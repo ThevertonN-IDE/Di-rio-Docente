@@ -1,0 +1,52 @@
+/* styles/print-a4.css */
+@page {
+  size: A4 portrait;
+  margin: 15mm 15mm 20mm 15mm;
+  @bottom-right {
+    content: "Página " counter(page) " de " counter(pages);
+    font-size: 9pt;
+    font-family: sans-serif;
+  }
+}
+
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* Esconde a barra lateral, botões de ação e modais */
+  .no-print, header, aside, button {
+    display: none !important;
+  }
+
+  /* Contêiner principal da folha */
+  .sheet-a4 {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Suporte a layout em duas colunas clássico de provas */
+  .columns-print-2 {
+    column-count: 2;
+    column-gap: 8mm;
+    column-rule: 0.5pt solid #d1d5db;
+  }
+
+  /* Evita que uma questão seja cortada ao meio entre duas páginas */
+  .quest-block, .aluno-row, tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Cabeçalho padrão escolar com espaço para nome, turma e data */
+  .cabecalho-avaliacao {
+    border: 1pt solid #000;
+    padding: 6mm;
+    margin-bottom: 6mm;
+  }
+}
