@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Diário Docente</title>
-  
+
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- Estilos de Impressão A4 -->
   <link rel="stylesheet" href="styles/print-a4.css">
-  
+
   <!-- KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -19,21 +20,34 @@
   <!-- SheetJS & Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Favicon da aba -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
+
+  <!-- Ícone para iOS ao salvar na tela de início -->
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+
+  <!-- Manifest do PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#4338ca">
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen font-sans antialiased selection:bg-indigo-100 selection:text-indigo-800">
+
+<body
+  class="bg-slate-100 text-slate-800 min-h-screen font-sans antialiased selection:bg-indigo-100 selection:text-indigo-800">
 
   <!-- Header Global (Inicia invisível e só aparece se estiver autenticado) -->
   <header id="app-header" class="no-print bg-white border-b border-slate-200 sticky top-0 z-40 hidden shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      
+
       <!-- Marca / Logo -->
-      <a href="#dashboard" class="flex items-center gap-2 font-black text-indigo-700 text-base sm:text-lg tracking-tight">
+      <a href="#dashboard"
+        class="flex items-center gap-2 font-black text-indigo-700 text-base sm:text-lg tracking-tight">
         <span class="text-xl">📖</span>
         <span>Diário Docente</span>
       </a>
 
       <!-- Botão Hambúrguer para Mobile -->
-      <button id="btn-mobile-menu" type="button" class="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none">
+      <button id="btn-mobile-menu" type="button"
+        class="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
@@ -43,7 +57,8 @@
       <nav id="nav-desktop" class="hidden md:flex items-center gap-4 text-xs sm:text-sm font-semibold text-slate-600">
         <a href="#dashboard" class="hover:text-indigo-600 transition py-1">Turmas</a>
         <a href="#provas" class="hover:text-indigo-600 transition py-1">Criador de Provas A4</a>
-        <button id="btn-gerar-backup" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
+        <button id="btn-gerar-backup" type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
           💾 Fazer Backup
         </button>
       </nav>
@@ -51,10 +66,14 @@
 
     <!-- Gaveta do Menu Mobile (abre ao clicar no hambúrguer) -->
     <div id="menu-mobile" class="hidden md:hidden border-t border-slate-100 px-4 py-3 space-y-2 bg-white">
-      <a href="#dashboard" class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Turmas</a>
-      <a href="#provas" class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Criador de Provas A4</a>
+      <a href="#dashboard"
+        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Turmas</a>
+      <a href="#provas"
+        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Criador de Provas
+        A4</a>
       <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-        <button id="btn-gerar-backup-mobile" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
+        <button id="btn-gerar-backup-mobile" type="button"
+          class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
           💾 Fazer Backup
         </button>
         <div id="mobile-logout-slot"></div>
@@ -67,4 +86,5 @@
 
   <script type="module" src="./src/app.js"></script>
 </body>
+
 </html>
