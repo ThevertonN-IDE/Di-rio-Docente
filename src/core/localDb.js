@@ -1,5 +1,5 @@
 // src/core/localDb.js
-import Dexie from 'dexie';
+import Dexie from 'https://cdn.jsdelivr.net/npm/dexie@4.0.8/+esm';
 import { supabase } from './supabaseClient.js';
 import { Toast } from '../utils/ui.js';
 
