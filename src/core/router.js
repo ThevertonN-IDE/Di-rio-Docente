@@ -1,4 +1,5 @@
 // src/core/router.js
+import { atualizarCorTema } from '../utils/theme.js';
 export class Router {
   constructor(rotas, containerId) {
     this.rotas = rotas;
