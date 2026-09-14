@@ -1,4 +1,4 @@
-// src/app.js (Atualizado com Guard de Autenticação e PWA)
+// src/app.js
 import { registerSW } from 'virtual:pwa-register';
 import { SyncManager } from './core/localDb.js';
 import { Router } from './core/router.js';
@@ -16,52 +16,63 @@ import { RelatorioView } from './views/RelatorioView.js';
 import { BackupService } from './services/BackupService.js';
 import { Toast } from './utils/ui.js';
 
-// Registra a atualização automática do Service Worker (Offline PWA)
 registerSW({ immediate: true });
-
-// Inicia monitoramento de conectividade e fila offline
 SyncManager.init();
 
 async function iniciarApp() {
   const usuario = await AuthService.getUsuarioAtual();
-  const header = document.querySelector('header');
+  const header = document.getElementById('app-header');
 
-  // 1. Se não estiver autenticado: oculta navegação e renderiza tela de login
+  // 1. Se não houver login: esconde o header e exibe a tela de login
   if (!usuario) {
     if (header) header.classList.add('hidden');
     const loginView = new LoginView('app', () => {
+      window.location.hash = '#dashboard';
       window.location.reload();
     });
     loginView.render();
     return;
   }
 
-  // 2. Se autenticado: exibe o header com as ferramentas ativas
+  // 2. Se autenticado: exibe o header e ativa os menus
   if (header) {
     header.classList.remove('hidden');
 
-    // Listener do botão de Backup (apenas com login ativo)
-    const btnBackup = document.getElementById('btn-gerar-backup');
-    if (btnBackup && !btnBackup.dataset.bound) {
-      btnBackup.dataset.bound = 'true';
-      btnBackup.addEventListener('click', async () => {
-        btnBackup.disabled = true;
-        btnBackup.innerText = 'Exportando...';
-        try {
-          await BackupService.gerarSnapshotCompleto();
-          Toast.show('Backup JSON baixado com sucesso!', 'success');
-        } catch (err) {
-          Toast.show('Erro ao exportar backup: ' + err.message, 'error');
-        } finally {
-          btnBackup.disabled = false;
-          btnBackup.innerHTML = '💾 Fazer Backup';
-        }
-      });
-    }
+    // Controle do menu hambúrguer mobile
+    const btnMobile = document.getElementById('btn-mobile-menu');
+    const menuMobile = document.getElementById('menu-mobile');
+    btnMobile?.addEventListener('click', () => {
+      menuMobile?.classList.toggle('hidden');
+    });
 
-    // Botão de Logout
+    // Fecha o menu mobile ao clicar em um link
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => menuMobile?.classList.add('hidden'));
+    });
+
+    // Listener de backup (desktop e mobile)
+    const dispararBackup = async (btn) => {
+      btn.disabled = true;
+      btn.innerText = 'Exportando...';
+      try {
+        await BackupService.gerarSnapshotCompleto();
+        Toast.show('Backup JSON baixado com sucesso!', 'success');
+      } catch (err) {
+        Toast.show('Erro ao exportar: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '💾 Fazer Backup';
+      }
+    };
+
+    const btnBackupDesktop = document.getElementById('btn-gerar-backup');
+    const btnBackupMobile = document.getElementById('btn-gerar-backup-mobile');
+    btnBackupDesktop?.addEventListener('click', () => dispararBackup(btnBackupDesktop));
+    btnBackupMobile?.addEventListener('click', () => dispararBackup(btnBackupMobile));
+
+    // Botão de Logout Desktop
     if (!document.getElementById('btn-logout')) {
-      const nav = header.querySelector('nav');
+      const navDesktop = document.getElementById('nav-desktop');
       const logoutBtn = document.createElement('button');
       logoutBtn.id = 'btn-logout';
       logoutBtn.className = 'text-rose-600 hover:text-rose-800 text-xs font-bold transition ml-2 cursor-pointer';
@@ -70,11 +81,25 @@ async function iniciarApp() {
         await AuthService.sair();
         window.location.reload();
       });
-      nav?.appendChild(logoutBtn);
+      navDesktop?.appendChild(logoutBtn);
+    }
+
+    // Botão de Logout Mobile
+    const mobileLogoutSlot = document.getElementById('mobile-logout-slot');
+    if (mobileLogoutSlot && !document.getElementById('btn-logout-mobile')) {
+      const logoutMobile = document.createElement('button');
+      logoutMobile.id = 'btn-logout-mobile';
+      logoutMobile.className = 'text-rose-600 hover:text-rose-800 text-xs font-bold transition p-2 cursor-pointer';
+      logoutMobile.innerText = 'Sair da Conta';
+      logoutMobile.addEventListener('click', async () => {
+        await AuthService.sair();
+        window.location.reload();
+      });
+      mobileLogoutSlot.appendChild(logoutMobile);
     }
   }
 
-  // 3. Roteador SPA
+  // 3. Rotas SPA
   const rotas = {
     dashboard: (container) => {
       const vm = new DashboardViewModel();
