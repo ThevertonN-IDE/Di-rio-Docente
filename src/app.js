@@ -1,5 +1,4 @@
 // src/app.js
-import { registerSW } from 'virtual:pwa-register';
 import { SyncManager } from './core/localDb.js';
 import { Router } from './core/router.js';
 import { AuthService } from './services/AuthService.js';
@@ -16,14 +15,23 @@ import { RelatorioView } from './views/RelatorioView.js';
 import { BackupService } from './services/BackupService.js';
 import { Toast } from './utils/ui.js';
 
-registerSW({ immediate: true });
+// Registro nativo do Service Worker PWA (Compatível com Vercel)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.log('SW não registrado (ambiente de dev/preview):', err);
+    });
+  });
+}
+
+// Inicia monitoramento de conectividade e fila offline
 SyncManager.init();
 
 async function iniciarApp() {
   const usuario = await AuthService.getUsuarioAtual();
   const header = document.getElementById('app-header');
 
-  // 1. Se não houver login: esconde o header e exibe a tela de login
+  // Se não houver usuário logado, mostra tela de login
   if (!usuario) {
     if (header) header.classList.add('hidden');
     const loginView = new LoginView('app', () => {
@@ -34,23 +42,22 @@ async function iniciarApp() {
     return;
   }
 
-  // 2. Se autenticado: exibe o header e ativa os menus
+  // Se houver usuário logado, exibe a navegação
   if (header) {
     header.classList.remove('hidden');
 
-    // Controle do menu hambúrguer mobile
+    // Menu mobile
     const btnMobile = document.getElementById('btn-mobile-menu');
     const menuMobile = document.getElementById('menu-mobile');
     btnMobile?.addEventListener('click', () => {
       menuMobile?.classList.toggle('hidden');
     });
 
-    // Fecha o menu mobile ao clicar em um link
     document.querySelectorAll('.mobile-nav-link').forEach(link => {
       link.addEventListener('click', () => menuMobile?.classList.add('hidden'));
     });
 
-    // Listener de backup (desktop e mobile)
+    // Backup
     const dispararBackup = async (btn) => {
       btn.disabled = true;
       btn.innerText = 'Exportando...';
@@ -70,7 +77,7 @@ async function iniciarApp() {
     btnBackupDesktop?.addEventListener('click', () => dispararBackup(btnBackupDesktop));
     btnBackupMobile?.addEventListener('click', () => dispararBackup(btnBackupMobile));
 
-    // Botão de Logout Desktop
+    // Logout Desktop
     if (!document.getElementById('btn-logout')) {
       const navDesktop = document.getElementById('nav-desktop');
       const logoutBtn = document.createElement('button');
@@ -84,7 +91,7 @@ async function iniciarApp() {
       navDesktop?.appendChild(logoutBtn);
     }
 
-    // Botão de Logout Mobile
+    // Logout Mobile
     const mobileLogoutSlot = document.getElementById('mobile-logout-slot');
     if (mobileLogoutSlot && !document.getElementById('btn-logout-mobile')) {
       const logoutMobile = document.createElement('button');
@@ -99,7 +106,7 @@ async function iniciarApp() {
     }
   }
 
-  // 3. Rotas SPA
+  // Rotas SPA
   const rotas = {
     dashboard: (container) => {
       const vm = new DashboardViewModel();
