@@ -21,12 +21,16 @@ export const AlunoService = {
     return publicUrl;
   },
 
-  // Cadastra o aluno e cria a matrícula vinculada à turma
+  // Cadastra o aluno com user_id e vincula à turma
   async cadastrarAlunoComMatricula(turmaId, { nome, email, fotoUrl, numeroChamada, observacao }) {
-    // 1. Cria o registro do aluno
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Usuário não autenticado.');
+
+    // 1. Cria o registro do aluno com o user_id do professor logado
     const { data: aluno, error: alunoError } = await supabase
       .from('alunos')
       .insert([{
+        user_id: user.id, // <-- Vincula ao seu usuário
         nome: nome.trim(),
         email: email ? email.trim() : null,
         foto_url: fotoUrl || null,
@@ -52,8 +56,11 @@ export const AlunoService = {
     return aluno;
   },
 
-  // Importação em massa: recebe um texto com nomes (um por linha) e cadastra todos
+  // Importação em massa com user_id
   async importarAlunosEmLote(turmaId, listaNomes) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Usuário não autenticado.');
+
     const nomesValidos = listaNomes
       .split('\n')
       .map(linha => linha.trim())
@@ -62,13 +69,15 @@ export const AlunoService = {
     const resultados = [];
 
     for (let i = 0; i < nomesValidos.length; i++) {
-      const nomeLimpo = nomesValidos[i].replace(/^\d+[\.\-\s]+/, ''); // Remove numeração prévia se houver
+      const nomeLimpo = nomesValidos[i].replace(/^\d+[\.\-\s]+/, '');
       const numeroChamada = i + 1;
 
-      // Cria o aluno
       const { data: aluno, error: alunoError } = await supabase
         .from('alunos')
-        .insert([{ nome: nomeLimpo }])
+        .insert([{
+          user_id: user.id, // <-- Vincula ao seu usuário
+          nome: nomeLimpo
+        }])
         .select()
         .single();
 
