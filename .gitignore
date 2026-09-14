@@ -1,12 +1,14 @@
-# Arquivos de sistema e editores
+# Dependências e compilação
+node_modules/
+dist/
+
+# Variáveis locais
+.env
+.env.local
+.env.*.local
+
+# Logs e arquivos de sistema
+*.log
 .DS_Store
 Thumbs.db
 .vscode/
-.idea/
-
-# Dependências (caso instale algo via npm no futuro)
-node_modules/
-package-lock.json
-
-# Logs
-*.log

@@ -1,4 +1,6 @@
-// src/app.js (Atualizado com Guard de Autenticação)
+// src/app.js (Atualizado com Guard de Autenticação e PWA)
+import { registerSW } from 'virtual:pwa-register';
+import { SyncManager } from './core/localDb.js';
 import { Router } from './core/router.js';
 import { AuthService } from './services/AuthService.js';
 import { LoginView } from './views/LoginView.js';
@@ -11,12 +13,20 @@ import { DiarioView } from './views/DiarioView.js';
 import { ProvaViewModel } from './viewmodels/ProvaViewModel.js';
 import { ProvaView } from './views/ProvaView.js';
 import { RelatorioView } from './views/RelatorioView.js';
+import { BackupService } from './services/BackupService.js';
+import { Toast } from './utils/ui.js';
+
+// Registra a atualização automática do Service Worker (Offline PWA)
+registerSW({ immediate: true });
+
+// Inicia monitoramento de conectividade e fila offline
+SyncManager.init();
 
 async function iniciarApp() {
   const usuario = await AuthService.getUsuarioAtual();
   const header = document.querySelector('header');
 
-  // Se não estiver autenticado, exibe a tela de login
+  // 1. Se não estiver autenticado: oculta navegação e renderiza tela de login
   if (!usuario) {
     if (header) header.classList.add('hidden');
     const loginView = new LoginView('app', () => {
@@ -26,25 +36,45 @@ async function iniciarApp() {
     return;
   }
 
-  // Se estiver autenticado, exibe o header com botão de logout
+  // 2. Se autenticado: exibe o header com as ferramentas ativas
   if (header) {
     header.classList.remove('hidden');
-    
-    // Adiciona botão de sair se não existir
+
+    // Listener do botão de Backup (apenas com login ativo)
+    const btnBackup = document.getElementById('btn-gerar-backup');
+    if (btnBackup && !btnBackup.dataset.bound) {
+      btnBackup.dataset.bound = 'true';
+      btnBackup.addEventListener('click', async () => {
+        btnBackup.disabled = true;
+        btnBackup.innerText = 'Exportando...';
+        try {
+          await BackupService.gerarSnapshotCompleto();
+          Toast.show('Backup JSON baixado com sucesso!', 'success');
+        } catch (err) {
+          Toast.show('Erro ao exportar backup: ' + err.message, 'error');
+        } finally {
+          btnBackup.disabled = false;
+          btnBackup.innerHTML = '💾 Fazer Backup';
+        }
+      });
+    }
+
+    // Botão de Logout
     if (!document.getElementById('btn-logout')) {
       const nav = header.querySelector('nav');
       const logoutBtn = document.createElement('button');
       logoutBtn.id = 'btn-logout';
-      logoutBtn.className = 'text-rose-600 hover:text-rose-800 text-xs font-bold transition ml-2';
+      logoutBtn.className = 'text-rose-600 hover:text-rose-800 text-xs font-bold transition ml-2 cursor-pointer';
       logoutBtn.innerText = 'Sair';
       logoutBtn.addEventListener('click', async () => {
         await AuthService.sair();
         window.location.reload();
       });
-      nav.appendChild(logoutBtn);
+      nav?.appendChild(logoutBtn);
     }
   }
 
+  // 3. Roteador SPA
   const rotas = {
     dashboard: (container) => {
       const vm = new DashboardViewModel();
@@ -91,5 +121,4 @@ async function iniciarApp() {
   appRouter.iniciar();
 }
 
-// Inicializa a aplicação
 iniciarApp();

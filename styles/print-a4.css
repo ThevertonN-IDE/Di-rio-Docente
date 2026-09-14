@@ -50,3 +50,17 @@
     margin-bottom: 6mm;
   }
 }
+/* Em styles/print-a4.css */
+.prova-conteudo-colunas {
+  column-count: 2;
+  column-gap: 2rem;
+  column-rule: 1px solid #e2e8f0;
+}
+
+@media print {
+  .prova-conteudo-colunas {
+    column-count: 2;
+    column-gap: 1.5cm;
+    column-rule: 0.5pt solid #cbd5e1;
+  }
+}

@@ -1,6 +1,7 @@
 // src/viewmodels/TurmaViewModel.js
 import { Observable } from '../core/Observable.js';
 import { TurmaService } from '../services/TurmaService.js';
+import { localDb, SyncManager } from '../core/localDb.js';
 
 export class TurmaViewModel extends Observable {
   constructor(turmaId) {
@@ -39,8 +40,40 @@ export class TurmaViewModel extends Observable {
         this.mapaNotas[`${n.aluno_id}_${n.avaliacao_id}`] = n.valor;
       });
 
+      // Salva snapshot local em cache para consultas offline
+      try {
+        await localDb.turmas.put(dadosTurma);
+        for (const aluno of this.alunos) {
+          await localDb.alunos.put(aluno);
+        }
+        for (const n of notas) {
+          await localDb.notas.put({
+            avaliacao_id: n.avaliacao_id,
+            aluno_id: n.aluno_id,
+            valor: n.valor
+          });
+        }
+      } catch (cacheErr) {
+        console.warn('Erro ao atualizar cache local do Dexie:', cacheErr);
+      }
+
       this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
     } catch (err) {
+      // Fallback: tenta recuperar do IndexedDB caso esteja sem internet logo ao abrir
+      try {
+        const cachedTurma = await localDb.turmas.get(this.turmaId);
+        if (cachedTurma) {
+          this.turma = cachedTurma;
+          const cachedNotas = await localDb.notas.toArray();
+          this.mapaNotas = {};
+          cachedNotas.forEach(n => {
+            this.mapaNotas[`${n.aluno_id}_${n.avaliacao_id}`] = n.valor;
+          });
+          this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
+          return;
+        }
+      } catch (_) {}
+
       this.notify('ERRO', err.message);
     } finally {
       this.notify('CARREGANDO', false);
@@ -54,7 +87,7 @@ export class TurmaViewModel extends Observable {
         const val = this.mapaNotas[`${aluno.id}_${av.id}`];
         return {
           avaliacaoId: av.id,
-          valor: val !== undefined ? val : ''
+          valor: val !== undefined && val !== null ? val : ''
         };
       });
 
@@ -75,7 +108,7 @@ export class TurmaViewModel extends Observable {
 
     for (const av of this.avaliacoes) {
       const val = this.mapaNotas[`${alunoId}_${av.id}`];
-      if (val !== undefined && val !== '' && !isNaN(val)) {
+      if (val !== undefined && val !== null && val !== '' && !isNaN(val)) {
         const num = parseFloat(val);
         const peso = av.peso || 1;
         soma += num * peso;
@@ -87,7 +120,7 @@ export class TurmaViewModel extends Observable {
     if (notasValidas.length === 0) return '-';
     
     // Suporta cálculo ponderado ou simples dependendo da configuração da turma
-    if (this.turma.tipo_media === 'ponderada' && pesoTotal > 0) {
+    if (this.turma?.tipo_media === 'ponderada' && pesoTotal > 0) {
       return (soma / pesoTotal).toFixed(1);
     }
     
@@ -96,19 +129,52 @@ export class TurmaViewModel extends Observable {
   }
 
   async atualizarNota(avaliacaoId, alunoId, novoValor) {
+    const chave = `${alunoId}_${avaliacaoId}`;
+    const valorNumerico = novoValor === '' || novoValor === null ? null : parseFloat(novoValor);
+
+    // 1. Atualização imediata em memória (UI responsiva)
+    if (valorNumerico === null) {
+      delete this.mapaNotas[chave];
+    } else {
+      this.mapaNotas[chave] = valorNumerico;
+    }
+
+    // 2. Notifica a View imediatamente para recalcular médias e gráficos
+    this.notify('MEDIA_ATUALIZADA', {
+      alunoId,
+      novaMedia: this.calcularMedia(alunoId)
+    });
+
+    // 3. Grava no cache IndexedDB instantaneamente
     try {
-      if (novoValor === '') {
-        delete this.mapaNotas[`${alunoId}_${avaliacaoId}`];
-      } else {
-        await TurmaService.salvarNota(avaliacaoId, alunoId, novoValor);
-        this.mapaNotas[`${alunoId}_${avaliacaoId}`] = parseFloat(novoValor);
-      }
-      this.notify('MEDIA_ATUALIZADA', {
-        alunoId,
-        novaMedia: this.calcularMedia(alunoId)
+      await localDb.notas.put({
+        avaliacao_id: avaliacaoId,
+        aluno_id: alunoId,
+        valor: valorNumerico
       });
-    } catch (err) {
-      this.notify('ERRO', 'Erro ao salvar nota: ' + err.message);
+    } catch (dbErr) {
+      console.warn('Erro ao salvar no IndexedDB:', dbErr);
+    }
+
+    // 4. Estratégia de Sincronização: Nuvem ou Fila Offline
+    if (navigator.onLine) {
+      try {
+        await TurmaService.salvarNota(avaliacaoId, alunoId, valorNumerico);
+      } catch (err) {
+        // Se a requisição cair por instabilidade de rede, joga para a fila
+        await SyncManager.enfileirarAcao('SALVAR_NOTA', {
+          avaliacao_id: avaliacaoId,
+          aluno_id: alunoId,
+          valor: valorNumerico
+        });
+      }
+    } else {
+      // Sem internet: enfileira para sincronizar assim que reconectar
+      await SyncManager.enfileirarAcao('SALVAR_NOTA', {
+        avaliacao_id: avaliacaoId,
+        aluno_id: alunoId,
+        valor: valorNumerico
+      });
     }
   }
 
@@ -117,10 +183,17 @@ export class TurmaViewModel extends Observable {
       await TurmaService.excluirAvaliacao(avaliacaoId);
       this.avaliacoes = this.avaliacoes.filter(a => a.id !== avaliacaoId);
       
-      // Limpa do mapa local
+      // Limpa do mapa em memória
       Object.keys(this.mapaNotas).forEach(key => {
         if (key.endsWith(`_${avaliacaoId}`)) delete this.mapaNotas[key];
       });
+
+      // Limpa registros correspondentes no IndexedDB
+      try {
+        await localDb.notas.where('avaliacao_id').equals(avaliacaoId).delete();
+      } catch (dbErr) {
+        console.warn('Erro ao remover notas do cache local:', dbErr);
+      }
 
       this.notify('AVALIACAO_REMOVIDA', {
         avaliacaoId,
