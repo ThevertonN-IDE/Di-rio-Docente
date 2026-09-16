@@ -1,4 +1,6 @@
 // src/app.js
+import { ListaViewModel } from './viewmodels/ListaViewModel.js';
+import { ListaView } from './views/ListaView.js';
 import { SyncManager } from './core/localDb.js';
 import { Router } from './core/router.js';
 import { AuthService } from './services/AuthService.js';
@@ -119,6 +121,11 @@ async function iniciarApp() {
       vm.carregarDashboard();
     },
 
+    listas: (container) => {
+    const vm = new ListaViewModel();
+    const view = new ListaView(container.id, vm);
+    view.render();
+    },
     turma: (container, turmaId) => {
       const vm = new TurmaViewModel(turmaId);
       new TurmaView(container.id, vm);
