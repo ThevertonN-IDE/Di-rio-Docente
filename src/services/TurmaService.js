@@ -117,5 +117,30 @@ export const TurmaService = {
 
     if (error) throw error;
     return data;
+  },
+  async atualizarAvaliacao(avaliacaoId, { titulo, data_prevista, peso, bimestre }) {
+    const { error } = await supabase
+      .from('avaliacoes')
+      .update({
+        titulo,
+        data_prevista,
+        peso: parseFloat(peso) || 1.0,
+        bimestre: parseInt(bimestre) || 1
+      })
+      .eq('id', avaliacaoId);
+
+    if (error) throw error;
+  },
+
+  async atualizarConfiguracaoTurma(turmaId, { mediaAprovacao, tipoMedia }) {
+    const { error } = await supabase
+      .from('turmas')
+      .update({
+        media_aprovacao: parseFloat(mediaAprovacao) || 6.0,
+        tipo_media: tipoMedia
+      })
+      .eq('id', turmaId);
+
+    if (error) throw error;
   }
 };

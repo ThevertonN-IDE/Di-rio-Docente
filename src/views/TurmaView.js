@@ -13,6 +13,7 @@ export class TurmaView {
     this.fotoSelecionada = null;
     this.fotoEdicaoSelecionada = null;
     this.alunoEmEdicao = null;
+    this.avaliacaoEmEdicao = null;
     this.salvarNotaDebounced = debounce((avId, alunoId, valor) => this.persistirNota(avId, alunoId, valor), 350);
     this.setupListeners();
   }
@@ -63,8 +64,9 @@ export class TurmaView {
 
   render() {
     const matriz = this.vm.getMatrizNotas();
-    const avaliacoes = this.vm.avaliacoes;
+    const avaliacoes = this.vm.getAvaliacoesFiltradas ? this.vm.getAvaliacoesFiltradas() : this.vm.avaliacoes;
     const { totalAulas, mapaPresencas } = this.dadosFreq;
+    const mediaCorte = this.vm.mediaCorte || 6.0;
 
     this.container.innerHTML = `
       <div class="p-6 max-w-7xl mx-auto space-y-6">
@@ -106,6 +108,22 @@ export class TurmaView {
           </div>
         </div>
 
+        <!-- BARRA DE BIMESTRES E CONFIGURAÇÃO DA TURMA -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center gap-1.5 text-xs font-bold flex-wrap">
+            <span class="text-slate-500 mr-2">Filtrar por Bimestre:</span>
+            <button data-bimestre-btn="0" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 0 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">Todos</button>
+            <button data-bimestre-btn="1" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">1º Bimestre</button>
+            <button data-bimestre-btn="2" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 2 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">2º Bimestre</button>
+            <button data-bimestre-btn="3" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 3 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">3º Bimestre</button>
+            <button data-bimestre-btn="4" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 4 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">4º Bimestre</button>
+          </div>
+
+          <button id="btn-cfg-media" class="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition flex items-center gap-1">
+            ⚙️ Média de Corte: <strong>${mediaCorte}</strong>
+          </button>
+        </div>
+
         <!-- GRÁFICO DE DIAGNÓSTICO -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-2">
           <h3 class="text-sm font-bold text-slate-800">Distribuição de Desempenho da Turma</h3>
@@ -125,10 +143,10 @@ export class TurmaView {
                   ${avaliacoes.map(av => `
                     <th class="py-3 px-3 min-w-[110px] text-center border-l border-slate-100">
                       <div class="flex items-center justify-center gap-1">
-                        <span>${av.titulo}</span>
+                        <span data-edit-av="${av.id}" title="Clique para editar avaliação" class="cursor-pointer hover:text-indigo-600 hover:underline transition font-bold">${av.titulo}</span>
                         <button data-delete-av="${av.id}" data-titulo-av="${av.titulo}" title="Excluir" class="text-slate-400 hover:text-red-500 ml-1 font-bold">&times;</button>
                       </div>
-                      <span class="block text-[10px] text-slate-400 font-normal">Peso ${av.peso || 1}</span>
+                      <span class="block text-[10px] text-slate-400 font-normal">p.${av.peso || 1} • ${av.bimestre ? av.bimestre + 'º Bim' : '1º Bim'}</span>
                     </th>
                   `).join('')}
                   <th class="py-3 px-4 w-24 text-center border-l border-slate-200 bg-slate-100 font-bold">Média</th>
@@ -142,6 +160,8 @@ export class TurmaView {
                   const presencas = mapaPresencas[aluno.id] || 0;
                   const pct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
                   const emAlerta = totalAulas > 0 && pct < 75;
+                  const mediaNum = parseFloat(aluno.mediaFinal);
+                  const abaixoDaMedia = !isNaN(mediaNum) && mediaNum < mediaCorte;
 
                   return `
                     <tr class="hover:bg-slate-50/80 transition">
@@ -149,8 +169,8 @@ export class TurmaView {
                       <td class="py-3 px-4 cursor-pointer group" data-abrir-aluno="${aluno.id}">
                         <div class="flex items-center gap-3">
                           <div class="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0 border border-slate-300 group-hover:ring-2 group-hover:ring-indigo-400 transition">
-                            ${aluno.foto_url 
-                              ? `<img src="${aluno.foto_url}" class="w-full h-full object-cover">` 
+                            ${aluno.foto_url
+                              ? `<img src="${aluno.foto_url}" class="w-full h-full object-cover">`
                               : `<div class="w-full h-full flex items-center justify-center text-slate-500 font-bold text-xs uppercase">${aluno.nome.charAt(0)}</div>`
                             }
                           </div>
@@ -174,14 +194,13 @@ export class TurmaView {
                           />
                         </td>
                       `).join('')}
-                      <td id="media-${aluno.id}" class="py-3 px-4 text-center border-l border-slate-200 font-bold font-mono text-slate-800 bg-slate-50/50">
+                      <td id="media-${aluno.id}" class="py-3 px-4 text-center border-l border-slate-200 font-bold font-mono text-slate-800 bg-slate-50/50 ${abaixoDaMedia ? 'text-rose-600 font-extrabold' : ''}">
                         ${aluno.mediaFinal}
                       </td>
                       <td class="py-3 px-3 text-center border-l border-slate-200 font-mono text-xs">
-                        <span class="px-2 py-0.5 rounded-md font-bold ${
-                          emAlerta 
-                            ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse' 
-                            : 'bg-emerald-50 text-emerald-700'
+                        <span class="px-2 py-0.5 rounded-md font-bold ${emAlerta
+                          ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse'
+                          : 'bg-emerald-50 text-emerald-700'
                         }">
                           ${pct}% (${presencas}/${totalAulas})
                         </span>
@@ -274,6 +293,45 @@ export class TurmaView {
         </div>
       </div>
 
+      <!-- MODAL EDITAR AVALIAÇÃO -->
+      <div id="modal-editar-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="text-base font-bold text-slate-800">Editar Avaliação</h3>
+            <button id="btn-fechar-modal-editar-av" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+          </div>
+          <form id="form-editar-avaliacao" class="space-y-3 text-sm">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Título</label>
+              <input type="text" id="edit-titulo-av" required class="w-full border rounded-lg p-2 text-sm">
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data</label>
+                <input type="date" id="edit-data-av" required class="w-full border rounded-lg p-2 text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Peso</label>
+                <input type="number" step="0.1" id="edit-peso-av" required class="w-full border rounded-lg p-2 text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Bimestre</label>
+                <select id="edit-bimestre-av" class="w-full border rounded-lg p-2 text-xs bg-white">
+                  <option value="1">1º Bimestre</option>
+                  <option value="2">2º Bimestre</option>
+                  <option value="3">3º Bimestre</option>
+                  <option value="4">4º Bimestre</option>
+                </select>
+              </div>
+            </div>
+            <div class="pt-3 border-t flex justify-end gap-2">
+              <button type="button" id="btn-cancelar-modal-editar-av" class="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">Cancelar</button>
+              <button type="submit" id="btn-salvar-edicao-av" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Salvar Alterações</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- MODAL IMPORTAÇÃO EM LOTE -->
       <div id="modal-lote-alunos" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
@@ -302,14 +360,23 @@ export class TurmaView {
               <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Título</label>
               <input type="text" id="campo-titulo-av" required class="w-full border rounded-lg p-2 text-sm">
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-3 gap-2">
               <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data</label>
-                <input type="date" id="campo-data-av" required class="w-full border rounded-lg p-2 text-sm">
+                <input type="date" id="campo-data-av" required class="w-full border rounded-lg p-2 text-xs">
               </div>
               <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Peso</label>
-                <input type="number" step="0.1" id="campo-peso-av" value="1.0" required class="w-full border rounded-lg p-2 text-sm">
+                <input type="number" step="0.1" id="campo-peso-av" value="1.0" required class="w-full border rounded-lg p-2 text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Bimestre</label>
+                <select id="campo-bimestre-av" class="w-full border rounded-lg p-2 text-xs bg-white">
+                  <option value="1">1º Bim</option>
+                  <option value="2">2º Bim</option>
+                  <option value="3">3º Bim</option>
+                  <option value="4">4º Bim</option>
+                </select>
               </div>
             </div>
             <div class="pt-3 flex justify-end gap-2">
@@ -347,7 +414,7 @@ export class TurmaView {
 
     this.container.querySelector('#btn-exportar-excel')?.addEventListener('click', () => {
       const matriz = this.vm.getMatrizNotas();
-      const avaliacoes = this.vm.avaliacoes;
+      const avaliacoes = this.vm.getAvaliacoesFiltradas ? this.vm.getAvaliacoesFiltradas() : this.vm.avaliacoes;
       const { totalAulas, mapaPresencas } = this.dadosFreq;
       PedagogicoService.exportarPlanilhaExcel(
         this.vm.turma.nome,
@@ -360,10 +427,40 @@ export class TurmaView {
       Toast.show('Planilha Excel gerada com sucesso!', 'success');
     });
 
+    // Filtros de Bimestre
+    this.container.querySelectorAll('[data-bimestre-btn]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const bim = parseInt(e.currentTarget.dataset.bimestreBtn);
+        if (this.vm.setBimestre) {
+          this.vm.setBimestre(bim);
+        } else {
+          this.vm.bimestreSelecionado = bim;
+          this.render();
+        }
+      });
+    });
+
+    // Mudar Média de Corte da Turma
+    this.container.querySelector('#btn-cfg-media')?.addEventListener('click', async () => {
+      const atual = this.vm.mediaCorte || 6.0;
+      const novaMedia = prompt('Informe a média mínima para aprovação nesta turma (ex: 6.0 ou 7.0):', atual);
+      if (novaMedia !== null && !isNaN(parseFloat(novaMedia))) {
+        if (this.vm.salvarConfiguracoesTurma) {
+          await this.vm.salvarConfiguracoesTurma(novaMedia, this.vm.turma.tipo_media || 'simples');
+        } else {
+          await TurmaService.atualizarConfiguracaoTurma(this.vm.turmaId, { mediaAprovacao: novaMedia, tipoMedia: this.vm.turma.tipo_media || 'simples' });
+          this.vm.turma.media_aprovacao = parseFloat(novaMedia);
+          this.render();
+        }
+        Toast.show(`Média mínima atualizada para ${novaMedia}!`, 'success');
+      }
+    });
+
     const modalAluno = this.container.querySelector('#modal-novo-aluno');
     const modalEditar = this.container.querySelector('#modal-editar-aluno');
     const modalLote = this.container.querySelector('#modal-lote-alunos');
     const modalAv = this.container.querySelector('#modal-nova-avaliacao');
+    const modalEditAv = this.container.querySelector('#modal-editar-avaliacao');
 
     this.container.querySelector('#btn-modal-add-aluno')?.addEventListener('click', () => modalAluno.classList.remove('hidden'));
     this.container.querySelector('#btn-fechar-modal-aluno')?.addEventListener('click', () => modalAluno.classList.add('hidden'));
@@ -377,9 +474,55 @@ export class TurmaView {
     this.container.querySelector('#btn-fechar-av')?.addEventListener('click', () => modalAv.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-av')?.addEventListener('click', () => modalAv.classList.add('hidden'));
 
-    // Modal Editar Aluno (Fechar)
     this.container.querySelector('#btn-fechar-modal-editar-aluno')?.addEventListener('click', () => modalEditar.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-editar-aluno')?.addEventListener('click', () => modalEditar.classList.add('hidden'));
+
+    this.container.querySelector('#btn-fechar-modal-editar-av')?.addEventListener('click', () => modalEditAv.classList.add('hidden'));
+    this.container.querySelector('#btn-cancelar-modal-editar-av')?.addEventListener('click', () => modalEditAv.classList.add('hidden'));
+
+    // ABRIR EDIÇÃO DA AVALIAÇÃO
+    this.container.querySelectorAll('[data-edit-av]').forEach(el => {
+      el.addEventListener('click', () => {
+        const avId = el.dataset.editAv;
+        const av = this.vm.avaliacoes.find(a => a.id === avId);
+        if (!av) return;
+
+        this.avaliacaoEmEdicao = av;
+        this.container.querySelector('#edit-titulo-av').value = av.titulo;
+        this.container.querySelector('#edit-data-av').value = av.data_prevista || '';
+        this.container.querySelector('#edit-peso-av').value = av.peso || 1.0;
+        this.container.querySelector('#edit-bimestre-av').value = av.bimestre || 1;
+
+        modalEditAv.classList.remove('hidden');
+      });
+    });
+
+    // Salvar Edição da Avaliação
+    this.container.querySelector('#form-editar-avaliacao')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!this.avaliacaoEmEdicao) return;
+
+      try {
+        const payload = {
+          titulo: this.container.querySelector('#edit-titulo-av').value,
+          data_prevista: this.container.querySelector('#edit-data-av').value,
+          peso: parseFloat(this.container.querySelector('#edit-peso-av').value) || 1.0,
+          bimestre: parseInt(this.container.querySelector('#edit-bimestre-av').value) || 1
+        };
+
+        if (this.vm.editarAvaliacao) {
+          await this.vm.editarAvaliacao(this.avaliacaoEmEdicao.id, payload);
+        } else {
+          await TurmaService.atualizarAvaliacao(this.avaliacaoEmEdicao.id, payload);
+          await this.vm.carregarDados();
+        }
+
+        modalEditAv.classList.add('hidden');
+        Toast.show('Avaliação atualizada com sucesso!', 'success');
+      } catch (err) {
+        Toast.show('Erro ao salvar avaliação: ' + err.message, 'error');
+      }
+    });
 
     // ABRIR DADOS DO ALUNO AO CLICAR NA LINHA
     this.container.querySelectorAll('[data-abrir-aluno]').forEach(celula => {
@@ -391,7 +534,6 @@ export class TurmaView {
         this.alunoEmEdicao = aluno;
         this.fotoEdicaoSelecionada = null;
 
-        // Preenche campos do modal
         this.container.querySelector('#edit-nome-aluno').value = aluno.nome;
         this.container.querySelector('#edit-email-aluno').value = aluno.email || '';
         this.container.querySelector('#edit-num-chamada').value = aluno.numero_chamada || '';
@@ -407,7 +549,7 @@ export class TurmaView {
       });
     });
 
-    // Preview de foto na edição
+    // Preview de foto na edição do aluno
     this.container.querySelector('#edit-foto-arquivo')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -435,12 +577,22 @@ export class TurmaView {
           fotoUrl = await AlunoService.uploadFoto(this.fotoEdicaoSelecionada);
         }
 
-        await this.vm.editarAluno(this.alunoEmEdicao.id, {
-          nome: this.container.querySelector('#edit-nome-aluno').value,
-          email: this.container.querySelector('#edit-email-aluno').value,
-          numeroChamada: this.container.querySelector('#edit-num-chamada').value,
-          fotoUrl
-        });
+        if (this.vm.editarAluno) {
+          await this.vm.editarAluno(this.alunoEmEdicao.id, {
+            nome: this.container.querySelector('#edit-nome-aluno').value,
+            email: this.container.querySelector('#edit-email-aluno').value,
+            numeroChamada: this.container.querySelector('#edit-num-chamada').value,
+            fotoUrl
+          });
+        } else {
+          await AlunoService.atualizarDadosAluno(this.vm.turmaId, this.alunoEmEdicao.id, {
+            nome: this.container.querySelector('#edit-nome-aluno').value,
+            email: this.container.querySelector('#edit-email-aluno').value,
+            numeroChamada: this.container.querySelector('#edit-num-chamada').value,
+            fotoUrl
+          });
+          await this.vm.carregarDados();
+        }
 
         modalEditar.classList.add('hidden');
         Toast.show('Dados do aluno atualizados com sucesso!', 'success');
@@ -463,7 +615,12 @@ export class TurmaView {
 
       if (confirmado) {
         try {
-          await this.vm.excluirAluno(this.alunoEmEdicao.id);
+          if (this.vm.excluirAluno) {
+            await this.vm.excluirAluno(this.alunoEmEdicao.id);
+          } else {
+            await AlunoService.removerAlunoDaTurma(this.vm.turmaId, this.alunoEmEdicao.id);
+            await this.vm.carregarDados();
+          }
           modalEditar.classList.add('hidden');
           Toast.show('Aluno removido da turma com sucesso.', 'info');
         } catch (err) {
@@ -472,7 +629,7 @@ export class TurmaView {
       }
     });
 
-    // Upload & Preview de Foto (Novo Aluno)
+    // Upload de Foto (Novo Aluno)
     const inputFoto = this.container.querySelector('#input-foto-arquivo');
     const previewBox = this.container.querySelector('#preview-avatar-box');
     inputFoto?.addEventListener('change', (e) => {
@@ -509,7 +666,7 @@ export class TurmaView {
       }
     });
 
-    // Importar Lote com Feedback Gráfico e Fechamento Automático
+    // Importar Lote
     const btnConfirmarLote = this.container.querySelector('#btn-confirmar-lote');
     const btnCancelarLote = this.container.querySelector('#btn-cancelar-lote');
     const txtAreaLote = this.container.querySelector('#txt-area-lote');
@@ -560,7 +717,8 @@ export class TurmaView {
           turma_id: this.vm.turmaId,
           titulo: this.container.querySelector('#campo-titulo-av').value,
           data_prevista: this.container.querySelector('#campo-data-av').value,
-          peso: parseFloat(this.container.querySelector('#campo-peso-av').value) || 1.0
+          peso: parseFloat(this.container.querySelector('#campo-peso-av').value) || 1.0,
+          bimestre: parseInt(this.container.querySelector('#campo-bimestre-av').value) || 1
         });
         modalAv.classList.add('hidden');
         Toast.show('Avaliação adicionada!', 'success');

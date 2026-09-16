@@ -11,6 +11,80 @@ export class TurmaViewModel extends Observable {
     this.alunos = [];
     this.avaliacoes = [];
     this.mapaNotas = {}; // Formato: { `${alunoId}_${avaliacaoId}`: valor }
+    this.bimestreSelecionado = 0;
+  }
+  setBimestre(bimestre) {
+    this.bimestreSelecionado = parseInt(bimestre) || 0;
+    this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
+  }
+  get mediaCorte(){
+    return parseFloat(this.turma?.media_aprovacao) || 6.0;
+  }
+  getAvaliacoesFiltradas() {
+    if (this.bimestreSelecionado === 0) return this.avaliacoes;
+    return this.avaliacoes.filter(av => (av.bimestre === 1) === this.bimestreSelecionado);
+  }
+  getMatrizNotas() {
+    const avaliacoesFiltradas = this.getAvaliacoesFiltradas();
+
+    return this.alunos.map(aluno => {
+      const notasAluno = avaliacoesFiltradas.map(av => {
+        const val = this.mapaNotas[`${aluno.id}_${av.id}`];
+        return {
+          avaliacaoId: av.id,
+          valor: val !== undefined && val !== null ? val : ''
+        };
+      });
+
+      const media = this.calcularMedia(aluno.id, avaliacoesFiltradas);
+      const mediaNum = parseFloat(media);
+      const aprovado = !isNaN(mediaNum) ? mediaNum >= this.mediaCorte : null;
+
+      return {
+        ...aluno,
+        notas: notasAluno,
+        mediaFinal: media,
+        aprovado
+      };
+    });
+  }
+
+  calcularMedia(alunoId, avaliacoes = this.getAvaliacoesFiltradas()) {
+    const notasValidas = [];
+    let soma = 0;
+    let pesoTotal = 0;
+
+    for (const av of avaliacoes) {
+      const val = this.mapaNotas[`${alunoId}_${av.id}`];
+      if (val !== undefined && val !== null && val !== '' && !isNaN(val)) {
+        const num = parseFloat(val);
+        const peso = av.peso || 1;
+        soma += num * peso;
+        pesoTotal += peso;
+        notasValidas.push(num);
+      }
+    }
+
+    if (notasValidas.length === 0) return '-';
+    
+    if (this.turma?.tipo_media === 'ponderada' && pesoTotal > 0) {
+      return (soma / pesoTotal).toFixed(1);
+    }
+    
+    const mediaSimples = notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
+    return mediaSimples.toFixed(1);
+  }
+
+  async editarAvaliacao(avaliacaoId, dados) {
+    await TurmaService.atualizarAvaliacao(avaliacaoId, dados);
+    await this.carregarDados();
+  }
+
+  async salvarConfiguracoesTurma(mediaAprovacao, tipoMedia) {
+    await TurmaService.atualizarConfiguracaoTurma(this.turmaId, { mediaAprovacao, tipoMedia });
+    this.turma.media_aprovacao = parseFloat(mediaAprovacao);
+    this.turma.tipo_media = tipoMedia;
+    this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
   }
   async editarAluno(alunoId, dados) {
     await AlunoService.atualizarDadosAluno(this.turmaId, alunoId, dados);
