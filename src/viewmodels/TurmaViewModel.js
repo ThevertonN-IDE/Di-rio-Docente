@@ -12,7 +12,15 @@ export class TurmaViewModel extends Observable {
     this.avaliacoes = [];
     this.mapaNotas = {}; // Formato: { `${alunoId}_${avaliacaoId}`: valor }
   }
+  async editarAluno(alunoId, dados) {
+    await AlunoService.atualizarDadosAluno(this.turmaId, alunoId, dados);
+    await this.carregarDados();
+  }
 
+  async excluirAluno(alunoId) {
+    await AlunoService.removerAlunoDaTurma(this.turmaId, alunoId);
+    await this.carregarDados();
+  }
   async carregarDados() {
     this.notify('CARREGANDO', true);
     try {
@@ -72,7 +80,7 @@ export class TurmaViewModel extends Observable {
           this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
           return;
         }
-      } catch (_) {}
+      } catch (_) { }
 
       this.notify('ERRO', err.message);
     } finally {
@@ -118,12 +126,12 @@ export class TurmaViewModel extends Observable {
     }
 
     if (notasValidas.length === 0) return '-';
-    
+
     // Suporta cálculo ponderado ou simples dependendo da configuração da turma
     if (this.turma?.tipo_media === 'ponderada' && pesoTotal > 0) {
       return (soma / pesoTotal).toFixed(1);
     }
-    
+
     const mediaSimples = notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
     return mediaSimples.toFixed(1);
   }
@@ -182,7 +190,7 @@ export class TurmaViewModel extends Observable {
     try {
       await TurmaService.excluirAvaliacao(avaliacaoId);
       this.avaliacoes = this.avaliacoes.filter(a => a.id !== avaliacaoId);
-      
+
       // Limpa do mapa em memória
       Object.keys(this.mapaNotas).forEach(key => {
         if (key.endsWith(`_${avaliacaoId}`)) delete this.mapaNotas[key];

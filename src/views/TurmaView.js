@@ -11,6 +11,8 @@ export class TurmaView {
     this.vm = viewModel;
     this.dadosFreq = { totalAulas: 0, mapaPresencas: {} };
     this.fotoSelecionada = null;
+    this.fotoEdicaoSelecionada = null;
+    this.alunoEmEdicao = null;
     this.salvarNotaDebounced = debounce((avId, alunoId, valor) => this.persistirNota(avId, alunoId, valor), 350);
     this.setupListeners();
   }
@@ -73,12 +75,12 @@ export class TurmaView {
             <div class="flex items-center gap-3">
               <a href="#dashboard" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">← Painel Geral</a>
               <span class="text-slate-300">•</span>
-              <span class="text-xs font-semibold text-slate-500 uppercase">${this.vm.turma.tipo_media === 'ponderada' ? 'Média Ponderada' : 'Média Simples'}</span>
+              <span class="text-xs font-semibold text-slate-500 uppercase">${this.vm.turma?.tipo_media === 'ponderada' ? 'Média Ponderada' : 'Média Simples'}</span>
               <span class="text-slate-300">•</span>
               <div id="sync-status-container" class="inline-block"></div>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800 mt-1">${this.vm.turma.nome}</h1>
-            <p class="text-sm text-slate-500">${this.vm.turma.disciplina || 'Sem disciplina'} • Ano: ${this.vm.turma.ano_letivo} • Total de aulas dadas: <strong>${totalAulas}</strong></p>
+            <h1 class="text-2xl font-bold text-slate-800 mt-1">${this.vm.turma?.nome || ''}</h1>
+            <p class="text-sm text-slate-500">${this.vm.turma?.disciplina || 'Sem disciplina'} • Ano: ${this.vm.turma?.ano_letivo || ''} • Total de aulas dadas: <strong>${totalAulas}</strong></p>
           </div>
 
           <!-- AÇÕES DO PROFESSOR -->
@@ -119,7 +121,7 @@ export class TurmaView {
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   <th class="py-3 px-4 w-12 text-center">Nº</th>
-                  <th class="py-3 px-4 min-w-[240px]">Aluno</th>
+                  <th class="py-3 px-4 min-w-[240px]">Aluno (clique para gerenciar)</th>
                   ${avaliacoes.map(av => `
                     <th class="py-3 px-3 min-w-[110px] text-center border-l border-slate-100">
                       <div class="flex items-center justify-center gap-1">
@@ -144,16 +146,21 @@ export class TurmaView {
                   return `
                     <tr class="hover:bg-slate-50/80 transition">
                       <td class="py-3 px-4 text-center text-slate-400 font-mono text-xs">${aluno.numero_chamada || '-'}</td>
-                      <td class="py-3 px-4 flex items-center gap-3">
-                        <div class="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0 border border-slate-300">
-                          ${aluno.foto_url 
-                            ? `<img src="${aluno.foto_url}" class="w-full h-full object-cover">` 
-                            : `<div class="w-full h-full flex items-center justify-center text-slate-500 font-bold text-xs uppercase">${aluno.nome.charAt(0)}</div>`
-                          }
-                        </div>
-                        <div class="truncate">
-                          <div class="font-medium text-slate-800 truncate">${aluno.nome}</div>
-                          <div class="text-xs text-slate-400 truncate">${aluno.email || 'Sem e-mail'}</div>
+                      <td class="py-3 px-4 cursor-pointer group" data-abrir-aluno="${aluno.id}">
+                        <div class="flex items-center gap-3">
+                          <div class="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0 border border-slate-300 group-hover:ring-2 group-hover:ring-indigo-400 transition">
+                            ${aluno.foto_url 
+                              ? `<img src="${aluno.foto_url}" class="w-full h-full object-cover">` 
+                              : `<div class="w-full h-full flex items-center justify-center text-slate-500 font-bold text-xs uppercase">${aluno.nome.charAt(0)}</div>`
+                            }
+                          </div>
+                          <div class="truncate">
+                            <div class="font-semibold text-slate-800 group-hover:text-indigo-600 transition flex items-center gap-1.5 truncate">
+                              ${aluno.nome}
+                              <span class="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100">✏️</span>
+                            </div>
+                            <div class="text-xs text-slate-400 truncate">${aluno.email || 'Sem e-mail'}</div>
+                          </div>
                         </div>
                       </td>
                       ${aluno.notas.map((n, cIndex) => `
@@ -188,7 +195,7 @@ export class TurmaView {
         </div>
       </div>
 
-      <!-- MODAIS (Aluno Individual, Lote, Nova Avaliação) -->
+      <!-- MODAL NOVO ALUNO -->
       <div id="modal-novo-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b pb-3">
@@ -225,6 +232,49 @@ export class TurmaView {
         </div>
       </div>
 
+      <!-- MODAL EDITAR / EXCLUIR ALUNO -->
+      <div id="modal-editar-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="text-base font-bold text-slate-800">Dados do Aluno</h3>
+            <button id="btn-fechar-modal-editar-aluno" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+          </div>
+          <form id="form-editar-aluno" class="space-y-3 text-sm">
+            <div class="flex items-center gap-4 py-2">
+              <div id="edit-preview-avatar-box" class="w-16 h-16 rounded-xl bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-400 font-bold overflow-hidden shrink-0"></div>
+              <div class="flex-1">
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Trocar Foto</label>
+                <input type="file" id="edit-foto-arquivo" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
+              </div>
+            </div>
+            <div class="grid grid-cols-4 gap-2">
+              <div class="col-span-1">
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nº</label>
+                <input type="number" id="edit-num-chamada" class="w-full border rounded-lg p-2 text-sm">
+              </div>
+              <div class="col-span-3">
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome Completo</label>
+                <input type="text" id="edit-nome-aluno" required class="w-full border rounded-lg p-2 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">E-mail</label>
+              <input type="email" id="edit-email-aluno" class="w-full border rounded-lg p-2 text-sm">
+            </div>
+            <div class="pt-3 border-t flex items-center justify-between">
+              <button type="button" id="btn-excluir-aluno" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                🗑️ Excluir da Turma
+              </button>
+              <div class="flex gap-2">
+                <button type="button" id="btn-cancelar-editar-aluno" class="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">Fechar</button>
+                <button type="submit" id="btn-salvar-edicao-aluno" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Salvar Alterações</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL IMPORTAÇÃO EM LOTE -->
       <div id="modal-lote-alunos" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b pb-3">
@@ -240,6 +290,7 @@ export class TurmaView {
         </div>
       </div>
 
+      <!-- MODAL NOVA AVALIAÇÃO -->
       <div id="modal-nova-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b pb-3">
@@ -274,7 +325,6 @@ export class TurmaView {
     SyncIndicator.salvo();
     this.bindEvents();
 
-    // Renderiza gráfico de diagnóstico
     const medias = matriz.map(a => a.mediaFinal);
     renderizarGraficoDiagnostico('grafico-diagnostico', medias);
   }
@@ -295,7 +345,6 @@ export class TurmaView {
       window.location.hash = `#relatorios/${this.vm.turmaId}`;
     });
 
-    // EXPORTAR EXCEL (.XLSX)
     this.container.querySelector('#btn-exportar-excel')?.addEventListener('click', () => {
       const matriz = this.vm.getMatrizNotas();
       const avaliacoes = this.vm.avaliacoes;
@@ -311,8 +360,8 @@ export class TurmaView {
       Toast.show('Planilha Excel gerada com sucesso!', 'success');
     });
 
-    // Modais
     const modalAluno = this.container.querySelector('#modal-novo-aluno');
+    const modalEditar = this.container.querySelector('#modal-editar-aluno');
     const modalLote = this.container.querySelector('#modal-lote-alunos');
     const modalAv = this.container.querySelector('#modal-nova-avaliacao');
 
@@ -328,7 +377,102 @@ export class TurmaView {
     this.container.querySelector('#btn-fechar-av')?.addEventListener('click', () => modalAv.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-av')?.addEventListener('click', () => modalAv.classList.add('hidden'));
 
-    // Upload & Preview de Foto
+    // Modal Editar Aluno (Fechar)
+    this.container.querySelector('#btn-fechar-modal-editar-aluno')?.addEventListener('click', () => modalEditar.classList.add('hidden'));
+    this.container.querySelector('#btn-cancelar-editar-aluno')?.addEventListener('click', () => modalEditar.classList.add('hidden'));
+
+    // ABRIR DADOS DO ALUNO AO CLICAR NA LINHA
+    this.container.querySelectorAll('[data-abrir-aluno]').forEach(celula => {
+      celula.addEventListener('click', () => {
+        const alunoId = celula.dataset.abrirAluno;
+        const aluno = this.vm.alunos.find(a => a.id === alunoId);
+        if (!aluno) return;
+
+        this.alunoEmEdicao = aluno;
+        this.fotoEdicaoSelecionada = null;
+
+        // Preenche campos do modal
+        this.container.querySelector('#edit-nome-aluno').value = aluno.nome;
+        this.container.querySelector('#edit-email-aluno').value = aluno.email || '';
+        this.container.querySelector('#edit-num-chamada').value = aluno.numero_chamada || '';
+
+        const previewEdit = this.container.querySelector('#edit-preview-avatar-box');
+        if (aluno.foto_url) {
+          previewEdit.innerHTML = `<img src="${aluno.foto_url}" class="w-full h-full object-cover">`;
+        } else {
+          previewEdit.innerHTML = `<span class="text-xl font-bold uppercase text-slate-400">${aluno.nome.charAt(0)}</span>`;
+        }
+
+        modalEditar.classList.remove('hidden');
+      });
+    });
+
+    // Preview de foto na edição
+    this.container.querySelector('#edit-foto-arquivo')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.fotoEdicaoSelecionada = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          this.container.querySelector('#edit-preview-avatar-box').innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Salvar Edição do Aluno
+    this.container.querySelector('#form-editar-aluno')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!this.alunoEmEdicao) return;
+
+      const btnSalvar = this.container.querySelector('#btn-salvar-edicao-aluno');
+      btnSalvar.disabled = true;
+      btnSalvar.innerText = 'Salvando...';
+
+      try {
+        let fotoUrl = this.alunoEmEdicao.foto_url;
+        if (this.fotoEdicaoSelecionada) {
+          fotoUrl = await AlunoService.uploadFoto(this.fotoEdicaoSelecionada);
+        }
+
+        await this.vm.editarAluno(this.alunoEmEdicao.id, {
+          nome: this.container.querySelector('#edit-nome-aluno').value,
+          email: this.container.querySelector('#edit-email-aluno').value,
+          numeroChamada: this.container.querySelector('#edit-num-chamada').value,
+          fotoUrl
+        });
+
+        modalEditar.classList.add('hidden');
+        Toast.show('Dados do aluno atualizados com sucesso!', 'success');
+      } catch (err) {
+        Toast.show('Erro ao atualizar aluno: ' + err.message, 'error');
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerText = 'Salvar Alterações';
+      }
+    });
+
+    // Excluir Aluno da Turma
+    this.container.querySelector('#btn-excluir-aluno')?.addEventListener('click', async () => {
+      if (!this.alunoEmEdicao) return;
+
+      const confirmado = await customConfirm(
+        `Excluir ${this.alunoEmEdicao.nome}?`,
+        'O aluno e todas as suas notas associadas a esta turma serão removidos.'
+      );
+
+      if (confirmado) {
+        try {
+          await this.vm.excluirAluno(this.alunoEmEdicao.id);
+          modalEditar.classList.add('hidden');
+          Toast.show('Aluno removido da turma com sucesso.', 'info');
+        } catch (err) {
+          Toast.show('Erro ao remover aluno: ' + err.message, 'error');
+        }
+      }
+    });
+
+    // Upload & Preview de Foto (Novo Aluno)
     const inputFoto = this.container.querySelector('#input-foto-arquivo');
     const previewBox = this.container.querySelector('#preview-avatar-box');
     inputFoto?.addEventListener('change', (e) => {
@@ -365,7 +509,6 @@ export class TurmaView {
       }
     });
 
-    // Importar Lote
     // Importar Lote com Feedback Gráfico e Fechamento Automático
     const btnConfirmarLote = this.container.querySelector('#btn-confirmar-lote');
     const btnCancelarLote = this.container.querySelector('#btn-cancelar-lote');
@@ -378,7 +521,6 @@ export class TurmaView {
         return;
       }
 
-      // 1. Ativa estado gráfico de carregamento
       btnConfirmarLote.disabled = true;
       if (btnCancelarLote) btnCancelarLote.disabled = true;
       txtAreaLote.disabled = true;
@@ -395,23 +537,14 @@ export class TurmaView {
       `;
 
       try {
-        // 2. Executa a gravação no banco
         await AlunoService.importarAlunosEmLote(this.vm.turmaId, texto);
-
-        // 3. Limpa o texto e fecha a janela automaticamente
         txtAreaLote.value = '';
         modalLote.classList.add('hidden');
-
-        // 4. Exibe o aviso gráfico de confirmação
         Toast.show('Alunos importados e matriculados com sucesso!', 'success');
-
-        // 5. Atualiza a tabela na tela
         await this.vm.carregarDados();
       } catch (err) {
-        // Se falhar, mantém a tela aberta para não perder a lista
         Toast.show('Erro ao importar lista: ' + err.message, 'error');
       } finally {
-        // 6. Restaura os controles
         btnConfirmarLote.disabled = false;
         if (btnCancelarLote) btnCancelarLote.disabled = false;
         txtAreaLote.disabled = false;

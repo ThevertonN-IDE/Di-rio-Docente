@@ -13,7 +13,15 @@ export class DiarioViewModel extends Observable {
     this.alunos = [];
     this.mapaPresenca = {}; // { [alunoId]: { presente: true/false, justificativa: '' } }
   }
+  async atualizarAula(aulaId, dados) {
+    await PedagogicoService.atualizarAula(aulaId, dados);
+    await this.carregarDiario();
+  }
 
+  async excluirAula(aulaId) {
+    await PedagogicoService.excluirAula(aulaId);
+    await this.carregarDiario();
+  }
   async carregarDiario(data = this.dataSelecionada) {
     this.dataSelecionada = data;
     this.notify('CARREGANDO', true);
@@ -37,7 +45,7 @@ export class DiarioViewModel extends Observable {
         .sort((a, b) => (a.numero_chamada || 999) - (b.numero_chamada || 999));
 
       const frequencias = await DiarioService.getFrequenciasDaAula(aula.id);
-      
+
       this.mapaPresenca = {};
       this.alunos.forEach(aluno => {
         const freq = frequencias.find(f => f.aluno_id === aluno.id);

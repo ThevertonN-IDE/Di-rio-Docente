@@ -93,5 +93,37 @@ export const AlunoService = {
     }
 
     return resultados;
+  },
+  async atualizarDadosAluno(turmaId, alunoId, { nome, email, numeroChamada, fotoUrl }) {
+    // 1. Atualiza dados gerais do aluno
+    const dadosAtualizacao = { nome, email };
+    if (fotoUrl) dadosAtualizacao.foto_url = fotoUrl;
+
+    const { error: errAluno } = await supabase
+      .from('alunos')
+      .update(dadosAtualizacao)
+      .eq('id', alunoId);
+
+    if (errAluno) throw errAluno;
+
+    // 2. Atualiza número de chamada na turma
+    const { error: errMatricula } = await supabase
+      .from('matriculas')
+      .update({ numero_chamada: numeroChamada ? parseInt(numeroChamada) : null })
+      .eq('turma_id', turmaId)
+      .eq('aluno_id', alunoId);
+
+    if (errMatricula) throw errMatricula;
+  },
+
+  async removerAlunoDaTurma(turmaId, alunoId) {
+    // Exclui a matrícula do aluno nesta turma (e notas vinculadas)
+    const { error } = await supabase
+      .from('matriculas')
+      .delete()
+      .eq('turma_id', turmaId)
+      .eq('aluno_id', alunoId);
+
+    if (error) throw error;
   }
 };

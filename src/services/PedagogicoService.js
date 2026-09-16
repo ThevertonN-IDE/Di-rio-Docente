@@ -12,7 +12,27 @@ export const PedagogicoService = {
     if (error) throw error;
     return data || [];
   },
+  async atualizarAula(aulaId, { data, conteudo, observacoes }) {
+    const { error } = await supabase
+      .from('aulas')
+      .update({
+        data,
+        conteudo,
+        observacoes
+      })
+      .eq('id', aulaId);
 
+    if (error) throw error;
+  },
+
+  async excluirAula(aulaId) {
+    // 1. Remove registros de presença vinculados a esta aula
+    await supabase.from('frequencias').delete().eq('aula_id', aulaId);
+
+    // 2. Remove o registro da aula
+    const { error } = await supabase.from('aulas').delete().eq('id', aulaId);
+    if (error) throw error;
+  },
   async criarQuestao({ assunto, enunciado, nivel }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado.');
@@ -72,10 +92,10 @@ export const PedagogicoService = {
   // 3. EXPORTAÇÃO PARA EXCEL (.XLSX) VIA SHEETJS
   exportarPlanilhaExcel(nomeTurma, disciplina, matrizAlunos, avaliacoes, totalAulas, mapaPresencas) {
     const cabecalho = ['Nº Chamada', 'Nome do Aluno', 'E-mail'];
-    
+
     // Adiciona colunas de avaliações
     avaliacoes.forEach(av => cabecalho.push(`${av.titulo} (P${av.peso || 1})`));
-    
+
     cabecalho.push('Média Final');
     cabecalho.push('Aulas Ministradas');
     cabecalho.push('Presenças');
