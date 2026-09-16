@@ -366,16 +366,56 @@ export class TurmaView {
     });
 
     // Importar Lote
-    this.container.querySelector('#btn-confirmar-lote')?.addEventListener('click', async () => {
-      const texto = this.container.querySelector('#txt-area-lote').value;
-      if (!texto.trim()) return;
+    // Importar Lote com Feedback Gráfico e Fechamento Automático
+    const btnConfirmarLote = this.container.querySelector('#btn-confirmar-lote');
+    const btnCancelarLote = this.container.querySelector('#btn-cancelar-lote');
+    const txtAreaLote = this.container.querySelector('#txt-area-lote');
+
+    btnConfirmarLote?.addEventListener('click', async () => {
+      const texto = txtAreaLote.value.trim();
+      if (!texto) {
+        Toast.show('Por favor, cole ao menos um nome na lista.', 'warning');
+        return;
+      }
+
+      // 1. Ativa estado gráfico de carregamento
+      btnConfirmarLote.disabled = true;
+      if (btnCancelarLote) btnCancelarLote.disabled = true;
+      txtAreaLote.disabled = true;
+
+      const textoOriginalBotao = btnConfirmarLote.innerHTML;
+      btnConfirmarLote.innerHTML = `
+        <span class="inline-flex items-center gap-2">
+          <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Importando alunos...
+        </span>
+      `;
+
       try {
+        // 2. Executa a gravação no banco
         await AlunoService.importarAlunosEmLote(this.vm.turmaId, texto);
+
+        // 3. Limpa o texto e fecha a janela automaticamente
+        txtAreaLote.value = '';
         modalLote.classList.add('hidden');
-        Toast.show('Alunos importados com sucesso!', 'success');
+
+        // 4. Exibe o aviso gráfico de confirmação
+        Toast.show('Alunos importados e matriculados com sucesso!', 'success');
+
+        // 5. Atualiza a tabela na tela
         await this.vm.carregarDados();
       } catch (err) {
-        Toast.show('Erro: ' + err.message, 'error');
+        // Se falhar, mantém a tela aberta para não perder a lista
+        Toast.show('Erro ao importar lista: ' + err.message, 'error');
+      } finally {
+        // 6. Restaura os controles
+        btnConfirmarLote.disabled = false;
+        if (btnCancelarLote) btnCancelarLote.disabled = false;
+        txtAreaLote.disabled = false;
+        btnConfirmarLote.innerHTML = textoOriginalBotao;
       }
     });
 
