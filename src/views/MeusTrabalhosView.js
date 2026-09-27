@@ -17,7 +17,7 @@ export class MeusTrabalhosView {
   async render() {
     this.container.innerHTML = `
       <div class="p-6 max-w-7xl mx-auto space-y-6">
-        <!-- CABEÇALHO DA CENTRAL DE TRABALHOS -->
+        <!-- CABEÇALHO -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
             <h1 class="text-2xl font-bold text-slate-800">Biblioteca Pedagógica & Meus Trabalhos</h1>
@@ -36,7 +36,7 @@ export class MeusTrabalhosView {
           </div>
         </div>
 
-        <!-- BARRA DE FILTROS COMBINADOS -->
+        <!-- FILTROS -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3 text-xs">
           <div class="flex-1 min-w-[200px]">
             <input type="text" id="inp-filtro-busca" placeholder="Buscar por título ou assunto..." class="w-full border rounded-lg p-2 text-xs">
@@ -57,7 +57,6 @@ export class MeusTrabalhosView {
             <span class="font-bold text-slate-600">Turma:</span>
             <select id="sel-filtro-turma" class="border rounded-lg p-1.5 font-semibold bg-white">
               <option value="">Todas as Turmas</option>
-              <!-- Preenchido via JS -->
             </select>
           </div>
 
@@ -81,9 +80,9 @@ export class MeusTrabalhosView {
         </div>
       </div>
 
-      <!-- MODAL DE UPLOAD DE ARQUIVOS EXTERNOS (PDF, DOCX, XLSX, IMAGENS) -->
+      <!-- MODAL DE UPLOAD DE ARQUIVOS (COM ASSOCIAÇÃO A ALUNO E TRABALHO) -->
       <div id="modal-upload-doc" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Anexar Documento Digital</h3>
             <button id="btn-fechar-modal-doc" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
@@ -95,15 +94,16 @@ export class MeusTrabalhosView {
             </div>
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Título / Identificação</label>
-              <input type="text" id="inp-doc-titulo" required placeholder="Ex: Tabela Periódica em PDF, Gabarito da Prova..." class="w-full border rounded-lg p-2">
+              <input type="text" id="inp-doc-titulo" required placeholder="Ex: Trabalho de Geometria, Redação entregue..." class="w-full border rounded-lg p-2">
             </div>
+            
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Categoria</label>
                 <select id="inp-doc-categoria" class="w-full border rounded-lg p-2 bg-white">
-                  <option value="Materiais Didáticos">Materiais Didáticos</option>
-                  <option value="Avaliações">Avaliações</option>
                   <option value="Trabalhos de Alunos">Trabalhos de Alunos</option>
+                  <option value="Avaliações">Avaliações</option>
+                  <option value="Materiais Didáticos">Materiais Didáticos</option>
                   <option value="Documentos Oficiais">Documentos Oficiais</option>
                   <option value="Geral">Geral</option>
                 </select>
@@ -115,6 +115,23 @@ export class MeusTrabalhosView {
                 </select>
               </div>
             </div>
+
+            <!-- VINCULAÇÃO AVALIAÇÃO / ALUNO -->
+            <div id="box-vinculos-extras" class="grid grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl hidden">
+              <div>
+                <label class="block font-bold text-slate-600 uppercase mb-1">Aluno Específico</label>
+                <select id="inp-doc-aluno" class="w-full border rounded-lg p-2 bg-white">
+                  <option value="">Toda a Turma / Nenhum</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-600 uppercase mb-1">Avaliação / Trabalho</label>
+                <select id="inp-doc-avaliacao" class="w-full border rounded-lg p-2 bg-white">
+                  <option value="">Nenhuma Avaliação</option>
+                </select>
+              </div>
+            </div>
+
             <div class="pt-3 border-t flex justify-end gap-2">
               <button type="button" id="btn-cancelar-modal-doc" class="px-3.5 py-1.5 border rounded-lg text-slate-600 font-semibold">Cancelar</button>
               <button type="submit" id="btn-salvar-upload-doc" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold">Fazer Upload</button>
@@ -129,23 +146,13 @@ export class MeusTrabalhosView {
 
   async carregarDados() {
     try {
-      // 1. Carrega os documentos salvos
-      const docs = await DocumentoService.listarDocumentos();
+      const [docs, turmas] = await Promise.all([
+        DocumentoService.listarDocumentos(),
+        TurmaService.getTurmas()
+      ]);
       this.documentos = docs || [];
+      this.turmas = turmas || [];
 
-      // 2. Carrega as turmas de forma segura com salvaguarda
-      try {
-        if (TurmaService && typeof TurmaService.getTurmas === 'function') {
-          this.turmas = await TurmaService.getTurmas();
-        } else {
-          this.turmas = [];
-        }
-      } catch (errTurmas) {
-        console.warn('Não foi possível listar turmas para o filtro:', errTurmas);
-        this.turmas = [];
-      }
-
-      // 3. Atualiza os seletores de turmas nos filtros e no modal
       const selFiltroTurma = this.container.querySelector('#sel-filtro-turma');
       const inpDocTurma = this.container.querySelector('#inp-doc-turma');
       const optionsHtml = this.turmas.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
@@ -175,7 +182,6 @@ export class MeusTrabalhosView {
       grid.innerHTML = `
         <div class="col-span-full text-center py-16 bg-white rounded-2xl border border-slate-200">
           <p class="text-slate-400 text-sm">Nenhum documento encontrado com os filtros aplicados.</p>
-          <p class="text-xs text-slate-400 mt-1">Crie avaliações, planos ou anexe documentos digitais pelos botões acima.</p>
         </div>
       `;
       return;
@@ -197,7 +203,7 @@ export class MeusTrabalhosView {
         acaoPrincipal = `<button data-editar-plano="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar Plano</button>`;
       } else {
         badge = `<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold uppercase text-[10px]">📁 Arquivo Digital</span>`;
-        acaoPrincipal = `<a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs transition">📥 Baixar / Visualizar</a>`;
+        acaoPrincipal = `<a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs transition">📥 Baixar / Abrir</a>`;
       }
 
       return `
@@ -211,13 +217,15 @@ export class MeusTrabalhosView {
             <div class="text-[11px] text-slate-500 space-y-0.5 mt-2">
               <p>📂 <strong>Categoria:</strong> ${doc.categoria || 'Geral'}</p>
               ${doc.turmas?.nome ? `<p>👥 <strong>Turma:</strong> ${doc.turmas.nome}</p>` : ''}
+              ${doc.alunos?.nome ? `<p>👤 <strong>Aluno:</strong> ${doc.alunos.nome}</p>` : ''}
+              ${doc.avaliacoes?.titulo ? `<p>📝 <strong>Atividade:</strong> ${doc.avaliacoes.titulo}</p>` : ''}
               ${doc.arquivo_tamanho ? `<p>💾 <strong>Tamanho:</strong> ${doc.arquivo_tamanho}</p>` : ''}
             </div>
           </div>
 
           <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
             ${acaoPrincipal}
-            <button data-excluir-doc="${doc.id}" title="Excluir Documento" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition font-bold text-xs">🗑️</button>
+            <button data-excluir-doc="${doc.id}" title="Excluir" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition font-bold text-xs">🗑️</button>
           </div>
         </div>
       `;
@@ -227,33 +235,28 @@ export class MeusTrabalhosView {
   }
 
   bindEventsCards() {
-    // Editar Prova ou Lista no Estúdio A4
     this.container.querySelectorAll('[data-editar-estudio]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const docId = e.currentTarget.dataset.editarEstudio;
-        const doc = this.documentos.find(d => d.id === docId);
+        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.editarEstudio);
         if (!doc) return;
         sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(doc));
         window.location.hash = '#estudio-a4';
       });
     });
 
-    // Editar Plano de Aula
     this.container.querySelectorAll('[data-editar-plano]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const docId = e.currentTarget.dataset.editarPlano;
-        const doc = this.documentos.find(d => d.id === docId);
+        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.editarPlano);
         if (!doc) return;
         sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(doc));
         window.location.hash = '#planos-aula';
       });
     });
 
-    // Excluir Documento
     this.container.querySelectorAll('[data-excluir-doc]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const docId = e.currentTarget.dataset.excluirDoc;
-        const confirmado = await customConfirm('Excluir documento permanente?', 'Esta ação não poderá ser desfeita.');
+        const confirmado = await customConfirm('Excluir documento permanente?', 'Esta ação removerá o arquivo da sua conta.');
         if (confirmado) {
           try {
             await DocumentoService.excluirDocumento(docId);
@@ -269,7 +272,6 @@ export class MeusTrabalhosView {
   }
 
   bindEvents() {
-    // Filtros
     this.container.querySelector('#inp-filtro-busca')?.addEventListener('input', (e) => {
       this.filtroBusca = e.target.value;
       this.renderCards();
@@ -287,17 +289,53 @@ export class MeusTrabalhosView {
       this.renderCards();
     });
 
-    // Modal de Anexo de Arquivo
     const modalDoc = this.container.querySelector('#modal-upload-doc');
     this.container.querySelector('#btn-modal-upload-doc')?.addEventListener('click', () => modalDoc.classList.remove('hidden'));
     this.container.querySelector('#btn-fechar-modal-doc')?.addEventListener('click', () => modalDoc.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-modal-doc')?.addEventListener('click', () => modalDoc.classList.add('hidden'));
 
-    // Submissão do Arquivo Digital
+    // Atualiza opções de Alunos e Avaliações ao selecionar uma Turma no modal
+    const inpDocTurma = this.container.querySelector('#inp-doc-turma');
+    const boxExtras = this.container.querySelector('#box-vinculos-extras');
+    const selAluno = this.container.querySelector('#inp-doc-aluno');
+    const selAv = this.container.querySelector('#inp-doc-avaliacao');
+
+    inpDocTurma?.addEventListener('change', async (e) => {
+      const turmaId = e.target.value;
+      if (!turmaId) {
+        boxExtras.classList.add('hidden');
+        selAluno.innerHTML = '<option value="">Toda a Turma / Nenhum</option>';
+        selAv.innerHTML = '<option value="">Nenhuma Avaliação</option>';
+        return;
+      }
+
+      try {
+        const [dadosTurma, avaliacoes] = await Promise.all([
+          TurmaService.getTurmaComAlunos(turmaId),
+          TurmaService.getAvaliacoes(turmaId)
+        ]);
+
+        const alunos = (dadosTurma?.matriculas || [])
+          .filter(m => m.status === 'ativo')
+          .map(m => m.alunos)
+          .sort((a, b) => a.nome.localeCompare(b.nome));
+
+        selAluno.innerHTML = '<option value="">Toda a Turma / Nenhum</option>' + 
+          alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+
+        selAv.innerHTML = '<option value="">Nenhuma Avaliação</option>' + 
+          (avaliacoes || []).map(av => `<option value="${av.id}">${av.titulo}</option>`).join('');
+
+        boxExtras.classList.remove('hidden');
+      } catch (err) {
+        console.warn('Erro ao carregar dados complementares da turma:', err);
+      }
+    });
+
+    // Submissão do upload
     this.container.querySelector('#form-upload-documento')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fileInput = this.container.querySelector('#inp-arquivo-upload');
-      const file = fileInput.files[0];
+      const file = this.container.querySelector('#inp-arquivo-upload').files[0];
       if (!file) return;
 
       const btnSalvar = this.container.querySelector('#btn-salvar-upload-doc');
@@ -306,22 +344,21 @@ export class MeusTrabalhosView {
 
       try {
         const { publicUrl, nomeOriginal, tamanhoFormatado } = await DocumentoService.uploadArquivo(file);
-        const titulo = this.container.querySelector('#inp-doc-titulo').value;
-        const categoria = this.container.querySelector('#inp-doc-categoria').value;
-        const turmaId = this.container.querySelector('#inp-doc-turma').value;
-
+        
         await DocumentoService.salvarDocumento({
           tipo: 'arquivo_externo',
-          titulo,
-          categoria,
-          turmaId: turmaId || null,
+          titulo: this.container.querySelector('#inp-doc-titulo').value,
+          categoria: this.container.querySelector('#inp-doc-categoria').value,
+          turmaId: inpDocTurma.value || null,
+          alunoId: selAluno.value || null,
+          avaliacaoId: selAv.value || null,
           arquivoUrl: publicUrl,
           arquivoNome: nomeOriginal,
           arquivoTamanho: tamanhoFormatado
         });
 
         modalDoc.classList.add('hidden');
-        Toast.show('Ficheiro anexado com sucesso!', 'success');
+        Toast.show('Ficheiro associado e guardado com sucesso!', 'success');
         await this.carregarDados();
       } catch (err) {
         Toast.show('Erro no upload: ' + err.message, 'error');

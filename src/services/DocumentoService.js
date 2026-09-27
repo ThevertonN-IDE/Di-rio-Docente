@@ -10,6 +10,7 @@ export const DocumentoService = {
     categoria = 'Geral',
     turmaId = null,
     alunoId = null,
+    avaliacaoId = null,
     conteudoJson = {},
     arquivoUrl = '',
     arquivoNome = '',
@@ -26,6 +27,7 @@ export const DocumentoService = {
       categoria,
       turma_id: turmaId || null,
       aluno_id: alunoId || null,
+      avaliacao_id: avaliacaoId || null,
       conteudo_json: conteudoJson,
       arquivo_url: arquivoUrl,
       arquivo_nome: arquivoNome,
@@ -59,7 +61,7 @@ export const DocumentoService = {
 
     const { data, error } = await supabase
       .from('documentos_salvos')
-      .select('*, turmas(nome), alunos(nome)')
+      .select('*, turmas(nome), alunos(nome), avaliacoes(titulo)')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
