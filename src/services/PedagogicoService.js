@@ -215,50 +215,52 @@ export const PedagogicoService = {
 
   // 2. CONSOLIDAÇÃO DE FREQUÊNCIA PERCENTUAL
   async calcularFrequenciasTurma(turmaId, bimestre = 0, dataInicio = null, dataFim = null) {
-    // 1. Busca as aulas filtrando opcionalmente por bimestre e intervalo de datas
-    let queryAulas = supabase
-      .from('aulas')
-      .select('id, data, bimestre')
-      .eq('turma_id', turmaId);
+    try {
+      let queryAulas = supabase
+        .from('aulas')
+        .select('id, data, bimestre')
+        .eq('turma_id', turmaId);
 
-    if (bimestre && parseInt(bimestre) > 0) {
-      queryAulas = queryAulas.eq('bimestre', parseInt(bimestre));
-    }
-    if (dataInicio) {
-      queryAulas = queryAulas.gte('data', dataInicio);
-    }
-    if (dataFim) {
-      queryAulas = queryAulas.lte('data', dataFim);
-    }
-
-    const { data: aulas, error: errAulas } = await queryAulas;
-    if (errAulas) throw errAulas;
-
-    const totalAulas = aulas.length;
-    const mapaPresencas = {};
-
-    if (totalAulas === 0) {
-      return { totalAulas: 0, mapaPresencas, aulas };
-    }
-
-    const aulaIds = aulas.map(a => a.id);
-
-    // 2. Busca todas as presenças registradas nessas aulas
-    const { data: frequencias, error: errFreq } = await supabase
-      .from('frequencias')
-      .select('aluno_id, presente')
-      .in('aula_id', aulaIds);
-
-    if (errFreq) throw errFreq;
-
-    // 3. Contagem correta: incrementa PRESENÇA se presente === true (ou truthy)
-    frequencias.forEach(f => {
-      if (f.presente === true || f.presente === 'true' || f.presente === 1) {
-        mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + 1;
+      if (bimestre && parseInt(bimestre) > 0) {
+        queryAulas = queryAulas.eq('bimestre', parseInt(bimestre));
       }
-    });
+      if (dataInicio) {
+        queryAulas = queryAulas.gte('data', dataInicio);
+      }
+      if (dataFim) {
+        queryAulas = queryAulas.lte('data', dataFim);
+      }
 
-    return { totalAulas, mapaPresencas, aulas };
+      const { data: aulas, error: errAulas } = await queryAulas;
+      if (errAulas) throw errAulas;
+
+      const totalAulas = aulas?.length || 0;
+      const mapaPresencas = {};
+
+      if (totalAulas === 0) {
+        return { totalAulas: 0, mapaPresencas, aulas: [] };
+      }
+
+      const aulaIds = aulas.map(a => a.id);
+
+      const { data: frequencias, error: errFreq } = await supabase
+        .from('frequencias')
+        .select('aluno_id, presente')
+        .in('aula_id', aulaIds);
+
+      if (errFreq) throw errFreq;
+
+      (frequencias || []).forEach(f => {
+        if (f.presente === true || f.presente === 'true' || f.presente === 1) {
+          mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + 1;
+        }
+      });
+
+      return { totalAulas, mapaPresencas, aulas };
+    } catch (err) {
+      console.error('Falha ao calcular frequências:', err);
+      return { totalAulas: 0, mapaPresencas: {}, aulas: [] };
+    }
   },
 
   // 3. EXPORTAÇÃO PARA EXCEL (.XLSX) VIA SHEETJS
