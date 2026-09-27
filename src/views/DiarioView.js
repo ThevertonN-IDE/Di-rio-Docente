@@ -42,7 +42,7 @@ export class DiarioView {
 
   render() {
     const { turma, aulaAtual: aula, alunos, mapaPresenca } = this.vm;
-    const bimestreAtual = aula?.bimestre || 1;
+    const bimestreAtual = parseInt(aula?.bimestre, 10) || 1;
 
     this.container.innerHTML = `
       <div class="p-6 max-w-7xl mx-auto space-y-8">
@@ -118,12 +118,13 @@ export class DiarioView {
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 ${alunos.map(aluno => {
-                  const presenca = mapaPresenca[aluno.id] || { presente: true, observacao: '' };
-                  const isPresente = presenca.presente !== undefined ? Boolean(presenca.presente) : true;
-                  const obsDoDia = presenca.observacao || '';
+                  const registro = mapaPresenca ? mapaPresenca[aluno.id] : undefined;
+                  // Leitura estrita: se registro existir, preserva o booleano exato (mesmo que false)
+                  const isPresente = registro !== undefined ? Boolean(registro.presente) : true;
+                  const obsDoDia = registro?.observacao || '';
 
                   return `
-                    <div class="bg-white border ${isPresente ? 'border-slate-200' : 'border-rose-200 bg-rose-50/20'} rounded-xl p-3 shadow-sm flex items-center justify-between gap-3">
+                    <div id="card-aluno-${aluno.id}" class="bg-white border ${isPresente ? 'border-slate-200' : 'border-rose-200 bg-rose-50/20'} rounded-xl p-3 shadow-sm flex items-center justify-between gap-3">
                       <div class="flex items-center gap-3 min-w-0 flex-1">
                         <div class="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                           ${aluno.foto_url 
@@ -272,9 +273,9 @@ export class DiarioView {
     `).join('');
 
     container.querySelectorAll('[data-carregar-aula]').forEach(card => {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', async (e) => {
         const data = e.currentTarget.dataset.carregarAula;
-        this.vm.carregarDiario(data);
+        await this.vm.carregarDiario(data);
       });
     });
 
@@ -321,6 +322,7 @@ export class DiarioView {
 
   atualizarBotaoPresencaNoDOM(alunoId, presente) {
     const btn = document.getElementById(`btn-presenca-${alunoId}`);
+    const card = document.getElementById(`card-aluno-${alunoId}`);
     if (!btn) return;
 
     btn.className = `px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition ${
@@ -329,14 +331,23 @@ export class DiarioView {
         : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
     }`;
     btn.innerHTML = presente ? 'Presente' : 'Falta';
+
+    if (card) {
+      if (presente) {
+        card.classList.remove('border-rose-200', 'bg-rose-50/20');
+        card.classList.add('border-slate-200', 'bg-white');
+      } else {
+        card.classList.remove('border-slate-200', 'bg-white');
+        card.classList.add('border-rose-200', 'bg-rose-50/20');
+      }
+    }
   }
 
   bindEvents() {
-    this.container.querySelector('#input-data-aula')?.addEventListener('change', (e) => {
-      this.vm.carregarDiario(e.target.value);
+    this.container.querySelector('#input-data-aula')?.addEventListener('change', async (e) => {
+      await this.vm.carregarDiario(e.target.value);
     });
 
-    // Captura da digitação de observação por dia
     this.container.querySelectorAll('[data-obs-dia]').forEach(input => {
       input.addEventListener('input', (e) => {
         const alunoId = e.currentTarget.dataset.obsDia;
@@ -356,15 +367,15 @@ export class DiarioView {
       try {
         const conteudo = this.container.querySelector('#txt-conteudo-ministrado').value;
         const proximo = this.container.querySelector('#txt-proximo-conteudo').value;
-        const bimestre = this.container.querySelector('#select-bimestre-aula').value;
+        const bimestreSelect = this.container.querySelector('#select-bimestre-aula');
+        const bimestreNum = parseInt(bimestreSelect?.value, 10) || 1;
 
-        // Monta a lista persistindo a presença e a observação específica desta data
         const listaPresencas = this.vm.alunos.map(aluno => {
-          const reg = this.vm.mapaPresenca[aluno.id] || {};
+          const reg = this.vm.mapaPresenca[aluno.id];
           return {
             alunoId: aluno.id,
-            presente: reg.presente !== undefined ? Boolean(reg.presente) : true,
-            observacao: reg.observacao || ''
+            presente: reg !== undefined ? Boolean(reg.presente) : true,
+            observacao: reg?.observacao || ''
           };
         });
 
@@ -375,12 +386,16 @@ export class DiarioView {
             conteudo,
             proximoConteudo: proximo,
             observacoes: '',
-            bimestre
+            bimestre: bimestreNum
           },
           listaPresencas
         );
 
-        Toast.show('Aula, chamada e observações do dia salvas com sucesso!', 'success');
+        if (this.vm.aulaAtual) {
+          this.vm.aulaAtual.bimestre = bimestreNum;
+        }
+
+        Toast.show('Aula, chamada e bimestre salvos com sucesso!', 'success');
         await this.carregarHistorico();
       } catch (err) {
         Toast.show('Erro ao salvar aula: ' + err.message, 'error');
@@ -415,7 +430,7 @@ export class DiarioView {
 
       try {
         const novaData = this.container.querySelector('#edit-aula-data').value;
-        const novoBimestre = this.container.querySelector('#edit-aula-bimestre').value;
+        const novoBimestre = parseInt(this.container.querySelector('#edit-aula-bimestre').value, 10) || 1;
         const novoConteudo = this.container.querySelector('#edit-aula-conteudo').value;
         const novoProximo = this.container.querySelector('#edit-aula-proximo').value;
 
@@ -428,8 +443,9 @@ export class DiarioView {
         });
 
         modalEditar.classList.add('hidden');
-        Toast.show('Aula alterada com sucesso!', 'success');
+        Toast.show('Bimestre e aula alterados com sucesso!', 'success');
         await this.vm.carregarDiario(novaData);
+        await this.carregarHistorico();
       } catch (err) {
         Toast.show('Erro ao salvar: ' + err.message, 'error');
       } finally {

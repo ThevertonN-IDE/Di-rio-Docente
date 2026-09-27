@@ -13,18 +13,23 @@ export const PedagogicoService = {
     return data || [];
   },
   async atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre }) {
-    const { error } = await supabase
+    const bimestreNum = parseInt(bimestre, 10) || 1;
+
+    const { data: aulaAtualizada, error } = await supabase
       .from('aulas')
       .update({
         data,
         conteudo_ministrado: conteudo,
         proximo_conteudo: proximoConteudo,
         observacoes,
-        bimestre: parseInt(bimestre) || 1
+        bimestre: bimestreNum
       })
-      .eq('id', aulaId);
+      .eq('id', aulaId)
+      .select()
+      .single();
 
     if (error) throw error;
+    return aulaAtualizada;
   },
 
   async carregarFrequenciasAula(aulaId) {
@@ -52,8 +57,10 @@ export const PedagogicoService = {
       return {};
     }
   },
-  async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaAlunosChamada) {
-    // 1. Localiza ou cria a aula daquela data
+  async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaPresencas) {
+    const bimestreNum = parseInt(bimestre, 10) || 1;
+
+    // 1. Verifica se já existe uma aula cadastrada nesta data
     let { data: aulaExistente } = await supabase
       .from('aulas')
       .select('id')
@@ -64,6 +71,7 @@ export const PedagogicoService = {
     let aulaId = aulaExistente?.id;
 
     if (!aulaId) {
+      // Cria a nova aula com o bimestre correto
       const { data: novaAula, error: errAula } = await supabase
         .from('aulas')
         .insert({
@@ -71,8 +79,8 @@ export const PedagogicoService = {
           data,
           conteudo_ministrado: conteudo,
           proximo_conteudo: proximoConteudo,
-          observacoes,
-          bimestre: parseInt(bimestre) || 1
+          observacoes: observacoes || '',
+          bimestre: bimestreNum
         })
         .select('id')
         .single();
@@ -80,22 +88,32 @@ export const PedagogicoService = {
       if (errAula) throw errAula;
       aulaId = novaAula.id;
     } else {
-      await this.atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre });
+      // Atualiza a aula existente forçando a atualização da coluna bimestre
+      await this.atualizarAula(aulaId, {
+        data,
+        conteudo,
+        proximoConteudo,
+        observacoes,
+        bimestre: bimestreNum
+      });
     }
 
-    // 2. Grava presença e a observação específica para este dia
-    const payloadFreq = listaAlunosChamada.map(item => ({
-      aula_id: aulaId,
-      aluno_id: item.alunoId,
-      presente: Boolean(item.presente),
-      observacao: (item.observacao || '').trim()
-    }));
+    // 2. Registra as frequências
+    if (listaPresencas && listaPresencas.length > 0) {
+      const payloadFreq = listaPresencas.map(p => ({
+        aula_id: aulaId,
+        aluno_id: p.alunoId,
+        presente: p.presente,
+        observacao: (p.observacao || '').trim()
+      }));
 
-    const { error: errFreq } = await supabase
-      .from('frequencias')
-      .upsert(payloadFreq, { onConflict: 'aula_id, aluno_id' });
+      const { error: errFreq } = await supabase
+        .from('frequencias')
+        .upsert(payloadFreq, { onConflict: 'aula_id, aluno_id' });
 
-    if (errFreq) throw errFreq;
+      if (errFreq) throw errFreq;
+    }
+
     return aulaId;
   },
   async listarObservacoesDiariasAluno(turmaId, alunoId, bimestre = 0, dataInicio = null, dataFim = null) {
