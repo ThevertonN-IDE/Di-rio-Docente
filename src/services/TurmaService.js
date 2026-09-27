@@ -28,7 +28,15 @@ export const TurmaService = {
     if (error) throw error;
     return data;
   },
+  async getTurmas() {
+    const { data, error } = await supabase
+      .from('turmas')
+      .select('id, nome, disciplina, ano_letivo, media_aprovacao, tipo_media')
+      .order('nome', { ascending: true });
 
+    if (error) throw error;
+    return data || [];
+  },
   // Busca as avaliações (que definem as colunas da planilha)
   async getAvaliacoes(turmaId) {
     const { data, error } = await supabase
