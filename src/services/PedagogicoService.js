@@ -29,21 +29,28 @@ export const PedagogicoService = {
 
   async carregarFrequenciasAula(aulaId) {
     if (!aulaId) return {};
-    const { data, error } = await supabase
-      .from('frequencias')
-      .select('aluno_id, presente, observacao')
-      .eq('aula_id', aulaId);
+    try {
+      const { data, error } = await supabase
+        .from('frequencias')
+        .select('aluno_id, presente, observacao')
+        .eq('aula_id', aulaId);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    const mapa = {};
-    (data || []).forEach(f => {
-      mapa[f.aluno_id] = {
-        presente: Boolean(f.presente),
-        observacao: f.observacao || ''
-      };
-    });
-    return mapa;
+      const mapa = {};
+      (data || []).forEach(f => {
+        // Garante boolean estrito: true se for true, false se for false
+        const isPresente = f.presente === true || f.presente === 'true' || f.presente === 1 || f.presente === 't';
+        mapa[f.aluno_id] = {
+          presente: isPresente,
+          observacao: f.observacao || ''
+        };
+      });
+      return mapa;
+    } catch (err) {
+      console.warn('Erro ao carregar presencas da aula:', err);
+      return {};
+    }
   },
   async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaAlunosChamada) {
     // 1. Localiza ou cria a aula daquela data
@@ -218,9 +225,10 @@ export const PedagogicoService = {
     try {
       let queryAulas = supabase
         .from('aulas')
-        .select('id, data, bimestre')
+        .select('id, data')
         .eq('turma_id', turmaId);
 
+      // Só aplica filtro de bimestre se o campo for passado e maior que zero
       if (bimestre && parseInt(bimestre) > 0) {
         queryAulas = queryAulas.eq('bimestre', parseInt(bimestre));
       }
@@ -232,7 +240,10 @@ export const PedagogicoService = {
       }
 
       const { data: aulas, error: errAulas } = await queryAulas;
-      if (errAulas) throw errAulas;
+      if (errAulas) {
+        console.warn('Erro ao consultar aulas:', errAulas);
+        return { totalAulas: 0, mapaPresencas: {}, aulas: [] };
+      }
 
       const totalAulas = aulas?.length || 0;
       const mapaPresencas = {};
@@ -248,17 +259,23 @@ export const PedagogicoService = {
         .select('aluno_id, presente')
         .in('aula_id', aulaIds);
 
-      if (errFreq) throw errFreq;
+      if (errFreq) {
+        console.warn('Erro ao consultar frequencias:', errFreq);
+        return { totalAulas, mapaPresencas, aulas };
+      }
 
+      // CORREÇÃO DA INVERSÃO:
+      // Verifica estritamente se presente é true (booleano ou texto 'true'/'1')
       (frequencias || []).forEach(f => {
-        if (f.presente === true || f.presente === 'true' || f.presente === 1) {
+        const estaPresente = f.presente === true || f.presente === 'true' || f.presente === 1 || f.presente === 't';
+        if (estaPresente) {
           mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + 1;
         }
       });
 
       return { totalAulas, mapaPresencas, aulas };
     } catch (err) {
-      console.error('Falha ao calcular frequências:', err);
+      console.error('Falha geral ao calcular frequencias:', err);
       return { totalAulas: 0, mapaPresencas: {}, aulas: [] };
     }
   },

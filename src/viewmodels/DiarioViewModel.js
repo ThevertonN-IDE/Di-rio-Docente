@@ -17,11 +17,11 @@ export class DiarioViewModel extends Observable {
     await PedagogicoService.atualizarAula(aulaId, dados);
     await this.carregarDiario();
   }
-  atualizarObsDia(alunoId, textoObs) {
+  atualizarObsDia(alunoId, texto) {
     if (!this.mapaPresenca[alunoId]) {
       this.mapaPresenca[alunoId] = { presente: true, observacao: '' };
     }
-    this.mapaPresenca[alunoId].observacao = textoObs;
+    this.mapaPresenca[alunoId].observacao = texto;
   }
   async excluirAula(aulaId) {
     await PedagogicoService.excluirAula(aulaId);
@@ -32,17 +32,31 @@ export class DiarioViewModel extends Observable {
     this.dataSelecionada = data;
 
     try {
-      const [dadosTurma, aula, historico] = await Promise.all([
-        TurmaService.getTurmaComAlunos(this.turmaId),
-        DiarioService.getAulaPorData(this.turmaId, data),
-        BackupService.buscarHistoricoAulas(this.turmaId)
-      ]);
-
+      // 1. Carrega os dados da turma e alunos
+      const dadosTurma = await TurmaService.getTurmaComAlunos(this.turmaId);
       this.turma = dadosTurma;
-      this.alunos = dadosTurma.matriculas
+      this.alunos = (dadosTurma?.matriculas || [])
         .filter(m => m.status === 'ativo')
-        .map(m => ({ ...m.alunos, numero_chamada: m.numero_chamada }))
+        .map(m => ({
+          ...m.alunos,
+          numero_chamada: m.numero_chamada,
+          observacao_turma: m.observacao_turma
+        }))
         .sort((a, b) => (a.numero_chamada || 999) - (b.numero_chamada || 999));
+
+      // 2. Busca a aula do dia selecionado
+      let aula = null;
+      try {
+        const { data: aulaDb } = await supabase
+          .from('aulas')
+          .select('*')
+          .eq('turma_id', this.turmaId)
+          .eq('data', data)
+          .maybeSingle();
+        aula = aulaDb;
+      } catch (e) {
+        console.warn('Erro ao buscar aula do dia:', e);
+      }
 
       this.aulaAtual = aula || {
         data,
@@ -51,38 +65,37 @@ export class DiarioViewModel extends Observable {
         proximo_conteudo: ''
       };
 
-      // Carrega o registro deste dia específico (presença e observação do dia)
+      // 3. Carrega o mapa de presenças para o dia (se houver aula gravada)
       if (aula?.id) {
         this.mapaPresenca = await PedagogicoService.carregarFrequenciasAula(aula.id);
       } else {
+        // Se for um novo dia que ainda não foi salvo, todos começam como PRESENTE
         this.mapaPresenca = {};
+        this.alunos.forEach(a => {
+          this.mapaPresenca[a.id] = { presente: true, observacao: '' };
+        });
       }
 
+      // 4. Notifica a View para desenhar a tela
       this.notify('DIARIO_CARREGADO', true);
     } catch (err) {
-      this.notify('ERRO', err.message);
+      console.error('Erro ao abrir diário:', err);
+      this.notify('ERRO', 'Não foi possível carregar a chamada: ' + err.message);
     } finally {
       this.notify('CARREGANDO', false);
     }
   }
 
-  async alternarPresenca(alunoId) {
-    const atual = this.mapaPresenca[alunoId];
-    const novoStatus = !atual.presente;
-    this.mapaPresenca[alunoId].presente = novoStatus;
-
-    try {
-      await DiarioService.registrarPresenca(
-        this.aulaAtual.id,
-        alunoId,
-        novoStatus,
-        atual.justificativa
-      );
-      this.notify('PRESENCA_ALTERADA', { alunoId, presente: novoStatus });
-    } catch (err) {
-      this.mapaPresenca[alunoId].presente = !novoStatus; // Reverte se der erro
-      this.notify('ERRO', 'Erro ao salvar frequência: ' + err.message);
+  alternarPresenca(alunoId) {
+    if (!this.mapaPresenca[alunoId]) {
+      this.mapaPresenca[alunoId] = { presente: true, observacao: '' };
     }
+    // Inverte o estado da presença
+    const estadoAtual = Boolean(this.mapaPresenca[alunoId].presente);
+    const novoEstado = !estadoAtual;
+    this.mapaPresenca[alunoId].presente = novoEstado;
+
+    this.notify('PRESENCA_ALTERADA', { alunoId, presente: novoEstado });
   }
 
   async salvarResumoAula(conteudoMinistrado, proximoConteudo, observacoes) {
