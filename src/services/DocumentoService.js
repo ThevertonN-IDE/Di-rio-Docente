@@ -2,19 +2,34 @@
 import { supabase } from '../core/supabaseClient.js';
 
 export const DocumentoService = {
-  async salvarDocumento({ id = null, tipo, titulo, dadosCabecalho, questoes, duasColunas }) {
+  async salvarDocumento({
+    id = null,
+    tipo,
+    subtipo = '',
+    titulo,
+    categoria = 'Geral',
+    turmaId = null,
+    alunoId = null,
+    conteudoJson = {},
+    arquivoUrl = '',
+    arquivoNome = '',
+    arquivoTamanho = ''
+  }) {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Usuário não autenticado.');
+    if (!user) throw new Error('Utilizador não autenticado.');
 
     const payload = {
       user_id: user.id,
-      tipo, // 'prova' ou 'lista'
+      tipo,
+      subtipo,
       titulo,
-      conteudo_json: {
-        dadosCabecalho,
-        questoes,
-        duasColunas
-      },
+      categoria,
+      turma_id: turmaId || null,
+      aluno_id: alunoId || null,
+      conteudo_json: conteudoJson,
+      arquivo_url: arquivoUrl,
+      arquivo_nome: arquivoNome,
+      arquivo_tamanho: arquivoTamanho,
       updated_at: new Date().toISOString()
     };
 
@@ -44,7 +59,7 @@ export const DocumentoService = {
 
     const { data, error } = await supabase
       .from('documentos_salvos')
-      .select('*')
+      .select('*, turmas(nome), alunos(nome)')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
@@ -58,5 +73,29 @@ export const DocumentoService = {
       .delete()
       .eq('id', id);
     if (error) throw error;
+  },
+
+  async uploadArquivo(file) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Utilizador não autenticado.');
+
+    const ext = file.name.split('.').pop();
+    const filePath = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('documentos_professores')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('documentos_professores')
+      .getPublicUrl(filePath);
+
+    return {
+      publicUrl,
+      nomeOriginal: file.name,
+      tamanhoFormatado: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+    };
   }
 };

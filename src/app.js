@@ -1,6 +1,4 @@
 // src/app.js
-import { ListaViewModel } from './viewmodels/ListaViewModel.js';
-import { ListaView } from './views/ListaView.js';
 import { SyncManager } from './core/localDb.js';
 import { Router } from './core/router.js';
 import { AuthService } from './services/AuthService.js';
@@ -11,13 +9,13 @@ import { TurmaViewModel } from './viewmodels/TurmaViewModel.js';
 import { TurmaView } from './views/TurmaView.js';
 import { DiarioViewModel } from './viewmodels/DiarioViewModel.js';
 import { DiarioView } from './views/DiarioView.js';
-import { ProvaViewModel } from './viewmodels/ProvaViewModel.js';
-import { ProvaView } from './views/ProvaView.js';
 import { RelatorioView } from './views/RelatorioView.js';
 import { BackupService } from './services/BackupService.js';
 import { Toast } from './utils/ui.js';
 import { atualizarCorTema } from './utils/theme.js';
 import { MeusTrabalhosView } from './views/MeusTrabalhosView.js';
+import { EditorDocumentoA4View } from './views/EditorDocumentoA4View.js';
+import { EditorPlanoAulaView } from './views/EditorPlanoAulaView.js';
 
 // 1. Registro nativo do Service Worker PWA (Offline & Cache)
 if ('serviceWorker' in navigator) {
@@ -122,35 +120,47 @@ async function iniciarApp() {
       vm.carregarDashboard();
     },
 
-    listas: (container) => {
-      const vm = new ListaViewModel();
-      const view = new ListaView(container.id, vm);
-      view.render();
-    },
     turma: (container, turmaId) => {
       const vm = new TurmaViewModel(turmaId);
       new TurmaView(container.id, vm);
       vm.carregarDados();
     },
-    'meus-trabalhos': (container) => {
-      const view = new MeusTrabalhosView(container.id);
-      view.render();
-    },
+
     diario: (container, turmaId) => {
       const vm = new DiarioViewModel(turmaId);
       new DiarioView(container.id, vm);
       vm.carregarDiario();
     },
 
-    provas: (container) => {
-      const vm = new ProvaViewModel();
-      const view = new ProvaView(container.id, vm);
-      view.render();
-    },
-
     relatorios: (container, turmaId) => {
       const view = new RelatorioView(container.id, turmaId);
       view.carregarERenderizar();
+    },
+
+    'meus-trabalhos': (container) => {
+      const view = new MeusTrabalhosView(container.id);
+      view.render();
+    },
+
+    'estudio-a4': (container) => {
+      const view = new EditorDocumentoA4View(container.id);
+      view.render();
+    },
+
+    'planos-aula': (container) => {
+      const view = new EditorPlanoAulaView(container.id);
+      view.render();
+    },
+
+    // Redireciona links antigos (#provas e #listas) para o novo estúdio unificado
+    provas: (container) => {
+      const view = new EditorDocumentoA4View(container.id, 'prova');
+      view.render();
+    },
+
+    listas: (container) => {
+      const view = new EditorDocumentoA4View(container.id, 'lista');
+      view.render();
     },
 
     404: (container) => {
