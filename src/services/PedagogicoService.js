@@ -122,8 +122,9 @@ export const PedagogicoService = {
       .select('id, data, bimestre, conteudo_ministrado')
       .eq('turma_id', turmaId);
 
-    if (bimestre && parseInt(bimestre) > 0) {
-      queryAulas = queryAulas.eq('bimestre', parseInt(bimestre));
+    const bimNum = parseInt(bimestre, 10);
+    if (bimNum > 0) {
+      queryAulas = queryAulas.eq('bimestre', bimNum);
     }
     if (dataInicio) queryAulas = queryAulas.gte('data', dataInicio);
     if (dataFim) queryAulas = queryAulas.lte('data', dataFim);
@@ -144,7 +145,11 @@ export const PedagogicoService = {
 
     const mapaFreq = {};
     (frequencias || []).forEach(f => {
-      mapaFreq[f.aula_id] = f;
+      // Leitura estrita: apenas true real é presença
+      mapaFreq[f.aula_id] = {
+        presente: f.presente === true || f.presente === 'true' || f.presente === 1,
+        observacao: f.observacao || ''
+      };
     });
 
     return aulas
@@ -154,11 +159,11 @@ export const PedagogicoService = {
           data: aula.data,
           bimestre: aula.bimestre,
           conteudo: aula.conteudo_ministrado,
-          presente: reg ? Boolean(reg.presente) : true,
+          presente: reg ? reg.presente : true,
           observacao: reg?.observacao || ''
         };
       })
-      .filter(item => item.observacao && item.observacao.trim() !== ''); // Retorna os dias que têm apontamento
+      .filter(item => item.observacao && item.observacao.trim() !== '');
   },
   async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaPresencas) {
     // Registra ou atualiza aula com o bimestre correto

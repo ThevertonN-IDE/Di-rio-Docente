@@ -202,11 +202,14 @@ export class RelatorioView {
   renderTabelaDocumento(avs, mediaCorte) {
     const { totalAulas, mapaPresencas } = this.dadosFreq;
 
+    // 1. RELATÓRIO INDIVIDUAL DO ALUNO
     if (this.tipoRelatorio === 'individual') {
       const aluno = this.alunos.find(a => a.id === this.alunoSelecionadoId);
       if (!aluno) return '<p class="text-xs">Nenhum aluno selecionado.</p>';
 
-      const presencas = mapaPresencas[aluno.id] || 0;
+      // Presenças reais computadas no mapa (garantindo número inteiro)
+      const presencas = parseInt(mapaPresencas[aluno.id] || 0, 10);
+      // Faltas reais = Total de Aulas menos as Presenças confirmadas
       const faltas = totalAulas >= presencas ? totalAulas - presencas : 0;
       const freqPct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
       const media = this.calcularMediaAluno(aluno.id, avs);
@@ -253,20 +256,19 @@ export class RelatorioView {
           <div class="grid grid-cols-3 gap-3 text-center">
             <div class="border p-3 rounded">
               <span class="text-slate-500 block">Aulas no Período</span>
-              <strong class="text-base">${totalAulas}</strong>
+              <strong class="text-base font-mono">${totalAulas}</strong>
             </div>
             <div class="border p-3 rounded">
               <span class="text-slate-500 block">Presenças</span>
-              <strong class="text-base text-emerald-600">${presencas}</strong>
+              <strong class="text-base text-emerald-600 font-mono">${presencas}</strong>
             </div>
             <div class="border p-3 rounded">
               <span class="text-slate-500 block">Faltas</span>
-              <strong class="text-base text-rose-600">${faltas}</strong>
+              <strong class="text-base text-rose-600 font-mono">${faltas}</strong>
             </div>
           </div>
-          <p class="text-right"><strong>Frequência Global:</strong> ${freqPct}%</p>
+          <p class="text-right"><strong>Frequência Global:</strong> <span class="font-mono font-bold ${freqPct < 75 ? 'text-rose-600' : 'text-emerald-700'}">${freqPct}%</span></p>
 
-          <!-- SEÇÃO: OCORRÊNCIAS E OBSERVAÇÕES EXCLUSIVAS POR DATA -->
           <h3 class="font-bold text-sm border-b pb-1">3. Ocorrências e Observações por Aula</h3>
           ${obsDiarias.length === 0 ? `
             <p class="text-slate-400 italic py-2">Nenhuma observação registrada para este aluno no período filtrado.</p>
@@ -276,7 +278,7 @@ export class RelatorioView {
                 <tr class="bg-slate-100">
                   <th class="border border-black p-1.5 w-24">Data</th>
                   <th class="border border-black p-1.5 w-16 text-center">Bimestre</th>
-                  <th class="border border-black p-1.5 w-20 text-center">Presença</th>
+                  <th class="border border-black p-1.5 w-20 text-center">Status</th>
                   <th class="border border-black p-1.5">Observação Registrada no Dia</th>
                 </tr>
               </thead>
@@ -298,6 +300,7 @@ export class RelatorioView {
       `;
     }
 
+    // 2. ATA GERAL / NOTAS / FREQUÊNCIA
     return `
       <table class="w-full border-collapse border border-black text-xs text-center">
         <thead>
@@ -329,7 +332,7 @@ export class RelatorioView {
         </thead>
         <tbody>
           ${this.alunos.map(aluno => {
-            const presencas = mapaPresencas[aluno.id] || 0;
+            const presencas = parseInt(mapaPresencas[aluno.id] || 0, 10);
             const faltas = totalAulas >= presencas ? totalAulas - presencas : 0;
             const pct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
             const media = this.calcularMediaAluno(aluno.id, avs);
@@ -351,7 +354,7 @@ export class RelatorioView {
                 ` : ''}
 
                 ${this.tipoRelatorio !== 'notas' ? `
-                  <td class="border border-black p-1 font-mono">${presencas}</td>
+                  <td class="border border-black p-1 font-mono text-emerald-700 font-bold">${presencas}</td>
                   <td class="border border-black p-1 font-mono text-rose-700">${faltas}</td>
                   <td class="border border-black p-1 font-mono font-bold ${pct < 75 ? 'text-rose-700' : ''}">${pct}%</td>
                 ` : ''}
