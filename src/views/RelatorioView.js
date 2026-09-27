@@ -207,10 +207,8 @@ export class RelatorioView {
       const aluno = this.alunos.find(a => a.id === this.alunoSelecionadoId);
       if (!aluno) return '<p class="text-xs">Nenhum aluno selecionado.</p>';
 
-      // Presenças reais computadas no mapa (garantindo número inteiro)
-      const presencas = parseInt(mapaPresencas[aluno.id] || 0, 10);
-      // Faltas reais = Total de Aulas menos as Presenças confirmadas
-      const faltas = totalAulas >= presencas ? totalAulas - presencas : 0;
+      const presencas = Number(mapaPresencas[aluno.id] || 0);
+      const faltas = totalAulas >= presencas ? (totalAulas - presencas) : 0;
       const freqPct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
       const media = this.calcularMediaAluno(aluno.id, avs);
       const aprovado = parseFloat(media) >= mediaCorte;
@@ -332,8 +330,8 @@ export class RelatorioView {
         </thead>
         <tbody>
           ${this.alunos.map(aluno => {
-            const presencas = parseInt(mapaPresencas[aluno.id] || 0, 10);
-            const faltas = totalAulas >= presencas ? totalAulas - presencas : 0;
+            const presencas = Number(mapaPresencas[aluno.id] || 0);
+            const faltas = totalAulas >= presencas ? (totalAulas - presencas) : 0;
             const pct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
             const media = this.calcularMediaAluno(aluno.id, avs);
             const mediaNum = parseFloat(media);

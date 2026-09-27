@@ -248,31 +248,25 @@ export const PedagogicoService = {
     try {
       let queryAulas = supabase
         .from('aulas')
-        .select('id, data')
+        .select('id, data, bimestre')
         .eq('turma_id', turmaId);
 
-      // Só aplica filtro de bimestre se o campo for passado e maior que zero
-      if (bimestre && parseInt(bimestre) > 0) {
-        queryAulas = queryAulas.eq('bimestre', parseInt(bimestre));
+      const bimNum = parseInt(bimestre, 10);
+      if (bimNum > 0) {
+        queryAulas = queryAulas.eq('bimestre', bimNum);
       }
-      if (dataInicio) {
-        queryAulas = queryAulas.gte('data', dataInicio);
-      }
-      if (dataFim) {
-        queryAulas = queryAulas.lte('data', dataFim);
-      }
+      if (dataInicio) queryAulas = queryAulas.gte('data', dataInicio);
+      if (dataFim) queryAulas = queryAulas.lte('data', dataFim);
 
       const { data: aulas, error: errAulas } = await queryAulas;
-      if (errAulas) {
-        console.warn('Erro ao consultar aulas:', errAulas);
-        return { totalAulas: 0, mapaPresencas: {}, aulas: [] };
-      }
+      if (errAulas) throw errAulas;
 
       const totalAulas = aulas?.length || 0;
       const mapaPresencas = {};
+      const mapaFaltas = {};
 
       if (totalAulas === 0) {
-        return { totalAulas: 0, mapaPresencas, aulas: [] };
+        return { totalAulas: 0, mapaPresencas, mapaFaltas, aulas: [] };
       }
 
       const aulaIds = aulas.map(a => a.id);
@@ -282,24 +276,23 @@ export const PedagogicoService = {
         .select('aluno_id, presente')
         .in('aula_id', aulaIds);
 
-      if (errFreq) {
-        console.warn('Erro ao consultar frequencias:', errFreq);
-        return { totalAulas, mapaPresencas, aulas };
-      }
+      if (errFreq) throw errFreq;
 
-      // CORREÇÃO DA INVERSÃO:
-      // Verifica estritamente se presente é true (booleano ou texto 'true'/'1')
       (frequencias || []).forEach(f => {
-        const estaPresente = f.presente === true || f.presente === 'true' || f.presente === 1 || f.presente === 't';
-        if (estaPresente) {
+        // Trata conversão para boolean real independente do formato retornado
+        const ehVerdadeiro = f.presente === true || f.presente === 'true' || f.presente === 1 || f.presente === 't';
+        
+        if (ehVerdadeiro) {
           mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + 1;
+        } else {
+          mapaFaltas[f.aluno_id] = (mapaFaltas[f.aluno_id] || 0) + 1;
         }
       });
 
-      return { totalAulas, mapaPresencas, aulas };
+      return { totalAulas, mapaPresencas, mapaFaltas, aulas };
     } catch (err) {
-      console.error('Falha geral ao calcular frequencias:', err);
-      return { totalAulas: 0, mapaPresencas: {}, aulas: [] };
+      console.error('Erro ao calcular frequências:', err);
+      return { totalAulas: 0, mapaPresencas: {}, mapaFaltas: {}, aulas: [] };
     }
   },
 
