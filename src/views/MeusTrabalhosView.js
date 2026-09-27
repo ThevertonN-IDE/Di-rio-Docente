@@ -129,14 +129,23 @@ export class MeusTrabalhosView {
 
   async carregarDados() {
     try {
-      const [docs, turmas] = await Promise.all([
-        DocumentoService.listarDocumentos(),
-        TurmaService.getTurmas()
-      ]);
-      this.documentos = docs;
-      this.turmas = turmas || [];
+      // 1. Carrega os documentos salvos
+      const docs = await DocumentoService.listarDocumentos();
+      this.documentos = docs || [];
 
-      // Popula selects de turmas
+      // 2. Carrega as turmas de forma segura com salvaguarda
+      try {
+        if (TurmaService && typeof TurmaService.getTurmas === 'function') {
+          this.turmas = await TurmaService.getTurmas();
+        } else {
+          this.turmas = [];
+        }
+      } catch (errTurmas) {
+        console.warn('Não foi possível listar turmas para o filtro:', errTurmas);
+        this.turmas = [];
+      }
+
+      // 3. Atualiza os seletores de turmas nos filtros e no modal
       const selFiltroTurma = this.container.querySelector('#sel-filtro-turma');
       const inpDocTurma = this.container.querySelector('#inp-doc-turma');
       const optionsHtml = this.turmas.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
