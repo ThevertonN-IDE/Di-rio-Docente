@@ -11,19 +11,22 @@ export class RelatorioView {
     this.avaliacoes = [];
     this.notas = [];
     this.dadosFreq = { totalAulas: 0, mapaPresencas: {} };
+    this.observacoesAlunoSelecionado = [];
     this.tipoRelatorio = 'geral'; // 'geral', 'notas', 'frequencia', 'individual'
     this.alunoSelecionadoId = null;
-    this.bimestre = 0; // 0 = Ano todo
+    this.bimestre = 0; // 0 = Todos os bimestres
+    this.dataInicio = '';
+    this.dataFim = '';
   }
 
   async carregarERenderizar() {
-    this.container.innerHTML = '<div class="p-12 text-center text-slate-500 font-semibold">Carregando relatório...</div>';
+    this.container.innerHTML = '<div class="p-12 text-center text-slate-500 font-semibold">Carregando relatório pedagógico...</div>';
     try {
       const [dadosTurma, avaliacoes, notas, freq] = await Promise.all([
         TurmaService.getTurmaComAlunos(this.turmaId),
         TurmaService.getAvaliacoes(this.turmaId),
         TurmaService.getNotas(this.turmaId),
-        PedagogicoService.calcularFrequenciasTurma(this.turmaId)
+        PedagogicoService.calcularFrequenciasTurma(this.turmaId, this.bimestre, this.dataInicio, this.dataFim)
       ]);
 
       this.turma = dadosTurma;
@@ -35,13 +38,27 @@ export class RelatorioView {
       this.avaliacoes = avaliacoes;
       this.notas = notas;
       this.dadosFreq = freq;
+
       if (this.alunos.length > 0 && !this.alunoSelecionadoId) {
         this.alunoSelecionadoId = this.alunos[0].id;
       }
 
+      // Busca as ocorrências e observações diárias do aluno ativo se estiver na Ficha Individual
+      if (this.tipoRelatorio === 'individual' && this.alunoSelecionadoId && PedagogicoService.listarObservacoesDiariasAluno) {
+        this.observacoesAlunoSelecionado = await PedagogicoService.listarObservacoesDiariasAluno(
+          this.turmaId,
+          this.alunoSelecionadoId,
+          this.bimestre,
+          this.dataInicio,
+          this.dataFim
+        );
+      } else {
+        this.observacoesAlunoSelecionado = [];
+      }
+
       this.render();
     } catch (err) {
-      this.container.innerHTML = `<div class="p-8 text-rose-600 text-center">Erro ao carregar relatório: ${err.message}</div>`;
+      this.container.innerHTML = `<div class="p-8 text-rose-600 text-center">Erro: ${err.message}</div>`;
     }
   }
 
@@ -78,7 +95,7 @@ export class RelatorioView {
           <div>
             <a href="#turma/${this.turmaId}" class="text-xs font-bold text-indigo-600 hover:underline">← Voltar à Turma</a>
             <h1 class="text-xl font-bold text-slate-800 mt-1">Central de Relatórios & Atas Oficiais</h1>
-            <p class="text-xs text-slate-500">${this.turma.nome} • Nota de Aprovação: <strong>${mediaCorte}</strong></p>
+            <p class="text-xs text-slate-500">${this.turma?.nome || ''} • Média de Aprovação: <strong>${mediaCorte}</strong></p>
           </div>
 
           <!-- Seletor de Tipo de Relatório -->
@@ -102,12 +119,12 @@ export class RelatorioView {
           </div>
         </div>
 
-        <!-- Filtros Extras (Bimestre e Aluno) -->
-        <div class="no-print flex flex-wrap items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+        <!-- Filtros Extras (Bimestre, Período de Datas e Aluno) -->
+        <div class="no-print flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
           <div class="flex items-center gap-2">
-            <span class="font-bold text-slate-600">Filtrar Período:</span>
+            <span class="font-bold text-slate-600">Bimestre:</span>
             <select id="select-bimestre-rel" class="bg-white border rounded-lg p-1.5 text-xs font-semibold">
-              <option value="0" ${this.bimestre === 0 ? 'selected' : ''}>Ano Letivo Completo</option>
+              <option value="0" ${this.bimestre === 0 ? 'selected' : ''}>Todos os Bimestres</option>
               <option value="1" ${this.bimestre === 1 ? 'selected' : ''}>1º Bimestre</option>
               <option value="2" ${this.bimestre === 2 ? 'selected' : ''}>2º Bimestre</option>
               <option value="3" ${this.bimestre === 3 ? 'selected' : ''}>3º Bimestre</option>
@@ -115,9 +132,18 @@ export class RelatorioView {
             </select>
           </div>
 
+          <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+            <span class="font-bold text-slate-600">Período de:</span>
+            <input type="date" id="rel-data-inicio" value="${this.dataInicio}" class="bg-white border rounded-lg p-1 text-xs">
+            <span class="font-bold text-slate-600">até:</span>
+            <input type="date" id="rel-data-fim" value="${this.dataFim}" class="bg-white border rounded-lg p-1 text-xs">
+            <button id="btn-filtrar-periodo" class="px-2.5 py-1 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700">Filtrar</button>
+            ${(this.dataInicio || this.dataFim) ? `<button id="btn-limpar-periodo" class="text-rose-600 hover:underline font-semibold ml-1">Limpar Datas</button>` : ''}
+          </div>
+
           ${this.tipoRelatorio === 'individual' ? `
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-slate-600">Selecione o Aluno:</span>
+            <div class="flex items-center gap-2 ml-auto">
+              <span class="font-bold text-slate-600">Aluno:</span>
               <select id="select-aluno-individual" class="bg-white border rounded-lg p-1.5 text-xs font-semibold">
                 ${this.alunos.map(a => `
                   <option value="${a.id}" ${this.alunoSelecionadoId === a.id ? 'selected' : ''}>
@@ -137,12 +163,15 @@ export class RelatorioView {
             <div class="border-b-2 border-black pb-3 mb-6 text-center space-y-1">
               <h2 class="text-base font-bold uppercase tracking-wider">ATA DE RENDIMENTO ESCOLAR E FREQUÊNCIA</h2>
               <div class="grid grid-cols-3 text-xs pt-2">
-                <div><strong>Turma:</strong> ${this.turma.nome}</div>
-                <div><strong>Disciplina:</strong> ${this.turma.disciplina || 'Geral'}</div>
-                <div><strong>Ano Letivo:</strong> ${this.turma.ano_letivo}</div>
+                <div><strong>Turma:</strong> ${this.turma?.nome || ''}</div>
+                <div><strong>Disciplina:</strong> ${this.turma?.disciplina || 'Geral'}</div>
+                <div><strong>Ano Letivo:</strong> ${this.turma?.ano_letivo || ''}</div>
               </div>
               <div class="text-[11px] text-slate-600 pt-1">
-                ${this.bimestre === 0 ? 'Período: Consolidado Anual' : `Período: ${this.bimestre}º Bimestre`} • Média de Aprovação: <strong>${mediaCorte}</strong>
+                ${this.bimestre === 0 ? 'Período: Consolidado Anual' : `Período: ${this.bimestre}º Bimestre`}
+                ${this.dataInicio ? ` • De: ${this.dataInicio.split('-').reverse().join('/')}` : ''}
+                ${this.dataFim ? ` Até: ${this.dataFim.split('-').reverse().join('/')}` : ''}
+                • Média de Aprovação: <strong>${mediaCorte}</strong>
               </div>
             </div>
 
@@ -173,16 +202,16 @@ export class RelatorioView {
   renderTabelaDocumento(avs, mediaCorte) {
     const { totalAulas, mapaPresencas } = this.dadosFreq;
 
-    // 1. RELATÓRIO INDIVIDUAL DO ALUNO
     if (this.tipoRelatorio === 'individual') {
       const aluno = this.alunos.find(a => a.id === this.alunoSelecionadoId);
       if (!aluno) return '<p class="text-xs">Nenhum aluno selecionado.</p>';
 
       const presencas = mapaPresencas[aluno.id] || 0;
-      const faltas = totalAulas > presencas ? totalAulas - presencas : 0;
+      const faltas = totalAulas >= presencas ? totalAulas - presencas : 0;
       const freqPct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
       const media = this.calcularMediaAluno(aluno.id, avs);
       const aprovado = parseFloat(media) >= mediaCorte;
+      const obsDiarias = this.observacoesAlunoSelecionado || [];
 
       return `
         <div class="space-y-6 text-xs">
@@ -190,7 +219,7 @@ export class RelatorioView {
             <div><strong>Aluno(a):</strong> ${aluno.nome}</div>
             <div><strong>Nº Chamada:</strong> ${aluno.numero_chamada || '-'}</div>
             <div><strong>E-mail:</strong> ${aluno.email || 'Não informado'}</div>
-            <div><strong>Situação Acadêmica:</strong> <span class="font-bold ${aprovado ? 'text-emerald-700' : 'text-rose-700'}">${aprovado ? 'Apto / Aprovado' : 'Abaixo da Média'}</span></div>
+            <div><strong>Situação:</strong> <span class="font-bold ${aprovado ? 'text-emerald-700' : 'text-rose-700'}">${aprovado ? 'Apto / Na Média' : 'Abaixo da Média'}</span></div>
           </div>
 
           <h3 class="font-bold text-sm border-b pb-1">1. Histórico de Avaliações</h3>
@@ -214,7 +243,7 @@ export class RelatorioView {
                 `;
               }).join('')}
               <tr class="bg-slate-50 font-bold">
-                <td colspan="2" class="border border-black p-2 text-right">Média Final:</td>
+                <td colspan="2" class="border border-black p-2 text-right">Média do Período:</td>
                 <td class="border border-black p-2 font-mono text-sm">${media}</td>
               </tr>
             </tbody>
@@ -223,7 +252,7 @@ export class RelatorioView {
           <h3 class="font-bold text-sm border-b pb-1">2. Registro de Frequência</h3>
           <div class="grid grid-cols-3 gap-3 text-center">
             <div class="border p-3 rounded">
-              <span class="text-slate-500 block">Total de Aulas</span>
+              <span class="text-slate-500 block">Aulas no Período</span>
               <strong class="text-base">${totalAulas}</strong>
             </div>
             <div class="border p-3 rounded">
@@ -236,11 +265,39 @@ export class RelatorioView {
             </div>
           </div>
           <p class="text-right"><strong>Frequência Global:</strong> ${freqPct}%</p>
+
+          <!-- SEÇÃO: OCORRÊNCIAS E OBSERVAÇÕES EXCLUSIVAS POR DATA -->
+          <h3 class="font-bold text-sm border-b pb-1">3. Ocorrências e Observações por Aula</h3>
+          ${obsDiarias.length === 0 ? `
+            <p class="text-slate-400 italic py-2">Nenhuma observação registrada para este aluno no período filtrado.</p>
+          ` : `
+            <table class="w-full border-collapse border border-black text-xs text-left">
+              <thead>
+                <tr class="bg-slate-100">
+                  <th class="border border-black p-1.5 w-24">Data</th>
+                  <th class="border border-black p-1.5 w-16 text-center">Bimestre</th>
+                  <th class="border border-black p-1.5 w-20 text-center">Presença</th>
+                  <th class="border border-black p-1.5">Observação Registrada no Dia</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${obsDiarias.map(item => `
+                  <tr>
+                    <td class="border border-black p-1.5 font-mono">${item.data.split('-').reverse().join('/')}</td>
+                    <td class="border border-black p-1.5 text-center">${item.bimestre}º</td>
+                    <td class="border border-black p-1.5 text-center font-bold ${item.presente ? 'text-emerald-700' : 'text-rose-700'}">
+                      ${item.presente ? 'Presente' : 'Falta'}
+                    </td>
+                    <td class="border border-black p-1.5 font-medium text-slate-800">${item.observacao}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `}
         </div>
       `;
     }
 
-    // 2. ATA GERAL, SOMENTE NOTAS OU SOMENTE FREQUÊNCIA
     return `
       <table class="w-full border-collapse border border-black text-xs text-center">
         <thead>
@@ -273,7 +330,7 @@ export class RelatorioView {
         <tbody>
           ${this.alunos.map(aluno => {
             const presencas = mapaPresencas[aluno.id] || 0;
-            const faltas = totalAulas > presencas ? totalAulas - presencas : 0;
+            const faltas = totalAulas >= presencas ? totalAulas - presencas : 0;
             const pct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
             const media = this.calcularMediaAluno(aluno.id, avs);
             const mediaNum = parseFloat(media);
@@ -318,18 +375,30 @@ export class RelatorioView {
     this.container.querySelectorAll('[data-tipo-rel]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         this.tipoRelatorio = e.currentTarget.dataset.tipoRel;
-        this.render();
+        this.carregarERenderizar();
       });
     });
 
     this.container.querySelector('#select-bimestre-rel')?.addEventListener('change', (e) => {
       this.bimestre = parseInt(e.target.value);
-      this.render();
+      this.carregarERenderizar();
+    });
+
+    this.container.querySelector('#btn-filtrar-periodo')?.addEventListener('click', () => {
+      this.dataInicio = this.container.querySelector('#rel-data-inicio').value;
+      this.dataFim = this.container.querySelector('#rel-data-fim').value;
+      this.carregarERenderizar();
+    });
+
+    this.container.querySelector('#btn-limpar-periodo')?.addEventListener('click', () => {
+      this.dataInicio = '';
+      this.dataFim = '';
+      this.carregarERenderizar();
     });
 
     this.container.querySelector('#select-aluno-individual')?.addEventListener('change', (e) => {
       this.alunoSelecionadoId = e.target.value;
-      this.render();
+      this.carregarERenderizar();
     });
   }
 }

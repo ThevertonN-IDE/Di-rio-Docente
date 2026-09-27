@@ -42,6 +42,7 @@ export class DiarioView {
 
   render() {
     const { turma, aulaAtual: aula, alunos, mapaPresenca } = this.vm;
+    const bimestreAtual = aula?.bimestre || 1;
 
     this.container.innerHTML = `
       <div class="p-6 max-w-7xl mx-auto space-y-8">
@@ -60,7 +61,15 @@ export class DiarioView {
 
           <div class="flex items-center gap-3">
             <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <label class="text-xs font-bold text-slate-600">Data:</label>
+              <label class="text-xs font-bold text-slate-600">Bimestre:</label>
+              <select id="select-bimestre-aula" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none">
+                <option value="1" ${bimestreAtual === 1 ? 'selected' : ''}>1º Bimestre</option>
+                <option value="2" ${bimestreAtual === 2 ? 'selected' : ''}>2º Bimestre</option>
+                <option value="3" ${bimestreAtual === 3 ? 'selected' : ''}>3º Bimestre</option>
+                <option value="4" ${bimestreAtual === 4 ? 'selected' : ''}>4º Bimestre</option>
+              </select>
+
+              <label class="text-xs font-bold text-slate-600 ml-1">Data:</label>
               <input 
                 type="date" 
                 id="input-data-aula" 
@@ -76,13 +85,12 @@ export class DiarioView {
           <!-- COLUNA ESQUERDA: REGISTRO DA AULA E CHAMADA -->
           <div class="lg:col-span-2 space-y-6">
             
-            <!-- Registro Pedagógico -->
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
               <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2">
                   <h2 class="text-base font-bold text-slate-800">Conteúdo do Dia</h2>
                   <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-100">
-                    📅 ${this.vm.dataSelecionada ? this.vm.dataSelecionada.split('-').reverse().join('/') : ''}
+                    📅 ${this.vm.dataSelecionada ? this.vm.dataSelecionada.split('-').reverse().join('/') : ''} • ${bimestreAtual}º Bimestre
                   </span>
                 </div>
                 <button id="btn-salvar-aula" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition">
@@ -105,31 +113,32 @@ export class DiarioView {
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <h2 class="text-base font-bold text-slate-800">Lista de Frequência (${alunos.length})</h2>
-                <span class="text-xs text-slate-400">Clique para alternar falta/presença</span>
+                <span class="text-xs text-slate-400">Clique para alternar presença e falta</span>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 ${alunos.map(aluno => {
-                  const presenca = mapaPresenca[aluno.id] || { presente: true };
-                  const isPresente = presenca.presente;
+                  const presenca = mapaPresenca[aluno.id] || { presente: true, observacao: '' };
+                  const isPresente = presenca.presente !== undefined ? Boolean(presenca.presente) : true;
+                  const obsDoDia = presenca.observacao || '';
 
                   return `
                     <div class="bg-white border ${isPresente ? 'border-slate-200' : 'border-rose-200 bg-rose-50/20'} rounded-xl p-3 shadow-sm flex items-center justify-between gap-3">
-                      <div class="flex items-center gap-3 min-w-0">
+                      <div class="flex items-center gap-3 min-w-0 flex-1">
                         <div class="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                           ${aluno.foto_url 
                             ? `<img src="${aluno.foto_url}" alt="${aluno.nome}" class="w-full h-full object-cover">`
                             : `<div class="w-full h-full flex items-center justify-center font-bold text-slate-400 text-xs">${aluno.nome.charAt(0)}</div>`
                           }
                         </div>
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                           <p class="text-xs font-bold text-slate-800 truncate">${aluno.numero_chamada ? aluno.numero_chamada + '. ' : ''}${aluno.nome}</p>
                           <input 
                             type="text" 
-                            data-obs-aluno="${aluno.id}"
-                            value="${aluno.observacao_turma || ''}" 
-                            placeholder="Observação individual..." 
-                            class="text-[11px] bg-transparent border-0 border-b border-transparent focus:border-indigo-400 p-0 text-slate-500 focus:outline-none w-full"
+                            data-obs-dia="${aluno.id}"
+                            value="${obsDoDia}" 
+                            placeholder="Observação deste dia..." 
+                            class="text-[11px] bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded px-2 py-0.5 text-slate-600 focus:outline-none focus:border-indigo-400 w-full transition mt-1"
                           />
                         </div>
                       </div>
@@ -183,9 +192,20 @@ export class DiarioView {
             <button id="btn-fechar-modal-editar-aula" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
           </div>
           <form id="form-editar-aula" class="space-y-3 text-sm">
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data da Aula</label>
-              <input type="date" id="edit-aula-data" required class="w-full border rounded-lg p-2 text-xs">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data da Aula</label>
+                <input type="date" id="edit-aula-data" required class="w-full border rounded-lg p-2 text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Bimestre</label>
+                <select id="edit-aula-bimestre" class="w-full border rounded-lg p-2 text-xs bg-white">
+                  <option value="1">1º Bimestre</option>
+                  <option value="2">2º Bimestre</option>
+                  <option value="3">3º Bimestre</option>
+                  <option value="4">4º Bimestre</option>
+                </select>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Conteúdo Ministrado</label>
@@ -231,7 +251,7 @@ export class DiarioView {
       }">
         <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1">
           <span class="flex items-center gap-1.5">
-            📅 ${aula.data.split('-').reverse().join('/')}
+            📅 ${aula.data.split('-').reverse().join('/')} • ${aula.bimestre || 1}º Bim
             ${aula.data === this.vm.dataSelecionada ? '<span class="text-indigo-600 font-extrabold text-[10px] bg-indigo-100 px-1.5 py-0.2 rounded">ABERTA</span>' : ''}
           </span>
           <div class="flex items-center gap-1">
@@ -251,7 +271,6 @@ export class DiarioView {
       </div>
     `).join('');
 
-    // Clique no card para abrir o dia
     container.querySelectorAll('[data-carregar-aula]').forEach(card => {
       card.addEventListener('click', (e) => {
         const data = e.currentTarget.dataset.carregarAula;
@@ -259,7 +278,6 @@ export class DiarioView {
       });
     });
 
-    // Clique no botão de editar aula
     container.querySelectorAll('[data-btn-editar-aula]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -269,6 +287,7 @@ export class DiarioView {
 
         this.aulaEmEdicao = aula;
         this.container.querySelector('#edit-aula-data').value = aula.data;
+        this.container.querySelector('#edit-aula-bimestre').value = aula.bimestre || 1;
         this.container.querySelector('#edit-aula-conteudo').value = aula.conteudo_ministrado || '';
         this.container.querySelector('#edit-aula-proximo').value = aula.proximo_conteudo || '';
 
@@ -276,7 +295,6 @@ export class DiarioView {
       });
     });
 
-    // Clique no botão de excluir aula
     container.querySelectorAll('[data-btn-excluir-aula]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -285,7 +303,7 @@ export class DiarioView {
 
         const confirmado = await customConfirm(
           `Excluir aula de ${dataFormatada}?`,
-          'O registro pedagógico e as frequências desta data serão removidos permanentemente.'
+          'O registro da aula e a chamada correspondente serão removidos.'
         );
 
         if (confirmado) {
@@ -318,10 +336,58 @@ export class DiarioView {
       this.vm.carregarDiario(e.target.value);
     });
 
-    this.container.querySelector('#btn-salvar-aula')?.addEventListener('click', () => {
-      const conteudo = this.container.querySelector('#txt-conteudo-ministrado').value;
-      const proximo = this.container.querySelector('#txt-proximo-conteudo').value;
-      this.vm.salvarResumoAula(conteudo, proximo, '');
+    // Captura da digitação de observação por dia
+    this.container.querySelectorAll('[data-obs-dia]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const alunoId = e.currentTarget.dataset.obsDia;
+        if (this.vm.atualizarObsDia) {
+          this.vm.atualizarObsDia(alunoId, e.target.value);
+        } else if (this.vm.mapaPresenca[alunoId]) {
+          this.vm.mapaPresenca[alunoId].observacao = e.target.value;
+        }
+      });
+    });
+
+    this.container.querySelector('#btn-salvar-aula')?.addEventListener('click', async () => {
+      const btn = this.container.querySelector('#btn-salvar-aula');
+      btn.disabled = true;
+      btn.innerText = 'Salvando...';
+
+      try {
+        const conteudo = this.container.querySelector('#txt-conteudo-ministrado').value;
+        const proximo = this.container.querySelector('#txt-proximo-conteudo').value;
+        const bimestre = this.container.querySelector('#select-bimestre-aula').value;
+
+        // Monta a lista persistindo a presença e a observação específica desta data
+        const listaPresencas = this.vm.alunos.map(aluno => {
+          const reg = this.vm.mapaPresenca[aluno.id] || {};
+          return {
+            alunoId: aluno.id,
+            presente: reg.presente !== undefined ? Boolean(reg.presente) : true,
+            observacao: reg.observacao || ''
+          };
+        });
+
+        await PedagogicoService.registrarAulaComChamada(
+          this.vm.turmaId,
+          {
+            data: this.vm.dataSelecionada,
+            conteudo,
+            proximoConteudo: proximo,
+            observacoes: '',
+            bimestre
+          },
+          listaPresencas
+        );
+
+        Toast.show('Aula, chamada e observações do dia salvas com sucesso!', 'success');
+        await this.carregarHistorico();
+      } catch (err) {
+        Toast.show('Erro ao salvar aula: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Salvar Registro';
+      }
     });
 
     this.container.querySelectorAll('[data-toggle-presenca]').forEach(btn => {
@@ -331,18 +397,10 @@ export class DiarioView {
       });
     });
 
-    this.container.querySelectorAll('[data-obs-aluno]').forEach(input => {
-      input.addEventListener('blur', (e) => {
-        const alunoId = e.currentTarget.dataset.obsAluno;
-        this.vm.salvarObsIndividual(alunoId, e.target.value);
-      });
-    });
-
     this.container.querySelector('#input-busca-historico')?.addEventListener('input', (e) => {
       this.buscarDebounced(e.target.value);
     });
 
-    // Modais de edição de aula
     const modalEditar = this.container.querySelector('#modal-editar-aula');
     this.container.querySelector('#btn-fechar-modal-editar-aula')?.addEventListener('click', () => modalEditar.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-modal-editar-aula')?.addEventListener('click', () => modalEditar.classList.add('hidden'));
@@ -357,11 +415,13 @@ export class DiarioView {
 
       try {
         const novaData = this.container.querySelector('#edit-aula-data').value;
+        const novoBimestre = this.container.querySelector('#edit-aula-bimestre').value;
         const novoConteudo = this.container.querySelector('#edit-aula-conteudo').value;
         const novoProximo = this.container.querySelector('#edit-aula-proximo').value;
 
         await PedagogicoService.atualizarAula(this.aulaEmEdicao.id, {
           data: novaData,
+          bimestre: novoBimestre,
           conteudo: novoConteudo,
           proximoConteudo: novoProximo,
           observacoes: this.aulaEmEdicao.observacoes || ''
@@ -371,7 +431,7 @@ export class DiarioView {
         Toast.show('Aula alterada com sucesso!', 'success');
         await this.vm.carregarDiario(novaData);
       } catch (err) {
-        Toast.show('Erro ao salvar alteração: ' + err.message, 'error');
+        Toast.show('Erro ao salvar: ' + err.message, 'error');
       } finally {
         btnSalvar.disabled = false;
         btnSalvar.innerText = 'Salvar Alterações';

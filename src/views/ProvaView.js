@@ -1,5 +1,6 @@
 // src/views/ProvaView.js
 import { PedagogicoService } from '../services/PedagogicoService.js';
+import { DocumentoService } from '../services/DocumentoService.js';
 import { Toast } from '../utils/ui.js';
 
 export class ProvaView {
@@ -7,6 +8,26 @@ export class ProvaView {
     this.container = document.getElementById(containerId);
     this.vm = viewModel;
     this.questoesBanco = [];
+    this.documentoAtivoId = null;
+
+    // Carrega rascunho salvo vindo de "Meus Trabalhos" se existir
+    const rascunho = sessionStorage.getItem('DOCUMENTO_ATIVO');
+    if (rascunho) {
+      try {
+        const doc = JSON.parse(rascunho);
+        if (doc.tipo === 'prova') {
+          this.documentoAtivoId = doc.id;
+          if (doc.conteudo_json?.dadosCabecalho) this.vm.dadosCabecalho = doc.conteudo_json.dadosCabecalho;
+          if (doc.conteudo_json?.questoes) this.vm.questoes = doc.conteudo_json.questoes;
+          if (doc.conteudo_json?.duasColunas !== undefined) this.vm.duasColunas = doc.conteudo_json.duasColunas;
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar documento salvo:', e);
+      } finally {
+        sessionStorage.removeItem('DOCUMENTO_ATIVO');
+      }
+    }
+
     this.setupListeners();
   }
 
@@ -30,9 +51,14 @@ export class ProvaView {
               <h2 class="text-xl font-bold text-slate-800">Editor de Provas A4</h2>
               <p class="text-xs text-slate-500">Diagramação com fórmulas, imagens e logotipo</p>
             </div>
-            <button id="btn-imprimir" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow-sm transition flex items-center gap-2">
-              🖨️ Imprimir / Salvar PDF
-            </button>
+            <div class="flex items-center gap-2">
+              <button id="btn-salvar-trabalho-prova" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                💾 Salvar Trabalho
+              </button>
+              <button id="btn-imprimir" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                🖨️ Imprimir / PDF
+              </button>
+            </div>
           </div>
 
           <!-- Configurações do Cabeçalho & Logo -->
@@ -83,17 +109,13 @@ export class ProvaView {
               </div>
             </div>
 
-            <div id="editor-questoes-container" class="space-y-4">
-              <!-- Renderizado via JS -->
-            </div>
+            <div id="editor-questoes-container" class="space-y-4"></div>
           </div>
         </div>
 
         <!-- FOLHA A4 DE PREVIEW E IMPRESSÃO REAL -->
         <div class="lg:w-7/12 flex justify-center bg-slate-200/60 p-4 rounded-2xl overflow-x-auto">
-          <div id="folha-a4-preview" class="sheet-a4 bg-white text-black shadow-2xl p-8" style="width: 210mm; min-height: 297mm; font-family: 'Times New Roman', serif;">
-            <!-- Conteúdo montado em atualizarPreview() -->
-          </div>
+          <div id="folha-a4-preview" class="sheet-a4 bg-white text-black shadow-2xl p-8" style="width: 210mm; min-height: 297mm; font-family: 'Times New Roman', serif;"></div>
         </div>
 
       </div>
@@ -132,7 +154,6 @@ export class ProvaView {
 
         <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-lg p-2 text-xs bg-white font-mono" placeholder="Enunciado... Use $fórmula$ ou $$bloco$$">${q.enunciado}</textarea>
 
-        <!-- Anexo de Imagem Ilustrativa -->
         <div class="flex items-center justify-between pt-1 border-t border-slate-200 text-xs">
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-600">🖼️ Imagem:</span>
@@ -159,7 +180,6 @@ export class ProvaView {
     const duasColunas = this.vm.duasColunas;
 
     preview.innerHTML = `
-      <!-- Cabeçalho Oficial Escolar A4 -->
       <div class="cabecalho-avaliacao border-2 border-black p-4 mb-6 text-sm" style="font-family: Arial, sans-serif;">
         <div class="flex items-center justify-between gap-4 pb-2 border-b border-black">
           ${cab.logoUrl ? `<img src="${cab.logoUrl}" class="max-h-14 max-w-[90px] object-contain shrink-0">` : ''}
@@ -181,22 +201,18 @@ export class ProvaView {
         </div>
       </div>
 
-      <!-- Título Centralizado -->
       <div class="text-center font-bold uppercase tracking-wider text-sm mb-6 underline">
         ${cab.tipoDocumento}
       </div>
 
-      <!-- Bloco de Questões -->
       <div class="${duasColunas ? 'columns-print-2' : 'space-y-6'}" style="font-size: 11pt; text-align: justify;">
         ${questoes.map(q => `
           <div class="quest-block mb-6 break-inside-avoid" style="page-break-inside: avoid;">
             <p class="leading-relaxed">
               <strong>${q.numero}.</strong> 
-              <span class="text-xs font-sans text-slate-600">[${q.pontuacao} pts]</span> 
-              ${q.enunciadoHtml}
+              <span class="text-xs font-sans text-slate-600">[${q.pontuacao} pts]</span>${q.enunciadoHtml}
             </p>
 
-            <!-- Imagem da Questão (caso inserida) -->
             ${q.imagemUrl ? `
               <div class="my-3 flex justify-center">
                 <img src="${q.imagemUrl}" style="max-height: 5cm; max-width: 90%; object-fit: contain;" class="rounded border border-slate-300">
@@ -258,6 +274,30 @@ export class ProvaView {
   bindEvents() {
     this.container.querySelector('#btn-imprimir')?.addEventListener('click', () => window.print());
 
+    // Salvar prova no banco do professor
+    this.container.querySelector('#btn-salvar-trabalho-prova')?.addEventListener('click', async () => {
+      const btn = this.container.querySelector('#btn-salvar-trabalho-prova');
+      btn.disabled = true;
+      btn.innerText = 'Salvando...';
+      try {
+        const docSalvo = await DocumentoService.salvarDocumento({
+          id: this.documentoAtivoId,
+          tipo: 'prova',
+          titulo: `${this.vm.dadosCabecalho.tipoDocumento} - ${this.vm.dadosCabecalho.disciplina}`,
+          dadosCabecalho: this.vm.dadosCabecalho,
+          questoes: this.vm.questoes,
+          duasColunas: this.vm.duasColunas
+        });
+        this.documentoAtivoId = docSalvo.id;
+        Toast.show('Prova salva na sua biblioteca com sucesso!', 'success');
+      } catch (err) {
+        Toast.show('Erro ao salvar trabalho: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '💾 Salvar Trabalho';
+      }
+    });
+
     this.container.querySelector('#btn-col-1')?.addEventListener('click', () => {
       this.vm.setColuna(false);
       this.render();
@@ -267,7 +307,6 @@ export class ProvaView {
       this.render();
     });
 
-    // Upload do logotipo da escola
     const inpLogo = this.container.querySelector('#inp-logo-prova');
     inpLogo?.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -292,7 +331,6 @@ export class ProvaView {
       this.atualizarPreview();
     });
 
-    // Inputs do cabeçalho
     ['escola', 'disciplina', 'professor', 'turma', 'tipo', 'valor'].forEach(campo => {
       const el = this.container.querySelector(`#cfg-${campo}`);
       el?.addEventListener('input', (e) => {
@@ -300,7 +338,6 @@ export class ProvaView {
       });
     });
 
-    // Inputs de texto e pontuação das questões
     this.container.addEventListener('input', (e) => {
       if (e.target.dataset.qTexto !== undefined) {
         const idx = parseInt(e.target.dataset.qTexto);
@@ -311,7 +348,6 @@ export class ProvaView {
       }
     });
 
-    // Upload de imagem da questão individual
     this.container.addEventListener('change', (e) => {
       if (e.target.dataset.uploadImg !== undefined) {
         const idx = parseInt(e.target.dataset.uploadImg);
@@ -328,7 +364,6 @@ export class ProvaView {
       }
     });
 
-    // Exclusão de questão e remoção de imagem
     this.container.addEventListener('click', (e) => {
       if (e.target.dataset.removeImg !== undefined) {
         const idx = parseInt(e.target.dataset.removeImg);
@@ -343,7 +378,6 @@ export class ProvaView {
       }
     });
 
-    // Modal Banco de Questões
     const modal = this.container.querySelector('#modal-banco-prova');
     this.container.querySelector('#btn-abrir-banco-prova')?.addEventListener('click', () => {
       modal.classList.remove('hidden');

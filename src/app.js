@@ -17,6 +17,7 @@ import { RelatorioView } from './views/RelatorioView.js';
 import { BackupService } from './services/BackupService.js';
 import { Toast } from './utils/ui.js';
 import { atualizarCorTema } from './utils/theme.js';
+import { MeusTrabalhosView } from './views/MeusTrabalhosView.js';
 
 // 1. Registro nativo do Service Worker PWA (Offline & Cache)
 if ('serviceWorker' in navigator) {
@@ -38,7 +39,7 @@ async function iniciarApp() {
   if (!usuario) {
     atualizarCorTema('login');
     if (header) header.classList.add('hidden');
-    
+
     const loginView = new LoginView('app', () => {
       window.location.hash = '#dashboard';
       window.location.reload();
@@ -122,16 +123,19 @@ async function iniciarApp() {
     },
 
     listas: (container) => {
-    const vm = new ListaViewModel();
-    const view = new ListaView(container.id, vm);
-    view.render();
+      const vm = new ListaViewModel();
+      const view = new ListaView(container.id, vm);
+      view.render();
     },
     turma: (container, turmaId) => {
       const vm = new TurmaViewModel(turmaId);
       new TurmaView(container.id, vm);
       vm.carregarDados();
     },
-
+    'meus-trabalhos': (container) => {
+      const view = new MeusTrabalhosView(container.id);
+      view.render();
+    },
     diario: (container, turmaId) => {
       const vm = new DiarioViewModel(turmaId);
       new DiarioView(container.id, vm);

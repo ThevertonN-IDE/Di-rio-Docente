@@ -12,17 +12,173 @@ export const PedagogicoService = {
     if (error) throw error;
     return data || [];
   },
-  async atualizarAula(aulaId, { data, conteudo, observacoes }) {
+  async atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre }) {
     const { error } = await supabase
       .from('aulas')
       .update({
         data,
-        conteudo,
-        observacoes
+        conteudo_ministrado: conteudo,
+        proximo_conteudo: proximoConteudo,
+        observacoes,
+        bimestre: parseInt(bimestre) || 1
       })
       .eq('id', aulaId);
 
     if (error) throw error;
+  },
+
+  async carregarFrequenciasAula(aulaId) {
+    if (!aulaId) return {};
+    const { data, error } = await supabase
+      .from('frequencias')
+      .select('aluno_id, presente, observacao')
+      .eq('aula_id', aulaId);
+
+    if (error) throw error;
+
+    const mapa = {};
+    (data || []).forEach(f => {
+      mapa[f.aluno_id] = {
+        presente: Boolean(f.presente),
+        observacao: f.observacao || ''
+      };
+    });
+    return mapa;
+  },
+  async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaAlunosChamada) {
+    // 1. Localiza ou cria a aula daquela data
+    let { data: aulaExistente } = await supabase
+      .from('aulas')
+      .select('id')
+      .eq('turma_id', turmaId)
+      .eq('data', data)
+      .maybeSingle();
+
+    let aulaId = aulaExistente?.id;
+
+    if (!aulaId) {
+      const { data: novaAula, error: errAula } = await supabase
+        .from('aulas')
+        .insert({
+          turma_id: turmaId,
+          data,
+          conteudo_ministrado: conteudo,
+          proximo_conteudo: proximoConteudo,
+          observacoes,
+          bimestre: parseInt(bimestre) || 1
+        })
+        .select('id')
+        .single();
+
+      if (errAula) throw errAula;
+      aulaId = novaAula.id;
+    } else {
+      await this.atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre });
+    }
+
+    // 2. Grava presença e a observação específica para este dia
+    const payloadFreq = listaAlunosChamada.map(item => ({
+      aula_id: aulaId,
+      aluno_id: item.alunoId,
+      presente: Boolean(item.presente),
+      observacao: (item.observacao || '').trim()
+    }));
+
+    const { error: errFreq } = await supabase
+      .from('frequencias')
+      .upsert(payloadFreq, { onConflict: 'aula_id, aluno_id' });
+
+    if (errFreq) throw errFreq;
+    return aulaId;
+  },
+  async listarObservacoesDiariasAluno(turmaId, alunoId, bimestre = 0, dataInicio = null, dataFim = null) {
+    let queryAulas = supabase
+      .from('aulas')
+      .select('id, data, bimestre, conteudo_ministrado')
+      .eq('turma_id', turmaId);
+
+    if (bimestre && parseInt(bimestre) > 0) {
+      queryAulas = queryAulas.eq('bimestre', parseInt(bimestre));
+    }
+    if (dataInicio) queryAulas = queryAulas.gte('data', dataInicio);
+    if (dataFim) queryAulas = queryAulas.lte('data', dataFim);
+
+    const { data: aulas, error: errAulas } = await queryAulas.order('data', { ascending: true });
+    if (errAulas) throw errAulas;
+
+    if (!aulas || aulas.length === 0) return [];
+
+    const aulaIds = aulas.map(a => a.id);
+    const { data: frequencias, error: errFreq } = await supabase
+      .from('frequencias')
+      .select('aula_id, presente, observacao')
+      .eq('aluno_id', alunoId)
+      .in('aula_id', aulaIds);
+
+    if (errFreq) throw errFreq;
+
+    const mapaFreq = {};
+    (frequencias || []).forEach(f => {
+      mapaFreq[f.aula_id] = f;
+    });
+
+    return aulas
+      .map(aula => {
+        const reg = mapaFreq[aula.id];
+        return {
+          data: aula.data,
+          bimestre: aula.bimestre,
+          conteudo: aula.conteudo_ministrado,
+          presente: reg ? Boolean(reg.presente) : true,
+          observacao: reg?.observacao || ''
+        };
+      })
+      .filter(item => item.observacao && item.observacao.trim() !== ''); // Retorna os dias que têm apontamento
+  },
+  async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaPresencas) {
+    // Registra ou atualiza aula com o bimestre correto
+    let { data: aulaExistente } = await supabase
+      .from('aulas')
+      .select('id')
+      .eq('turma_id', turmaId)
+      .eq('data', data)
+      .maybeSingle();
+
+    let aulaId = aulaExistente?.id;
+
+    if (!aulaId) {
+      const { data: novaAula, error: errAula } = await supabase
+        .from('aulas')
+        .insert({
+          turma_id: turmaId,
+          data,
+          conteudo_ministrado: conteudo,
+          proximo_conteudo: proximoConteudo,
+          observacoes,
+          bimestre: parseInt(bimestre) || 1
+        })
+        .select('id')
+        .single();
+
+      if (errAula) throw errAula;
+      aulaId = novaAula.id;
+    } else {
+      await this.atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre });
+    }
+
+    // Salva a lista de frequência
+    const payloadFreq = listaPresencas.map(p => ({
+      aula_id: aulaId,
+      aluno_id: p.alunoId,
+      presente: Boolean(p.presente) // Garante boolean estrito true/false
+    }));
+
+    const { error: errFreq } = await supabase
+      .from('frequencias')
+      .upsert(payloadFreq, { onConflict: 'aula_id, aluno_id' });
+
+    if (errFreq) throw errFreq;
+    return aulaId;
   },
 
   async excluirAula(aulaId) {
@@ -58,35 +214,51 @@ export const PedagogicoService = {
   },
 
   // 2. CONSOLIDAÇÃO DE FREQUÊNCIA PERCENTUAL
-  async calcularFrequenciasTurma(turmaId) {
-    // Total de aulas registradas na turma
-    const { data: aulas, error: erroAulas } = await supabase
+  async calcularFrequenciasTurma(turmaId, bimestre = 0, dataInicio = null, dataFim = null) {
+    // 1. Busca as aulas filtrando opcionalmente por bimestre e intervalo de datas
+    let queryAulas = supabase
       .from('aulas')
-      .select('id')
+      .select('id, data, bimestre')
       .eq('turma_id', turmaId);
 
-    if (erroAulas) throw erroAulas;
-    const totalAulas = aulas ? aulas.length : 0;
-
-    // Presenças registradas nas aulas dessa turma
-    const aulaIds = aulas.map(a => a.id);
-    let mapaPresencas = {}; // { aluno_id: contagemPresencas }
-
-    if (aulaIds.length > 0) {
-      const { data: frequencias, error: erroFreq } = await supabase
-        .from('frequencias')
-        .select('aluno_id, presente')
-        .in('aula_id', aulaIds)
-        .eq('presente', true);
-
-      if (erroFreq) throw erroFreq;
-
-      frequencias.forEach(f => {
-        mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + 1;
-      });
+    if (bimestre && parseInt(bimestre) > 0) {
+      queryAulas = queryAulas.eq('bimestre', parseInt(bimestre));
+    }
+    if (dataInicio) {
+      queryAulas = queryAulas.gte('data', dataInicio);
+    }
+    if (dataFim) {
+      queryAulas = queryAulas.lte('data', dataFim);
     }
 
-    return { totalAulas, mapaPresencas };
+    const { data: aulas, error: errAulas } = await queryAulas;
+    if (errAulas) throw errAulas;
+
+    const totalAulas = aulas.length;
+    const mapaPresencas = {};
+
+    if (totalAulas === 0) {
+      return { totalAulas: 0, mapaPresencas, aulas };
+    }
+
+    const aulaIds = aulas.map(a => a.id);
+
+    // 2. Busca todas as presenças registradas nessas aulas
+    const { data: frequencias, error: errFreq } = await supabase
+      .from('frequencias')
+      .select('aluno_id, presente')
+      .in('aula_id', aulaIds);
+
+    if (errFreq) throw errFreq;
+
+    // 3. Contagem correta: incrementa PRESENÇA se presente === true (ou truthy)
+    frequencias.forEach(f => {
+      if (f.presente === true || f.presente === 'true' || f.presente === 1) {
+        mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + 1;
+      }
+    });
+
+    return { totalAulas, mapaPresencas, aulas };
   },
 
   // 3. EXPORTAÇÃO PARA EXCEL (.XLSX) VIA SHEETJS

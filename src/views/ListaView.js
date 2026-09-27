@@ -1,5 +1,6 @@
 // src/views/ListaView.js
 import { PedagogicoService } from '../services/PedagogicoService.js';
+import { DocumentoService } from '../services/DocumentoService.js';
 import { Toast } from '../utils/ui.js';
 
 export class ListaView {
@@ -7,6 +8,26 @@ export class ListaView {
     this.container = document.getElementById(containerId);
     this.vm = viewModel;
     this.questoesBanco = [];
+    this.documentoAtivoId = null;
+
+    // Recupera lista do painel "Meus Trabalhos" se existir
+    const rascunho = sessionStorage.getItem('DOCUMENTO_ATIVO');
+    if (rascunho) {
+      try {
+        const doc = JSON.parse(rascunho);
+        if (doc.tipo === 'lista') {
+          this.documentoAtivoId = doc.id;
+          if (doc.conteudo_json?.dadosCabecalho) this.vm.dadosCabecalho = doc.conteudo_json.dadosCabecalho;
+          if (doc.conteudo_json?.questoes) this.vm.questoes = doc.conteudo_json.questoes;
+          if (doc.conteudo_json?.duasColunas !== undefined) this.vm.duasColunas = doc.conteudo_json.duasColunas;
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar lista salva:', e);
+      } finally {
+        sessionStorage.removeItem('DOCUMENTO_ATIVO');
+      }
+    }
+
     this.setupListeners();
   }
 
@@ -29,16 +50,20 @@ export class ListaView {
               <h2 class="text-xl font-bold text-slate-800">Gerador de Listas de Exercícios</h2>
               <p class="text-xs text-slate-500">Formato A4 com espaçamento para resoluções e ilustrações</p>
             </div>
-            <button id="btn-imprimir-lista" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow-sm transition flex items-center gap-2">
-              🖨️ Imprimir / PDF
-            </button>
+            <div class="flex items-center gap-2">
+              <button id="btn-salvar-trabalho-lista" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                💾 Salvar Trabalho
+              </button>
+              <button id="btn-imprimir-lista" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+                🖨️ Imprimir / PDF
+              </button>
+            </div>
           </div>
 
           <!-- Logo & Cabeçalho -->
           <div class="space-y-3">
             <h3 class="text-xs font-bold text-slate-500 uppercase">Cabeçalho & Identificação</h3>
             
-            <!-- Logo da Escola -->
             <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <div id="box-preview-logo" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                 ${this.vm.dadosCabecalho.logoUrl 
@@ -91,17 +116,13 @@ export class ListaView {
               </div>
             </div>
 
-            <div id="editor-questoes-container" class="space-y-4">
-              <!-- Renderizado via JS -->
-            </div>
+            <div id="editor-questoes-container" class="space-y-4"></div>
           </div>
         </div>
 
         <!-- FOLHA A4 DE PREVIEW E IMPRESSÃO -->
         <div class="lg:w-7/12 flex justify-center bg-slate-200/60 p-4 rounded-2xl overflow-x-auto">
-          <div id="folha-a4-preview" class="sheet-a4 bg-white text-black shadow-2xl p-8" style="width: 210mm; min-height: 297mm; font-family: 'Times New Roman', serif;">
-            <!-- Conteúdo montado em atualizarPreview() -->
-          </div>
+          <div id="folha-a4-preview" class="sheet-a4 bg-white text-black shadow-2xl p-8" style="width: 210mm; min-height: 297mm; font-family: 'Times New Roman', serif;"></div>
         </div>
 
       </div>
@@ -143,7 +164,6 @@ export class ListaView {
 
         <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-lg p-2 text-xs bg-white font-mono" placeholder="Enunciado com LaTeX ($formula$ ou $$bloco$$)...">${q.enunciado}</textarea>
 
-        <!-- Controle de Imagem Ilustrativa -->
         <div class="flex items-center justify-between pt-1 border-t border-slate-200 text-xs">
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-600">🖼️ Imagem:</span>
@@ -170,7 +190,6 @@ export class ListaView {
     const duasColunas = this.vm.duasColunas;
 
     preview.innerHTML = `
-      <!-- Cabeçalho Oficial Escolar A4 -->
       <div class="cabecalho-avaliacao border-2 border-black p-4 mb-6 text-sm" style="font-family: Arial, sans-serif;">
         <div class="flex items-center justify-between gap-4 pb-2 border-b border-black">
           ${cab.logoUrl ? `<img src="${cab.logoUrl}" class="max-h-14 max-w-[90px] object-contain shrink-0">` : ''}
@@ -191,15 +210,12 @@ export class ListaView {
         </div>
       </div>
 
-      <!-- Título da Lista -->
       <div class="text-center font-bold uppercase tracking-wider text-sm mb-6 underline">
         ${cab.tipoDocumento}
       </div>
 
-      <!-- Bloco das Questões -->
       <div class="${duasColunas ? 'columns-print-2' : 'space-y-4'}" style="font-size: 11pt; text-align: justify;">
         ${questoes.map(q => {
-          // Gera as linhas pontilhadas de resolução de acordo com o espaçamento escolhido
           let linhasHtml = '';
           for (let i = 0; i < q.linhasEspaco; i++) {
             linhasHtml += `<div class="w-full border-b border-dotted border-slate-400 h-6"></div>`;
@@ -208,18 +224,15 @@ export class ListaView {
           return `
             <div class="quest-block mb-6 break-inside-avoid" style="page-break-inside: avoid;">
               <p class="leading-relaxed">
-                <strong>${q.numero}.</strong> 
-                ${q.enunciadoHtml}
+                <strong>${q.numero}.</strong>${q.enunciadoHtml}
               </p>
 
-              <!-- Imagem da Questão (caso exista) -->
               ${q.imagemUrl ? `
                 <div class="my-3 flex justify-center">
                   <img src="${q.imagemUrl}" style="max-height: 4.5cm; max-width: 90%; object-fit: contain;" class="rounded border border-slate-300">
                 </div>
               ` : ''}
 
-              <!-- Espaço p/ Resolução -->
               ${linhasHtml ? `<div class="mt-2 space-y-1">${linhasHtml}</div>` : ''}
             </div>
           `;
@@ -274,10 +287,32 @@ export class ListaView {
   }
 
   bindEvents() {
-    // Impressão
     this.container.querySelector('#btn-imprimir-lista')?.addEventListener('click', () => window.print());
 
-    // Layout
+    // Salvar lista no banco do professor
+    this.container.querySelector('#btn-salvar-trabalho-lista')?.addEventListener('click', async () => {
+      const btn = this.container.querySelector('#btn-salvar-trabalho-lista');
+      btn.disabled = true;
+      btn.innerText = 'Salvando...';
+      try {
+        const docSalvo = await DocumentoService.salvarDocumento({
+          id: this.documentoAtivoId,
+          tipo: 'lista',
+          titulo: `${this.vm.dadosCabecalho.tipoDocumento} - ${this.vm.dadosCabecalho.disciplina}`,
+          dadosCabecalho: this.vm.dadosCabecalho,
+          questoes: this.vm.questoes,
+          duasColunas: this.vm.duasColunas
+        });
+        this.documentoAtivoId = docSalvo.id;
+        Toast.show('Lista salva na sua biblioteca com sucesso!', 'success');
+      } catch (err) {
+        Toast.show('Erro ao salvar trabalho: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '💾 Salvar Trabalho';
+      }
+    });
+
     this.container.querySelector('#btn-col-1')?.addEventListener('click', () => {
       this.vm.setColuna(false);
       this.render();
@@ -287,7 +322,6 @@ export class ListaView {
       this.render();
     });
 
-    // Logo da Escola Upload
     const inpLogo = this.container.querySelector('#inp-logo-escola');
     inpLogo?.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -306,7 +340,6 @@ export class ListaView {
       this.render();
     });
 
-    // Inputs do cabeçalho
     ['escola', 'disciplina', 'professor', 'turma', 'tipo'].forEach(campo => {
       const el = this.container.querySelector(`#cfg-${campo}`);
       el?.addEventListener('input', (e) => {
@@ -314,7 +347,6 @@ export class ListaView {
       });
     });
 
-    // Espaçamento Global
     this.container.querySelector('#btn-aplicar-espaco')?.addEventListener('click', () => {
       const val = this.container.querySelector('#inp-espaco-global').value;
       this.vm.setEspacoGlobal(val);
@@ -322,14 +354,12 @@ export class ListaView {
       Toast.show('Espaçamento aplicado a todas as questões!', 'info');
     });
 
-    // Adicionar Questão
     this.container.querySelector('#btn-add-q')?.addEventListener('click', () => {
       this.vm.adicionarQuestao();
       this.renderFormQuestoes();
       this.atualizarPreview();
     });
 
-    // Delegação de eventos no formulário de questões
     this.container.addEventListener('input', (e) => {
       if (e.target.dataset.qTexto !== undefined) {
         const idx = parseInt(e.target.dataset.qTexto);
@@ -340,7 +370,6 @@ export class ListaView {
       }
     });
 
-    // Upload de imagem da questão individual
     this.container.addEventListener('change', (e) => {
       if (e.target.dataset.uploadImg !== undefined) {
         const idx = parseInt(e.target.dataset.uploadImg);
@@ -357,7 +386,6 @@ export class ListaView {
       }
     });
 
-    // Remoção de imagem ou questão
     this.container.addEventListener('click', (e) => {
       if (e.target.dataset.removeImg !== undefined) {
         const idx = parseInt(e.target.dataset.removeImg);
@@ -372,7 +400,6 @@ export class ListaView {
       }
     });
 
-    // Modal Banco de Questões
     const modal = this.container.querySelector('#modal-banco-lista');
     this.container.querySelector('#btn-abrir-banco')?.addEventListener('click', () => {
       modal.classList.remove('hidden');

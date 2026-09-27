@@ -17,50 +17,48 @@ export class DiarioViewModel extends Observable {
     await PedagogicoService.atualizarAula(aulaId, dados);
     await this.carregarDiario();
   }
-
+  atualizarObsDia(alunoId, textoObs) {
+    if (!this.mapaPresenca[alunoId]) {
+      this.mapaPresenca[alunoId] = { presente: true, observacao: '' };
+    }
+    this.mapaPresenca[alunoId].observacao = textoObs;
+  }
   async excluirAula(aulaId) {
     await PedagogicoService.excluirAula(aulaId);
     await this.carregarDiario();
   }
   async carregarDiario(data = this.dataSelecionada) {
-    this.dataSelecionada = data;
     this.notify('CARREGANDO', true);
+    this.dataSelecionada = data;
 
     try {
-      const [dadosTurma, aula] = await Promise.all([
+      const [dadosTurma, aula, historico] = await Promise.all([
         TurmaService.getTurmaComAlunos(this.turmaId),
-        DiarioService.getOuCriarAula(this.turmaId, this.dataSelecionada)
+        DiarioService.getAulaPorData(this.turmaId, data),
+        BackupService.buscarHistoricoAulas(this.turmaId)
       ]);
 
       this.turma = dadosTurma;
-      this.aulaAtual = aula;
-
       this.alunos = dadosTurma.matriculas
         .filter(m => m.status === 'ativo')
-        .map(m => ({
-          ...m.alunos,
-          numero_chamada: m.numero_chamada,
-          observacao_turma: m.observacao_turma || ''
-        }))
+        .map(m => ({ ...m.alunos, numero_chamada: m.numero_chamada }))
         .sort((a, b) => (a.numero_chamada || 999) - (b.numero_chamada || 999));
 
-      const frequencias = await DiarioService.getFrequenciasDaAula(aula.id);
+      this.aulaAtual = aula || {
+        data,
+        bimestre: 1,
+        conteudo_ministrado: '',
+        proximo_conteudo: ''
+      };
 
-      this.mapaPresenca = {};
-      this.alunos.forEach(aluno => {
-        const freq = frequencias.find(f => f.aluno_id === aluno.id);
-        this.mapaPresenca[aluno.id] = {
-          presente: freq ? freq.presente : true, // Padrão presente ao abrir novo dia
-          justificativa: freq ? freq.justificativa || '' : ''
-        };
-      });
+      // Carrega o registro deste dia específico (presença e observação do dia)
+      if (aula?.id) {
+        this.mapaPresenca = await PedagogicoService.carregarFrequenciasAula(aula.id);
+      } else {
+        this.mapaPresenca = {};
+      }
 
-      this.notify('DIARIO_CARREGADO', {
-        turma: this.turma,
-        aula: this.aulaAtual,
-        alunos: this.alunos,
-        presencas: this.mapaPresenca
-      });
+      this.notify('DIARIO_CARREGADO', true);
     } catch (err) {
       this.notify('ERRO', err.message);
     } finally {
