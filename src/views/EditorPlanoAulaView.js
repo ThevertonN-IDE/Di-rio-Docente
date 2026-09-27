@@ -8,56 +8,48 @@ export class EditorPlanoAulaView {
     this.container = document.getElementById(containerId);
     this.turmas = [];
     this.documentoAtivoId = null;
-    this.subtipo = 'diario'; // 'diario', 'semanal', 'mensal', 'bimestral', 'semestral', 'anual'
+    this.subtipo = 'anual';
     this.turmaIdSelecionada = '';
 
     this.plano = {
-      titulo: 'Plano de Aula',
-      disciplina: 'Matemática',
-      turmaNome: '',
+      titulo: 'PLANO DE ENSINO ANUAL',
+      escola: 'Escola Estadual João Ferreira de Souza',
+      professor: 'Emanuel Adriano Dantas',
+      serie: '1º Ano / Médio',
+      turno: 'Matutino',
       anoLetivo: '2026',
-      // Campos Estruturados
-      objetivosGerais: '',
-      conteudoProgramatico: '',
-      cronogramaMacro: '',
-      projetosInterdisciplinares: '',
-      metasPeriodo: '',
-      unidadesTematicas: '',
-      grandesAvaliacoes: '',
-      habilidadesBNCC: '',
-      conteudosDetalhados: '',
-      metodologiaGeral: '',
-      criteriosAvaliacao: '',
-      cronogramaSemanas: '',
-      recursosPrincipais: '',
-      datasEntrega: '',
-      rotinaDias: '',
-      encadeamentoConteudos: '',
-      tarefasCasa: '',
-      acolhidaIntroducao: '',
-      objetivoAula: '',
-      desenvolvimentoPassoAPasso: '',
-      gestaoTempo: '',
-      fechamentoConclusao: ''
+      cargaHorariaTotal: '120 aulas',
+      duracaoAula: '45 minutos',
+      logoUrl: '',
+      ementa: 'Conjuntos; Conjuntos Numéricos; Noção de função; Função Afim; Função Quadrática; Função Modular; Função Exponencial; Função Logarítmica; Sequências; Matemática Financeira.',
+      objetivoGeral: 'Compreender e fazer uso de diferentes linguagens matemáticas e utilizar conceitos e estratégias para analisar situações e resolver problemas do dia a dia.',
+      objetivosEspecificos: '• Representar e efetuar operações entre conjuntos.\n• Representar pontos no plano cartesiano.\n• Identificar domínio, contradomínio e imagem.\n• Resolver problemas práticos envolvendo funções afins e quadráticas.',
+      conteudoBimestre1: 'Conjuntos\n• Representação e Operações\n• Problemas com conjuntos finitos\nConjuntos Numéricos\n• Naturais, inteiros, racionais e reais\n• Intervalos reais\nNoção de Função',
+      conteudoBimestre2: 'Função polinomial do 1º grau\n• Representação gráfica e Taxa de variação\n• Estudo do sinal\nFunção polinomial do 2º grau\n• Vértice da parábola e raízes\n• Estudo do sinal',
+      conteudoBimestre3: 'Função exponencial\n• Equações e propriedades de potência\nFunção Logarítmica\n• Definição e Propriedades operatórias',
+      conteudoBimestre4: 'Sequências Numéricas\n• Progressão Aritmética (PA)\n• Progressão Geométrica (PG)\nMatemática Financeira\n• Juros simples e compostos',
+      recursosDidaticos: 'Quadro branco e pincel;\nProjetor multimídia;\nCalculadora científica;\nLivro didático e apostila impressa.',
+      metodologia: 'Aulas expositivas e dialogadas;\nResolução guiada de problemas;\nUso de tecnologias e softwares gráficos;\nAtividades em duplas e materiais manipuláveis.',
+      avaliacao: 'Acompanhamento processual diário;\nTrabalhos em grupo e listas de exercícios;\nProvas dissertativas e diagnósticas bimestrais.',
+      referencias: 'DANTE, Luiz Roberto. Matemática: Contextos e Aplicações. São Paulo: Ática, 2013.\nPAIVA, Manoel. Matemática: Paiva. São Paulo: Moderna, 2013.'
     };
   }
 
   async render() {
-    this.container.innerHTML = '<div class="p-12 text-center text-slate-500 font-semibold">Carregando estúdio de planeamento...</div>';
+    this.container.innerHTML = '<div class="p-12 text-center text-slate-500 font-semibold">Carregando estúdio de planos...</div>';
     try {
       this.turmas = await TurmaService.getTurmas();
     } catch {
       this.turmas = [];
     }
 
-    // Carrega rascunho vindo de "Meus Trabalhos" se existir
     const rascunho = sessionStorage.getItem('DOCUMENTO_ATIVO');
     if (rascunho) {
       try {
         const doc = JSON.parse(rascunho);
         if (doc.tipo === 'plano_aula') {
           this.documentoAtivoId = doc.id;
-          this.subtipo = doc.subtipo || 'diario';
+          this.subtipo = doc.subtipo || 'anual';
           this.turmaIdSelecionada = doc.turma_id || '';
           if (doc.conteudo_json) this.plano = doc.conteudo_json;
         }
@@ -74,16 +66,16 @@ export class EditorPlanoAulaView {
   montarInterface() {
     this.container.innerHTML = `
       <div class="flex flex-col lg:flex-row gap-8 p-6 max-w-full">
-        <!-- PAINEL DE CONTROLO DO PLANO -->
+        <!-- PAINEL DE CONTROLE (Não sai na impressão) -->
         <div class="no-print lg:w-5/12 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6 max-h-[92vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b pb-4">
             <div>
-              <h2 class="text-xl font-bold text-slate-800">Criador de Planos Pedagógicos</h2>
-              <p class="text-xs text-slate-500">Planeamento curricular do nível macro ao micro roteiro</p>
+              <h2 class="text-xl font-bold text-slate-800">Plano de Ensino & Roteiros</h2>
+              <p class="text-xs text-slate-500">Modelo oficial alinhado com diretrizes institucionais</p>
             </div>
             <div class="flex items-center gap-2">
               <button id="btn-salvar-plano" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
-                💾 Salvar Plano
+                💾 Salvar
               </button>
               <button id="btn-imprimir-plano" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
                 🖨️ PDF
@@ -91,179 +83,208 @@ export class EditorPlanoAulaView {
             </div>
           </div>
 
-          <!-- SELEÇÃO DE ESCOPO E TURMA -->
-          <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-            <div>
-              <label class="block font-bold text-slate-600 uppercase mb-1">Nível de Planeamento</label>
-              <select id="sel-subtipo-plano" class="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700">
-                <option value="diario" ${this.subtipo === 'diario' ? 'selected' : ''}>🎯 Plano Diário (Roteiro de Aula)</option>
-                <option value="semanal" ${this.subtipo === 'semanal' ? 'selected' : ''}>📊 Plano Semanal (O Semanário)</option>
-                <option value="mensal" ${this.subtipo === 'mensal' ? 'selected' : ''}>📝 Plano Mensal</option>
-                <option value="bimestral" ${this.subtipo === 'bimestral' ? 'selected' : ''}>📂 Plano Bimestral / Trimestral</option>
-                <option value="semestral" ${this.subtipo === 'semestral' ? 'selected' : ''}>🗓️ Plano Semestral / Quadrimestral</option>
-                <option value="anual" ${this.subtipo === 'anual' ? 'selected' : ''}>📅 Plano Anual (Macroplanejamento)</option>
-              </select>
+          <!-- IDENTIFICAÇÃO E LOGO DA ESCOLA -->
+          <div class="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+            <h3 class="font-bold text-slate-700 uppercase">Identificação Escolar</h3>
+            
+            <div class="flex items-center gap-3">
+              <div id="preview-logo-plano" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                ${this.plano.logoUrl ? `<img src="${this.plano.logoUrl}" class="w-full h-full object-contain">` : `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Brasão/Logo</span>`}
+              </div>
+              <div class="flex-1">
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-0.5">Logo da Escola</label>
+                <input type="file" id="inp-logo-plano-file" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
+              </div>
+              ${this.plano.logoUrl ? `<button id="btn-remover-logo-plano" class="text-xs text-rose-500 hover:underline">Remover</button>` : ''}
             </div>
-            <div>
-              <label class="block font-bold text-slate-600 uppercase mb-1">Turma Vinculada</label>
-              <select id="sel-turma-plano" class="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700">
-                <option value="">Sem Turma Específica</option>
-                ${this.turmas.map(t => `<option value="${t.id}" ${this.turmaIdSelecionada === t.id ? 'selected' : ''}>${t.nome}</option>`).join('')}
-              </select>
-            </div>
-            <div class="col-span-2">
-              <label class="block font-bold text-slate-600 uppercase mb-1">Título do Documento</label>
-              <input type="text" id="inp-plano-titulo" value="${this.plano.titulo}" class="w-full bg-white border border-slate-200 rounded-lg p-2 font-semibold">
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <input type="text" id="inp-pl-escola" value="${this.plano.escola}" placeholder="Nome da Escola" class="border p-2 rounded-lg col-span-2 bg-white font-bold">
+              <input type="text" id="inp-pl-professor" value="${this.plano.professor}" placeholder="Professor(a)" class="border p-2 rounded-lg bg-white">
+              <input type="text" id="inp-pl-serie" value="${this.plano.serie}" placeholder="Série / Turma" class="border p-2 rounded-lg bg-white">
+              <input type="text" id="inp-pl-turno" value="${this.plano.turno}" placeholder="Turno" class="border p-2 rounded-lg bg-white">
+              <input type="text" id="inp-pl-ano" value="${this.plano.anoLetivo}" placeholder="Ano Letivo" class="border p-2 rounded-lg bg-white">
+              <input type="text" id="inp-pl-ch" value="${this.plano.cargaHorariaTotal}" placeholder="Carga Horária (ex: 120 aulas)" class="border p-2 rounded-lg bg-white">
+              <input type="text" id="inp-pl-duracao" value="${this.plano.duracaoAula}" placeholder="Duração (ex: 45 min)" class="border p-2 rounded-lg bg-white">
             </div>
           </div>
 
-          <!-- FORMULÁRIO DINÂMICO CONFORME O NÍVEL ESCOLHIDO -->
-          <div id="campos-especificos-plano" class="space-y-4 text-xs">
-            ${this.gerarCamposDinamicosHtml()}
+          <!-- SEÇÕES ESTRUTURAIS DO PLANO -->
+          <div class="space-y-4 text-xs">
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1">Ementa Curricular</label>
+              <textarea id="inp-pl-ementa" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.ementa}</textarea>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1">Objetivo Geral</label>
+              <textarea id="inp-pl-objgeral" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.objetivoGeral}</textarea>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1">Objetivos Específicos</label>
+              <textarea id="inp-pl-objespecificos" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.objetivosEspecificos}</textarea>
+            </div>
+
+            <div class="border-t pt-3">
+              <h4 class="font-bold text-slate-700 uppercase mb-2">Conteúdo Programático por Bimestre</h4>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="block font-semibold text-slate-500 mb-0.5">1º Bimestre</label><textarea id="inp-pl-b1" rows="3" class="w-full border rounded p-1.5">${this.plano.conteudoBimestre1}</textarea></div>
+                <div><label class="block font-semibold text-slate-500 mb-0.5">2º Bimestre</label><textarea id="inp-pl-b2" rows="3" class="w-full border rounded p-1.5">${this.plano.conteudoBimestre2}</textarea></div>
+                <div><label class="block font-semibold text-slate-500 mb-0.5">3º Bimestre</label><textarea id="inp-pl-b3" rows="3" class="w-full border rounded p-1.5">${this.plano.conteudoBimestre3}</textarea></div>
+                <div><label class="block font-semibold text-slate-500 mb-0.5">4º Bimestre</label><textarea id="inp-pl-b4" rows="3" class="w-full border rounded p-1.5">${this.plano.conteudoBimestre4}</textarea></div>
+              </div>
+            </div>
+
+            <div class="border-t pt-3 space-y-2">
+              <h4 class="font-bold text-slate-700 uppercase">Recursos, Metodologia e Avaliação</h4>
+              <div><label class="block font-semibold text-slate-500 mb-0.5">Recursos Didáticos</label><textarea id="inp-pl-recursos" rows="2" class="w-full border rounded p-1.5">${this.plano.recursosDidaticos}</textarea></div>
+              <div><label class="block font-semibold text-slate-500 mb-0.5">Metodologia</label><textarea id="inp-pl-metodologia" rows="2" class="w-full border rounded p-1.5">${this.plano.metodologia}</textarea></div>
+              <div><label class="block font-semibold text-slate-500 mb-0.5">Avaliação</label><textarea id="inp-pl-avaliacao" rows="2" class="w-full border rounded p-1.5">${this.plano.avaliacao}</textarea></div>
+            </div>
+
+            <div class="border-t pt-3">
+              <label class="block font-bold text-slate-600 uppercase mb-1">Referências Bibliográficas</label>
+              <textarea id="inp-pl-referencias" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.referencias}</textarea>
+            </div>
           </div>
         </div>
 
-        <!-- FOLHA A4 DE PREVIEW DO PLANO -->
+        <!-- FOLHA A4 MODELO RETRATO IDÊNTICA AO PADRÃO ESCOLAR -->
         <div class="lg:w-7/12 flex justify-center bg-slate-200/60 p-4 rounded-2xl overflow-x-auto">
-          <div id="folha-plano-a4" class="sheet-a4 bg-white text-black shadow-2xl p-8" style="width: 210mm; min-height: 297mm; font-family: Arial, sans-serif;"></div>
+          <div id="folha-plano-modelo-a4" class="sheet-a4 bg-white text-black shadow-2xl p-6" style="width: 210mm; min-height: 297mm; font-family: Arial, sans-serif; font-size: 10pt;">
+            <!-- Renderizado em atualizarPreviewPlanoModelo() -->
+          </div>
         </div>
       </div>
     `;
 
-    this.atualizarPreviewPlano();
+    this.atualizarPreviewPlanoModelo();
     this.bindEvents();
   }
 
-  gerarCamposDinamicosHtml() {
-    switch (this.subtipo) {
-      case 'anual':
-        return `
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">1. Objetivos Gerais (Competências BNCC)</label><textarea data-p-campo="objetivosGerais" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.objetivosGerais}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">2. Conteúdo Programático Amplo</label><textarea data-p-campo="conteudoProgramatico" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.conteudoProgramatico}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">3. Cronograma Macro (Divisão por Bimestres)</label><textarea data-p-campo="cronogramaMacro" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.cronogramaMacro}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">4. Projetos Interdisciplinares</label><textarea data-p-campo="projetosInterdisciplinares" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.projetosInterdisciplinares}</textarea></div>
-        `;
-      case 'semestral':
-        return `
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">1. Metas do Período</label><textarea data-p-campo="metasPeriodo" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.metasPeriodo}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">2. Unidades Temáticas</label><textarea data-p-campo="unidadesTematicas" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.unidadesTematicas}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">3. Grandes Avaliações & Entregas</label><textarea data-p-campo="grandesAvaliacoes" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.grandesAvaliacoes}</textarea></div>
-        `;
-      case 'bimestral':
-        return `
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">1. Habilidades Específicas (Códigos BNCC)</label><textarea data-p-campo="habilidadesBNCC" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.habilidadesBNCC}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">2. Conteúdos Detalhados</label><textarea data-p-campo="conteudosDetalhados" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.conteudosDetalhados}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">3. Metodologia Geral</label><textarea data-p-campo="metodologiaGeral" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.metodologiaGeral}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">4. Critérios de Avaliação & Recuperação</label><textarea data-p-campo="criteriosAvaliacao" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.criteriosAvaliacao}</textarea></div>
-        `;
-      case 'mensal':
-        return `
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">1. Cronograma de Semanas</label><textarea data-p-campo="cronogramaSemanas" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.cronogramaSemanas}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">2. Recursos Principais & Materiais</label><textarea data-p-campo="recursosPrincipais" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.recursosPrincipais}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">3. Datas de Entrega & Avaliações</label><textarea data-p-campo="datasEntrega" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.datasEntrega}</textarea></div>
-        `;
-      case 'semanal':
-        return `
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">1. Rotina dos Dias & Horários</label><textarea data-p-campo="rotinaDias" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.rotinaDias}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">2. Encadeamento de Conteúdos</label><textarea data-p-campo="encadeamentoConteudos" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.encadeamentoConteudos}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">3. Tarefas de Casa & Atividades Extraclasse</label><textarea data-p-campo="tarefasCasa" rows="3" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.tarefasCasa}</textarea></div>
-        `;
-      default: // diário
-        return `
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">1. Acolhida / Introdução</label><textarea data-p-campo="acolhidaIntroducao" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.acolhidaIntroducao}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">2. Objetivo da Aula</label><textarea data-p-campo="objetivoAula" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.objetivoAula}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">3. Desenvolvimento Passo a Passo</label><textarea data-p-campo="desenvolvimentoPassoAPasso" rows="4" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.desenvolvimentoPassoAPasso}</textarea></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">4. Gestão do Tempo (Minutos por etapa)</label><input type="text" data-p-campo="gestaoTempo" value="${this.plano.gestaoTempo}" class="w-full border rounded-lg p-2 bg-slate-50"></div>
-          <div><label class="block font-bold text-slate-600 uppercase mb-1">5. Fechamento / Conclusão</label><textarea data-p-campo="fechamentoConclusao" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.fechamentoConclusao}</textarea></div>
-        `;
-    }
-  }
-
-  atualizarPreviewPlano() {
-    const preview = this.container.querySelector('#folha-plano-a4');
-    const subtitulos = {
-      diario: 'PLANO DE AULA DIÁRIO (ROTEIRO)',
-      semanal: 'PLANO DE AULA SEMANAL (SEMANÁRIO)',
-      mensal: 'PLANO PEDAGÓGICO MENSAL',
-      bimestral: 'PLANO BIMESTRAL / TRIMESTRAL',
-      semestral: 'PLANO SEMESTRAL / QUADRIMESTRAL',
-      anual: 'PLANO CURRICULAR ANUAL (MACRO)'
-    };
-
-    const turmaNome = this.turmas.find(t => t.id === this.turmaIdSelecionada)?.nome || 'Turma Não Especificada';
-
-    let corpoDocumento = '';
-    if (this.subtipo === 'anual') {
-      corpoDocumento = `
-        <div class="space-y-4">
-          <div class="border p-3 rounded"><strong>1. Objetivos Gerais (BNCC):</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.objetivosGerais || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>2. Conteúdo Programático Amplo:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.conteudoProgramatico || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>3. Cronograma Macro:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.cronogramaMacro || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>4. Projetos Interdisciplinares:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.projetosInterdisciplinares || 'Não preenchido'}</p></div>
-        </div>
-      `;
-    } else if (this.subtipo === 'semestral') {
-      corpoDocumento = `
-        <div class="space-y-4">
-          <div class="border p-3 rounded"><strong>1. Metas do Período:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.metasPeriodo || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>2. Unidades Temáticas:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.unidadesTematicas || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>3. Grandes Avaliações & Trabalhos:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.grandesAvaliacoes || 'Não preenchido'}</p></div>
-        </div>
-      `;
-    } else if (this.subtipo === 'bimestral') {
-      corpoDocumento = `
-        <div class="space-y-4">
-          <div class="border p-3 rounded"><strong>1. Habilidades Específicas (BNCC):</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.habilidadesBNCC || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>2. Conteúdos Detalhados:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.conteudosDetalhados || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>3. Metodologia Geral:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.metodologiaGeral || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>4. Critérios de Avaliação & Recuperação:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.criteriosAvaliacao || 'Não preenchido'}</p></div>
-        </div>
-      `;
-    } else if (this.subtipo === 'mensal') {
-      corpoDocumento = `
-        <div class="space-y-4">
-          <div class="border p-3 rounded"><strong>1. Cronograma de Semanas:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.cronogramaSemanas || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>2. Recursos Principais & Materiais:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.recursosPrincipais || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>3. Datas de Entrega & Avaliações:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.datasEntrega || 'Não preenchido'}</p></div>
-        </div>
-      `;
-    } else if (this.subtipo === 'semanal') {
-      corpoDocumento = `
-        <div class="space-y-4">
-          <div class="border p-3 rounded"><strong>1. Rotina dos Dias & Horários:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.rotinaDias || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>2. Encadeamento de Conteúdos:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.encadeamentoConteudos || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>3. Tarefas de Casa (Para Casa):</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.tarefasCasa || 'Não preenchido'}</p></div>
-        </div>
-      `;
-    } else {
-      corpoDocumento = `
-        <div class="space-y-4">
-          <div class="border p-3 rounded"><strong>1. Acolhida / Introdução:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.acolhidaIntroducao || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>2. Objetivo da Aula:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.objetivoAula || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>3. Desenvolvimento Passo a Passo:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.desenvolvimentoPassoAPasso || 'Não preenchido'}</p></div>
-          <div class="border p-3 rounded"><strong>4. Gestão do Tempo:</strong><p class="mt-1 text-slate-700">${this.plano.gestaoTempo || 'Não informado'}</p></div>
-          <div class="border p-3 rounded"><strong>5. Fechamento / Conclusão:</strong><p class="mt-1 whitespace-pre-line text-slate-700">${this.plano.fechamentoConclusao || 'Não preenchido'}</p></div>
-        </div>
-      `;
-    }
+  atualizarPreviewPlanoModelo() {
+    const preview = this.container.querySelector('#folha-plano-modelo-a4');
+    const pl = this.plano;
 
     preview.innerHTML = `
-      <div class="text-xs">
-        <div class="border-b-2 border-black pb-3 mb-6 text-center space-y-1">
-          <h1 class="text-base font-bold uppercase tracking-wider">${this.plano.titulo || 'PLANO PEDAGÓGICO'}</h1>
-          <p class="text-[11px] font-semibold text-slate-600 uppercase">${subtitulos[this.subtipo]}</p>
-          <div class="grid grid-cols-3 pt-2 text-[11px]">
-            <div><strong>Turma:</strong> ${turmaNome}</div>
-            <div><strong>Disciplina:</strong> ${this.plano.disciplina}</div>
-            <div><strong>Ano Letivo:</strong> ${this.plano.anoLetivo}</div>
+      <div class="space-y-3">
+        <!-- Logo e Cabeçalho de Identificação -->
+        <div class="flex items-center gap-4 border-2 border-black p-3">
+          ${pl.logoUrl ? `<img src="${pl.logoUrl}" class="max-h-20 max-w-[90px] object-contain shrink-0">` : ''}
+          <div class="flex-1 text-center">
+            <h1 class="font-extrabold text-sm uppercase tracking-wide">PLANO DE ENSINO</h1>
+            <p class="text-xs font-bold uppercase mt-0.5">${pl.escola}</p>
+          </div>
+          ${pl.logoUrl ? `<div class="w-[90px] shrink-0"></div>` : ''}
+        </div>
+
+        <!-- Tabela de Identificação -->
+        <table class="w-full border-collapse border border-black text-xs">
+          <tr>
+            <td colspan="4" class="border border-black p-1.5 bg-slate-100 font-bold uppercase text-center">IDENTIFICAÇÃO</td>
+          </tr>
+          <tr>
+            <td class="border border-black p-1 font-bold w-24">Escola:</td>
+            <td colspan="3" class="border border-black p-1">${pl.escola}</td>
+          </tr>
+          <tr>
+            <td class="border border-black p-1 font-bold">Professor(a):</td>
+            <td colspan="3" class="border border-black p-1">${pl.professor}</td>
+          </tr>
+          <tr>
+            <td class="border border-black p-1 font-bold">Série:</td>
+            <td class="border border-black p-1">${pl.serie}</td>
+            <td class="border border-black p-1 font-bold w-20">Turno / Ano:</td>
+            <td class="border border-black p-1">${pl.turno} / ${pl.anoLetivo}</td>
+          </tr>
+          <tr>
+            <td class="border border-black p-1 font-bold">Carga Horária:</td>
+            <td class="border border-black p-1">${pl.cargaHorariaTotal}</td>
+            <td class="border border-black p-1 font-bold">Duração Aula:</td>
+            <td class="border border-black p-1">${pl.duracaoAula}</td>
+          </tr>
+        </table>
+
+        <!-- Ementa -->
+        <div class="border border-black p-2">
+          <h2 class="font-bold text-xs uppercase bg-slate-100 p-1 mb-1 border-b border-black">EMENTA</h2>
+          <p class="text-justify leading-relaxed whitespace-pre-line">${pl.ementa}</p>
+        </div>
+
+        <!-- Objetivos -->
+        <div class="border border-black p-2">
+          <h2 class="font-bold text-xs uppercase bg-slate-100 p-1 mb-1 border-b border-black">OBJETIVOS</h2>
+          <div class="space-y-1.5">
+            <div>
+              <strong class="block text-[11px] underline">Objetivo Geral:</strong>
+              <p class="text-justify leading-relaxed whitespace-pre-line">${pl.objetivoGeral}</p>
+            </div>
+            <div>
+              <strong class="block text-[11px] underline">Objetivos Específicos:</strong>
+              <p class="text-justify leading-relaxed whitespace-pre-line">${pl.objetivosEspecificos}</p>
+            </div>
           </div>
         </div>
 
-        ${corpoDocumento}
+        <!-- Conteúdo em Grade Bimestral 2x2 -->
+        <table class="w-full border-collapse border border-black text-xs">
+          <tr>
+            <td colspan="2" class="border border-black p-1 bg-slate-100 font-bold uppercase text-center">CONTEÚDO PROGRAMÁTICO</td>
+          </tr>
+          <tr class="align-top">
+            <td class="border border-black p-2 w-1/2">
+              <strong class="block border-b border-black pb-0.5 mb-1 font-bold text-center">1º BIMESTRE</strong>
+              <p class="whitespace-pre-line leading-snug">${pl.conteudoBimestre1}</p>
+            </td>
+            <td class="border border-black p-2 w-1/2">
+              <strong class="block border-b border-black pb-0.5 mb-1 font-bold text-center">2º BIMESTRE</strong>
+              <p class="whitespace-pre-line leading-snug">${pl.conteudoBimestre2}</p>
+            </td>
+          </tr>
+          <tr class="align-top">
+            <td class="border border-black p-2 w-1/2">
+              <strong class="block border-b border-black pb-0.5 mb-1 font-bold text-center">3º BIMESTRE</strong>
+              <p class="whitespace-pre-line leading-snug">${pl.conteudoBimestre3}</p>
+            </td>
+            <td class="border border-black p-2 w-1/2">
+              <strong class="block border-b border-black pb-0.5 mb-1 font-bold text-center">4º BIMESTRE</strong>
+              <p class="whitespace-pre-line leading-snug">${pl.conteudoBimestre4}</p>
+            </td>
+          </tr>
+        </table>
 
-        <div class="mt-16 pt-8 border-t border-slate-300 grid grid-cols-2 gap-12 text-center text-xs">
-          <div><div class="border-t border-black w-3/4 mx-auto mb-1"></div><p class="font-bold">Professor(a) Regente</p></div>
-          <div><div class="border-t border-black w-3/4 mx-auto mb-1"></div><p class="font-bold">Coordenação Pedagógica</p></div>
+        <!-- Recursos, Metodologia e Avaliação -->
+        <table class="w-full border-collapse border border-black text-xs">
+          <tr>
+            <td colspan="3" class="border border-black p-1 bg-slate-100 font-bold uppercase text-center">RECURSOS DIDÁTICOS, METODOLOGIA E AVALIAÇÃO</td>
+          </tr>
+          <tr class="align-top">
+            <td class="border border-black p-2 w-1/3">
+              <strong class="block border-b border-black pb-0.5 mb-1 font-bold text-center">RECURSOS</strong>
+              <p class="whitespace-pre-line leading-snug">${pl.recursosDidaticos}</p>
+            </td>
+            <td class="border border-black p-2 w-1/3">
+              <strong class="block border-b border-black pb-0.5 mb-1 font-bold text-center">METODOLOGIA</strong>
+              <p class="whitespace-pre-line leading-snug">${pl.metodologia}</p>
+            </td>
+            <td class="border border-black p-2 w-1/3">
+              <strong class="block border-b border-black pb-0.5 mb-1 font-bold text-center">AVALIAÇÃO</strong>
+              <p class="whitespace-pre-line leading-snug">${pl.avaliacao}</p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Referências -->
+        <div class="border border-black p-2">
+          <h2 class="font-bold text-xs uppercase bg-slate-100 p-1 mb-1 border-b border-black">REFERÊNCIAS BIBLIOGRÁFICAS</h2>
+          <p class="whitespace-pre-line leading-snug">${pl.referencias}</p>
+        </div>
+
+        <!-- Assinaturas -->
+        <div class="pt-8 grid grid-cols-2 gap-8 text-center text-xs">
+          <div><div class="border-t border-black w-4/5 mx-auto mb-1"></div><strong>Professor(a) Regente</strong></div>
+          <div><div class="border-t border-black w-4/5 mx-auto mb-1"></div><strong>Coordenação Pedagógica / Direção</strong></div>
         </div>
       </div>
     `;
@@ -272,29 +293,54 @@ export class EditorPlanoAulaView {
   bindEvents() {
     this.container.querySelector('#btn-imprimir-plano')?.addEventListener('click', () => window.print());
 
-    this.container.querySelector('#sel-subtipo-plano')?.addEventListener('change', (e) => {
-      this.subtipo = e.target.value;
-      this.container.querySelector('#campos-especificos-plano').innerHTML = this.gerarCamposDinamicosHtml();
-      this.atualizarPreviewPlano();
-    });
-
-    this.container.querySelector('#sel-turma-plano')?.addEventListener('change', (e) => {
-      this.turmaIdSelecionada = e.target.value;
-      this.atualizarPreviewPlano();
-    });
-
-    this.container.querySelector('#inp-plano-titulo')?.addEventListener('input', (e) => {
-      this.plano.titulo = e.target.value;
-      this.atualizarPreviewPlano();
-    });
-
-    this.container.addEventListener('input', (e) => {
-      if (e.target.dataset.pCampo) {
-        this.plano[e.target.dataset.pCampo] = e.target.value;
-        this.atualizarPreviewPlano();
+    // Upload do Logo da Escola
+    this.container.querySelector('#inp-logo-plano-file')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          this.plano.logoUrl = ev.target.result;
+          this.montarInterface();
+        };
+        reader.readAsDataURL(file);
       }
     });
 
+    this.container.querySelector('#btn-remover-logo-plano')?.addEventListener('click', () => {
+      this.plano.logoUrl = '';
+      this.montarInterface();
+    });
+
+    // Inputs e Textareas
+    const mapeamentoCampos = [
+      ['inp-pl-escola', 'escola'],
+      ['inp-pl-professor', 'professor'],
+      ['inp-pl-serie', 'serie'],
+      ['inp-pl-turno', 'turno'],
+      ['inp-pl-ano', 'anoLetivo'],
+      ['inp-pl-ch', 'cargaHorariaTotal'],
+      ['inp-pl-duracao', 'duracaoAula'],
+      ['inp-pl-ementa', 'ementa'],
+      ['inp-pl-objgeral', 'objetivoGeral'],
+      ['inp-pl-objespecificos', 'objetivosEspecificos'],
+      ['inp-pl-b1', 'conteudoBimestre1'],
+      ['inp-pl-b2', 'conteudoBimestre2'],
+      ['inp-pl-b3', 'conteudoBimestre3'],
+      ['inp-pl-b4', 'conteudoBimestre4'],
+      ['inp-pl-recursos', 'recursosDidaticos'],
+      ['inp-pl-metodologia', 'metodologia'],
+      ['inp-pl-avaliacao', 'avaliacao'],
+      ['inp-pl-referencias', 'referencias']
+    ];
+
+    mapeamentoCampos.forEach(([id, prop]) => {
+      this.container.querySelector(`#${id}`)?.addEventListener('input', (e) => {
+        this.plano[prop] = e.target.value;
+        this.atualizarPreviewPlanoModelo();
+      });
+    });
+
+    // Salvar Plano
     this.container.querySelector('#btn-salvar-plano')?.addEventListener('click', async () => {
       const btn = this.container.querySelector('#btn-salvar-plano');
       btn.disabled = true;
@@ -305,18 +351,18 @@ export class EditorPlanoAulaView {
           id: this.documentoAtivoId,
           tipo: 'plano_aula',
           subtipo: this.subtipo,
-          titulo: this.plano.titulo,
+          titulo: `${this.plano.titulo} - ${this.plano.serie}`,
           categoria: 'Planos de Aula',
           turmaId: this.turmaIdSelecionada || null,
           conteudoJson: this.plano
         });
         this.documentoAtivoId = docSalvo.id;
-        Toast.show('Plano de aula salvo com sucesso!', 'success');
+        Toast.show('Plano de ensino salvo com sucesso!', 'success');
       } catch (err) {
         Toast.show('Erro ao salvar plano: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.innerText = '💾 Salvar Plano';
+        btn.innerText = '💾 Salvar';
       }
     });
   }

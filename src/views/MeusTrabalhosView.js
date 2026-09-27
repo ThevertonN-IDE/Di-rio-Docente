@@ -21,17 +21,20 @@ export class MeusTrabalhosView {
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
             <h1 class="text-2xl font-bold text-slate-800">Biblioteca Pedagógica & Meus Trabalhos</h1>
-            <p class="text-xs text-slate-500">Gestão integrada de Provas, Listas, Planos curriculares e Documentos digitais</p>
+            <p class="text-xs text-slate-500">Gestão integrada de Provas, Listas, Apostilas, Planos curriculares e Documentos digitais</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <a href="#estudio-a4" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5">
-              ✨ Criar Prova / Lista A4
+            <a href="#estudio-a4" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
+              ✨ Prova / Lista A4
             </a>
-            <a href="#planos-aula" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5">
-              📅 Criar Plano de Aula
+            <a href="#apostilas" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
+              📘 Criar Apostila
             </a>
-            <button id="btn-modal-upload-doc" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5">
-              📁 Anexar Arquivo Digital
+            <a href="#planos-aula" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
+              📅 Plano de Aula
+            </a>
+            <button id="btn-modal-upload-doc" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
+              📁 Anexar Arquivo
             </button>
           </div>
         </div>
@@ -39,15 +42,16 @@ export class MeusTrabalhosView {
         <!-- FILTROS -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3 text-xs">
           <div class="flex-1 min-w-[200px]">
-            <input type="text" id="inp-filtro-busca" placeholder="Buscar por título ou assunto..." class="w-full border rounded-lg p-2 text-xs">
+            <input type="text" id="inp-filtro-busca" placeholder="Buscar por título ou assunto..." class="w-full border rounded-lg p-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none">
           </div>
 
           <div class="flex items-center gap-1.5">
             <span class="font-bold text-slate-600">Tipo:</span>
-            <select id="sel-filtro-tipo" class="border rounded-lg p-1.5 font-semibold bg-white">
+            <select id="sel-filtro-tipo" class="border rounded-lg p-1.5 font-semibold bg-white outline-none">
               <option value="todos">Todos os Tipos</option>
               <option value="prova">Provas A4</option>
               <option value="lista">Listas de Exercícios</option>
+              <option value="apostila">Apostilas Didáticas</option>
               <option value="plano_aula">Planos de Aula</option>
               <option value="arquivo_externo">Arquivos & Anexos</option>
             </select>
@@ -55,19 +59,19 @@ export class MeusTrabalhosView {
 
           <div class="flex items-center gap-1.5">
             <span class="font-bold text-slate-600">Turma:</span>
-            <select id="sel-filtro-turma" class="border rounded-lg p-1.5 font-semibold bg-white">
+            <select id="sel-filtro-turma" class="border rounded-lg p-1.5 font-semibold bg-white outline-none">
               <option value="">Todas as Turmas</option>
             </select>
           </div>
 
           <div class="flex items-center gap-1.5">
             <span class="font-bold text-slate-600">Categoria:</span>
-            <select id="sel-filtro-cat" class="border rounded-lg p-1.5 font-semibold bg-white">
+            <select id="sel-filtro-cat" class="border rounded-lg p-1.5 font-semibold bg-white outline-none">
               <option value="todas">Todas as Categorias</option>
               <option value="Avaliações">Avaliações</option>
               <option value="Listas">Listas</option>
-              <option value="Planos de Aula">Planos de Aula</option>
               <option value="Materiais Didáticos">Materiais Didáticos</option>
+              <option value="Planos de Aula">Planos de Aula</option>
               <option value="Trabalhos de Alunos">Trabalhos de Alunos</option>
               <option value="Documentos Oficiais">Documentos Oficiais</option>
             </select>
@@ -90,7 +94,7 @@ export class MeusTrabalhosView {
           <form id="form-upload-documento" class="space-y-3 text-xs">
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Ficheiro (PDF, DOCX, XLSX, Imagem)</label>
-              <input type="file" id="inp-arquivo-upload" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" class="w-full border rounded-lg p-2 text-xs bg-slate-50">
+              <input type="file" id="inp-arquivo-upload" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" class="w-full border rounded-lg p-2 text-xs bg-slate-50 cursor-pointer">
             </div>
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Título / Identificação</label>
@@ -104,6 +108,7 @@ export class MeusTrabalhosView {
                   <option value="Trabalhos de Alunos">Trabalhos de Alunos</option>
                   <option value="Avaliações">Avaliações</option>
                   <option value="Materiais Didáticos">Materiais Didáticos</option>
+                  <option value="Planos de Aula">Planos de Aula</option>
                   <option value="Documentos Oficiais">Documentos Oficiais</option>
                   <option value="Geral">Geral</option>
                 </select>
@@ -146,12 +151,19 @@ export class MeusTrabalhosView {
 
   async carregarDados() {
     try {
-      const [docs, turmas] = await Promise.all([
-        DocumentoService.listarDocumentos(),
-        TurmaService.getTurmas()
-      ]);
+      const docs = await DocumentoService.listarDocumentos();
       this.documentos = docs || [];
-      this.turmas = turmas || [];
+
+      try {
+        if (TurmaService && typeof TurmaService.getTurmas === 'function') {
+          this.turmas = await TurmaService.getTurmas();
+        } else {
+          this.turmas = [];
+        }
+      } catch (errTurmas) {
+        console.warn('Não foi possível listar turmas para o filtro:', errTurmas);
+        this.turmas = [];
+      }
 
       const selFiltroTurma = this.container.querySelector('#sel-filtro-turma');
       const inpDocTurma = this.container.querySelector('#inp-doc-turma');
@@ -198,11 +210,14 @@ export class MeusTrabalhosView {
       } else if (doc.tipo === 'lista') {
         badge = `<span class="px-2 py-0.5 rounded bg-teal-50 text-teal-700 font-bold uppercase text-[10px]">📋 Lista A4</span>`;
         acaoPrincipal = `<button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar Lista</button>`;
+      } else if (doc.tipo === 'apostila') {
+        badge = `<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold uppercase text-[10px]">📘 Apostila Didática</span>`;
+        acaoPrincipal = `<button data-editar-apostila="${doc.id}" class="flex-1 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg text-xs transition">✏️ Editar Apostila</button>`;
       } else if (doc.tipo === 'plano_aula') {
         badge = `<span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold uppercase text-[10px]">📅 Plano (${doc.subtipo || 'Geral'})</span>`;
         acaoPrincipal = `<button data-editar-plano="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar Plano</button>`;
       } else {
-        badge = `<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold uppercase text-[10px]">📁 Arquivo Digital</span>`;
+        badge = `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">📁 Arquivo Digital</span>`;
         acaoPrincipal = `<a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs transition">📥 Baixar / Abrir</a>`;
       }
 
@@ -241,6 +256,15 @@ export class MeusTrabalhosView {
         if (!doc) return;
         sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(doc));
         window.location.hash = '#estudio-a4';
+      });
+    });
+
+    this.container.querySelectorAll('[data-editar-apostila]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.editarApostila);
+        if (!doc) return;
+        sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(doc));
+        window.location.hash = '#apostilas';
       });
     });
 
@@ -294,7 +318,6 @@ export class MeusTrabalhosView {
     this.container.querySelector('#btn-fechar-modal-doc')?.addEventListener('click', () => modalDoc.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-modal-doc')?.addEventListener('click', () => modalDoc.classList.add('hidden'));
 
-    // Atualiza opções de Alunos e Avaliações ao selecionar uma Turma no modal
     const inpDocTurma = this.container.querySelector('#inp-doc-turma');
     const boxExtras = this.container.querySelector('#box-vinculos-extras');
     const selAluno = this.container.querySelector('#inp-doc-aluno');
@@ -332,7 +355,6 @@ export class MeusTrabalhosView {
       }
     });
 
-    // Submissão do upload
     this.container.querySelector('#form-upload-documento')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = this.container.querySelector('#inp-arquivo-upload').files[0];

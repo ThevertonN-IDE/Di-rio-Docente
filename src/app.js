@@ -16,6 +16,7 @@ import { atualizarCorTema } from './utils/theme.js';
 import { MeusTrabalhosView } from './views/MeusTrabalhosView.js';
 import { EditorDocumentoA4View } from './views/EditorDocumentoA4View.js';
 import { EditorPlanoAulaView } from './views/EditorPlanoAulaView.js';
+import { EditorApostilaView } from './views/EditorApostilaView.js';
 
 // 1. Registro nativo do Service Worker PWA (Offline & Cache)
 if ('serviceWorker' in navigator) {
@@ -151,7 +152,10 @@ async function iniciarApp() {
       const view = new EditorPlanoAulaView(container.id);
       view.render();
     },
-
+    'apostilas': (container) => {
+      const view = new EditorApostilaView(container.id);
+      view.render();
+    },
     // Redireciona links antigos (#provas e #listas) para o novo estúdio unificado
     provas: (container) => {
       const view = new EditorDocumentoA4View(container.id, 'prova');
