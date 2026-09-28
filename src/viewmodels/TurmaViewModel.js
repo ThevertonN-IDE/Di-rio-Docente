@@ -2,6 +2,7 @@
 import { Observable } from '../core/Observable.js';
 import { TurmaService } from '../services/TurmaService.js';
 import { localDb, SyncManager } from '../core/localDb.js';
+import { AlunoService } from '../services/AlunoService.js';
 
 export class TurmaViewModel extends Observable {
   constructor(turmaId) {
