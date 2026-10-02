@@ -1,5 +1,4 @@
 // src/views/EditorDocumentoA4View.js
-import { PedagogicoService } from '../services/PedagogicoService.js';
 import { DocumentoService } from '../services/DocumentoService.js';
 import { renderizarMatematica } from '../utils/katexRenderer.js';
 import { Toast } from '../utils/ui.js';
@@ -9,22 +8,21 @@ export class EditorDocumentoA4View {
   constructor(containerId, tipoPadrao = 'prova') {
     this.container = document.getElementById(containerId);
     this.documentoAtivoId = null;
-    this.tipo = tipoPadrao; // 'prova' ou 'lista'
+    this.tipo = tipoPadrao;
 
-    // Estado da Customização Visual
     this.estilo = {
-      fonte: 'font-serif', // 'font-serif', 'font-sans', 'font-mono'
+      fonte: 'font-serif',
       tamanhoFonte: '11pt',
-      layoutCabecalho: 'classico', // 'classico', 'moderno_central', 'minimalista'
+      layoutCabecalho: 'classico',
       duasColunas: true,
       espacoPadraoLinhas: 4
     };
 
     this.dadosCabecalho = {
-      escola: 'INSTITUTO EDUCACIONAL',
+      escola: 'INSTITUIÇÃO DE ENSINO',
       disciplina: 'Matemática',
-      professor: 'Carregando...',
-      turma: 'Turma A',
+      professor: 'Professor(a)',
+      turma: 'Turma Geral',
       tipoDocumento: tipoPadrao === 'prova' ? 'AVALIAÇÃO BIMESTRAL' : 'LISTA DE EXERCÍCIOS',
       valor: '10.0',
       logoUrl: ''
@@ -32,17 +30,15 @@ export class EditorDocumentoA4View {
 
     this.questoes = [
       {
-        enunciado: 'Resolva a equação algébrica dada por $$x^2 - 5x + 6 = 0$$ determinando as raízes reais.',
+        enunciado: 'Resolva a equação dada por $$x^2 - 5x + 6 = 0$$.',
         pontuacao: '2.0',
         linhasEspaco: 4,
         imagemUrl: ''
       }
     ];
-
-    this.carregarDadosIniciais();
   }
 
-  async carregarDadosIniciais() {
+  async restaurarDadosSalvos() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -50,33 +46,36 @@ export class EditorDocumentoA4View {
         this.dadosCabecalho.professor = `Prof(a). ${nome}`;
       }
     } catch {
-      this.dadosCabecalho.professor = 'Professor(a)';
+      // mantém padrão
     }
 
-    // Carrega rascunho vindo de "Meus Trabalhos" se existir
     const rascunho = sessionStorage.getItem('DOCUMENTO_ATIVO');
     if (rascunho) {
       try {
         const doc = JSON.parse(rascunho);
-        this.documentoAtivoId = doc.id;
-        this.tipo = doc.tipo;
-        if (doc.conteudo_json?.dadosCabecalho) this.dadosCabecalho = doc.conteudo_json.dadosCabecalho;
-        if (doc.conteudo_json?.questoes) this.questoes = doc.conteudo_json.questoes;
-        if (doc.conteudo_json?.estilo) this.estilo = doc.conteudo_json.estilo;
+        if (doc.id) this.documentoAtivoId = doc.id;
+        if (doc.tipo) this.tipo = doc.tipo;
+
+        const cJson = doc.conteudo_json || {};
+        if (cJson.dadosCabecalho) this.dadosCabecalho = { ...this.dadosCabecalho, ...cJson.dadosCabecalho };
+        if (Array.isArray(cJson.questoes) && cJson.questoes.length > 0) this.questoes = cJson.questoes;
+        if (cJson.estilo) this.estilo = { ...this.estilo, ...cJson.estilo };
       } catch (e) {
-        console.warn('Erro ao carregar rascunho:', e);
+        console.warn('Erro ao restaurar documento ativo:', e);
       } finally {
         sessionStorage.removeItem('DOCUMENTO_ATIVO');
       }
     }
   }
 
-  render() {
+  async render() {
+    await this.restaurarDadosSalvos();
+
     this.container.innerHTML = `
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
       <div class="flex flex-col lg:flex-row gap-8 p-6 max-w-full">
-        <!-- PAINEL DE CONTROLO E CUSTOMIZAÇÃO -->
+        <!-- PAINEL DE CONTROLO E EDIÇÃO -->
         <div class="no-print lg:w-5/12 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6 max-h-[92vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b pb-4">
             <div>
@@ -85,7 +84,7 @@ export class EditorDocumentoA4View {
             </div>
             <div class="flex items-center gap-2">
               <button id="btn-salvar-estudio" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
-                💾 Salvar
+                💾 Guardar
               </button>
               <button id="btn-imprimir-estudio" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
                 🖨️ PDF
@@ -93,7 +92,7 @@ export class EditorDocumentoA4View {
             </div>
           </div>
 
-          <!-- SELEÇÃO DE TIPO E LAYOUT DE PÁGINA -->
+          <!-- SELEÇÃO DE TIPO E LAYOUT -->
           <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
             <div>
               <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Finalidade</label>
@@ -128,7 +127,7 @@ export class EditorDocumentoA4View {
             </div>
           </div>
 
-          <!-- CONTROLO DE LOGOTIPO -->
+          <!-- LOGOTIPO -->
           <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
             <div id="preview-logo-box" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
               ${this.dadosCabecalho.logoUrl 
@@ -137,7 +136,7 @@ export class EditorDocumentoA4View {
               }
             </div>
             <div class="flex-1">
-              <label class="block text-xs font-bold text-slate-700 mb-1">Logotipo da Instituição</label>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Logótipo da Instituição</label>
               <input type="file" id="inp-upload-logo" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
             </div>
             ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="text-xs text-rose-500 hover:underline">Remover</button>` : ''}
@@ -195,6 +194,8 @@ export class EditorDocumentoA4View {
 
   renderQuestoesFormulario() {
     const container = this.container.querySelector('#questoes-formulario-container');
+    if (!container) return;
+
     container.innerHTML = this.questoes.map((q, idx) => `
       <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3">
         <div class="flex items-center justify-between text-xs font-bold text-slate-600">
@@ -202,7 +203,7 @@ export class EditorDocumentoA4View {
           <div class="flex items-center gap-2">
             ${this.tipo === 'prova' ? `
               <span>Pts:</span>
-              <input type="text" data-q-pts="${idx}" value="${q.pontuacao}" class="w-12 text-center border rounded p-1 text-xs bg-white font-bold">
+              <input type="text" data-q-pts="${idx}" value="${q.pontuacao || '1.0'}" class="w-12 text-center border rounded p-1 text-xs bg-white font-bold">
             ` : `
               <span>Linhas:</span>
               <input type="number" min="0" max="30" data-q-linhas="${idx}" value="${q.linhasEspaco || 0}" class="w-12 text-center border rounded p-1 text-xs bg-white font-bold">
@@ -211,7 +212,7 @@ export class EditorDocumentoA4View {
           </div>
         </div>
 
-        <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-lg p-2 text-xs bg-white font-mono" placeholder="Enunciado com LaTeX ($formula$ ou $$bloco$$)...">${q.enunciado}</textarea>
+        <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-lg p-2 text-xs bg-white font-mono" placeholder="Enunciado com LaTeX ($formula$ ou $$bloco$$)...">${q.enunciado || ''}</textarea>
 
         <div class="flex items-center justify-between pt-1 border-t border-slate-200 text-xs">
           <div class="flex items-center gap-2">
@@ -232,15 +233,15 @@ export class EditorDocumentoA4View {
 
   atualizarPreviewA4() {
     const preview = this.container.querySelector('#folha-preview-a4');
+    if (!preview) return;
+
     const cab = this.dadosCabecalho;
     const est = this.estilo;
 
-    // Define classe de fonte
     let fontCss = "font-family: 'Times New Roman', serif;";
     if (est.fonte === 'font-sans') fontCss = "font-family: Arial, Helvetica, sans-serif;";
     if (est.fonte === 'font-mono') fontCss = "font-family: monospace;";
 
-    // Estruturas de Cabeçalho Configuráveis
     let cabecalhoHtml = '';
     if (est.layoutCabecalho === 'classico') {
       cabecalhoHtml = `
@@ -275,7 +276,6 @@ export class EditorDocumentoA4View {
         </div>
       `;
     } else {
-      // Minimalista
       cabecalhoHtml = `
         <div class="flex justify-between items-start border-b border-black pb-3 mb-6 text-xs" style="font-family: Arial, sans-serif;">
           <div>
@@ -291,7 +291,6 @@ export class EditorDocumentoA4View {
       `;
     }
 
-    // Renderização das Questões com KaTeX
     const questoesHtml = this.questoes.map((q, idx) => {
       const enunciadoHtml = renderizarMatematica(q.enunciado || '');
       let espacoHtml = '';
@@ -336,17 +335,27 @@ export class EditorDocumentoA4View {
     `;
   }
 
+  sincronizarCamposDoDOM() {
+    this.dadosCabecalho.escola = this.container.querySelector('#cfg-escola')?.value || this.dadosCabecalho.escola;
+    this.dadosCabecalho.disciplina = this.container.querySelector('#cfg-disciplina')?.value || this.dadosCabecalho.disciplina;
+    this.dadosCabecalho.professor = this.container.querySelector('#cfg-professor')?.value || this.dadosCabecalho.professor;
+    this.dadosCabecalho.turma = this.container.querySelector('#cfg-turma')?.value || this.dadosCabecalho.turma;
+    this.dadosCabecalho.tipoDocumento = this.container.querySelector('#cfg-tipo')?.value || this.dadosCabecalho.tipoDocumento;
+    if (this.tipo === 'prova') {
+      this.dadosCabecalho.valor = this.container.querySelector('#cfg-valor')?.value || this.dadosCabecalho.valor;
+    }
+  }
+
   bindEvents() {
     this.container.querySelector('#btn-imprimir-estudio')?.addEventListener('click', () => window.print());
 
-    // Tipo de Documento
     this.container.querySelector('#sel-tipo-doc')?.addEventListener('change', (e) => {
       this.tipo = e.target.value;
       this.dadosCabecalho.tipoDocumento = this.tipo === 'prova' ? 'AVALIAÇÃO BIMESTRAL' : 'LISTA DE EXERCÍCIOS';
-      this.render();
+      this.renderQuestoesFormulario();
+      this.atualizarPreviewA4();
     });
 
-    // Customizações Visuais
     this.container.querySelector('#sel-layout-cab')?.addEventListener('change', (e) => {
       this.estilo.layoutCabecalho = e.target.value;
       this.atualizarPreviewA4();
@@ -360,24 +369,24 @@ export class EditorDocumentoA4View {
       this.atualizarPreviewA4();
     });
 
-    // Colunas
     this.container.querySelector('#btn-col-1')?.addEventListener('click', () => {
       this.estilo.duasColunas = false;
-      this.render();
+      this.atualizarPreviewA4();
     });
     this.container.querySelector('#btn-col-2')?.addEventListener('click', () => {
       this.estilo.duasColunas = true;
-      this.render();
+      this.atualizarPreviewA4();
     });
 
-    // Upload do Logotipo
     this.container.querySelector('#inp-upload-logo')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (ev) => {
           this.dadosCabecalho.logoUrl = ev.target.result;
-          this.render();
+          const box = this.container.querySelector('#preview-logo-box');
+          if (box) box.innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-contain">`;
+          this.atualizarPreviewA4();
         };
         reader.readAsDataURL(file);
       }
@@ -385,10 +394,11 @@ export class EditorDocumentoA4View {
 
     this.container.querySelector('#btn-remover-logo')?.addEventListener('click', () => {
       this.dadosCabecalho.logoUrl = '';
-      this.render();
+      const box = this.container.querySelector('#preview-logo-box');
+      if (box) box.innerHTML = `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Sem Logo</span>`;
+      this.atualizarPreviewA4();
     });
 
-    // Inputs de Cabeçalho
     ['escola', 'disciplina', 'professor', 'turma', 'tipo', 'valor'].forEach(campo => {
       const el = this.container.querySelector(`#cfg-${campo}`);
       el?.addEventListener('input', (e) => {
@@ -397,10 +407,10 @@ export class EditorDocumentoA4View {
       });
     });
 
-    // Adicionar Questão
     this.container.querySelector('#btn-add-questao')?.addEventListener('click', () => {
+      this.sincronizarCamposDoDOM();
       this.questoes.push({
-        enunciado: 'Enunciado da questão... Use $x = 1$ ou $$\\Delta = b^2 - 4ac$$.',
+        enunciado: 'Enunciado da questão...',
         pontuacao: '1.0',
         linhasEspaco: this.estilo.espacoPadraoLinhas,
         imagemUrl: ''
@@ -409,27 +419,25 @@ export class EditorDocumentoA4View {
       this.atualizarPreviewA4();
     });
 
-    // Delegação de Eventos nas Questões
     this.container.addEventListener('input', (e) => {
       if (e.target.dataset.qTexto !== undefined) {
-        const idx = parseInt(e.target.dataset.qTexto);
+        const idx = parseInt(e.target.dataset.qTexto, 10);
         this.questoes[idx].enunciado = e.target.value;
         this.atualizarPreviewA4();
       } else if (e.target.dataset.qPts !== undefined) {
-        const idx = parseInt(e.target.dataset.qPts);
+        const idx = parseInt(e.target.dataset.qPts, 10);
         this.questoes[idx].pontuacao = e.target.value;
         this.atualizarPreviewA4();
       } else if (e.target.dataset.qLinhas !== undefined) {
-        const idx = parseInt(e.target.dataset.qLinhas);
-        this.questoes[idx].linhasEspaco = parseInt(e.target.value) || 0;
+        const idx = parseInt(e.target.dataset.qLinhas, 10);
+        this.questoes[idx].linhasEspaco = parseInt(e.target.value, 10) || 0;
         this.atualizarPreviewA4();
       }
     });
 
-    // Upload de Imagem na Questão
     this.container.addEventListener('change', (e) => {
       if (e.target.dataset.uploadQImg !== undefined) {
-        const idx = parseInt(e.target.dataset.uploadQImg);
+        const idx = parseInt(e.target.dataset.uploadQImg, 10);
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
@@ -443,33 +451,34 @@ export class EditorDocumentoA4View {
       }
     });
 
-    // Exclusão de Questão ou Imagem
     this.container.addEventListener('click', (e) => {
       if (e.target.dataset.removeQ !== undefined) {
-        const idx = parseInt(e.target.dataset.removeQ);
+        const idx = parseInt(e.target.dataset.removeQ, 10);
         this.questoes.splice(idx, 1);
         this.renderQuestoesFormulario();
         this.atualizarPreviewA4();
       } else if (e.target.dataset.removeQImg !== undefined) {
-        const idx = parseInt(e.target.dataset.removeQImg);
+        const idx = parseInt(e.target.dataset.removeQImg, 10);
         this.questoes[idx].imagemUrl = '';
         this.renderQuestoesFormulario();
         this.atualizarPreviewA4();
       }
     });
 
-    // Salvar Documento na Nuvem
+    // GUARDAR ATUALIZADO
     this.container.querySelector('#btn-salvar-estudio')?.addEventListener('click', async () => {
       const btn = this.container.querySelector('#btn-salvar-estudio');
       btn.disabled = true;
-      btn.innerText = 'Salvando...';
+      btn.innerText = 'A guardar...';
+
+      this.sincronizarCamposDoDOM();
 
       try {
         const docSalvo = await DocumentoService.salvarDocumento({
           id: this.documentoAtivoId,
           tipo: this.tipo,
           titulo: `${this.dadosCabecalho.tipoDocumento} - ${this.dadosCabecalho.disciplina}`,
-          categoria: 'Avaliações',
+          categoria: this.tipo === 'prova' ? 'Avaliações' : 'Listas',
           conteudoJson: {
             dadosCabecalho: this.dadosCabecalho,
             questoes: this.questoes,
@@ -477,12 +486,12 @@ export class EditorDocumentoA4View {
           }
         });
         this.documentoAtivoId = docSalvo.id;
-        Toast.show('Documento salvo com sucesso no seu perfil!', 'success');
+        Toast.show('Documento guardado com sucesso na biblioteca!', 'success');
       } catch (err) {
-        Toast.show('Erro ao salvar: ' + err.message, 'error');
+        Toast.show('Erro ao guardar: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.innerText = '💾 Salvar';
+        btn.innerText = '💾 Guardar';
       }
     });
   }
