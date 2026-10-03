@@ -3,7 +3,7 @@ import { supabase } from '../core/supabaseClient.js';
 
 export const LatexService = {
   /**
-   * Converte marcações HTML/rich text para comandos nativos de LaTeX
+   * Converte tags básicas de rich text (HTML/Markdown) para comandos nativos de LaTeX
    */
   converterFormatacaoBasica(texto = '') {
     if (!texto) return '';
@@ -24,7 +24,7 @@ export const LatexService = {
   },
 
   /**
-   * 1. Exportador: Provas e Listas A4
+   * 1. Exportador: Provas e Listas de Exercícios A4
    */
   gerarDocumentoTex(dadosCabecalho = {}, questoes = []) {
     const itensLatex = questoes.map((q, idx) => {
@@ -38,7 +38,7 @@ export const LatexService = {
 
       if (q.imagemUrl) {
         blocoImagem = `\n  \\begin{center}
-    % Carregue a imagem no Overleaf com o nome 'figura_${idx + 1}.png'
+    % Carregue a imagem correspondente no Overleaf como 'figura_${idx + 1}.png'
     \\includegraphics[width=0.55\\textwidth,keepaspectratio]{figura_${idx + 1}.png}
   \\end{center}`;
       }
@@ -82,19 +82,21 @@ ${itensLatex}
   },
 
   /**
-   * 2. Exportador: Apostilas Didáticas completas (Capítulos, Boxes, Gráficos e Exercícios)
+   * 2. Exportador: Apostilas Didáticas completas (Capa, Capítulos, Caixas Didáticas, Exemplos, Exercícios e Gabarito)
    */
   gerarApostilaTex(dados = {}) {
     const ap = dados.conteudo_json || dados;
     const capitulos = ap.capitulos || [];
-    let gabaritoLista = [];
+    const gabaritoLista = [];
 
     const capitulosLatex = capitulos.map((cap) => {
       const secoesTex = (cap.secoes || []).map((sec) => {
         let boxTex = '';
         if (sec.tipoBox && sec.tipoBox !== 'nenhum' && sec.textoBox) {
           const envNome = sec.tipoBox === 'conceito' ? 'definicao' : (sec.tipoBox === 'atencao' ? 'atencao' : 'dica');
-          const tituloBox = sec.tipoBox === 'conceito' ? 'Definição e Conceito' : (sec.tipoBox === 'atencao' ? 'Atenção e Erro Comum' : 'Dica do Professor');
+          const tituloBox = sec.tipoBox === 'conceito' 
+            ? 'Definição e Conceito' 
+            : (sec.tipoBox === 'atencao' ? 'Atenção e Erro Comum' : 'Dica do Professor');
           boxTex = `\\begin{${envNome}}[${tituloBox}]\n${sec.textoBox}\n\\end{${envNome}}\n\\vspace{0.3cm}\n`;
         }
 
@@ -110,19 +112,17 @@ ${itensLatex}
         }
 
         let exemplosTex = '';
-        if (sec.exemplosResolvidos?.length > 0) {
+        if (sec.exemplosResolvidos && sec.exemplosResolvidos.length > 0) {
           exemplosTex = sec.exemplosResolvidos.map((ex, eIdx) => `
-\\begin{exemplo}[Exemplo ${eIdx + 1}]
-${ex.enunciado}
-\\tcblower
-\\textbf{Resolução:}\\\\
-${ex.resolucaoPassoAPasso}
+\\begin{exemplo}[Exemplo ${eIdx + 1}: ${ex.enunciado || ''}]
+\\textbf{Resolução Passo a Passo:}\\\\
+${ex.resolucaoPassoAPasso || ''}
 \\end{exemplo}
 \\vspace{0.3cm}`).join('\n');
         }
 
         let exerciciosTex = '';
-        if (sec.exercicios?.length > 0) {
+        if (sec.exercicios && sec.exercicios.length > 0) {
           const itens = sec.exercicios.map((q) => {
             if (q.respostaGabarito) {
               gabaritoLista.push({ numero: q.numero, resposta: q.respostaGabarito });
@@ -166,7 +166,7 @@ ${ex.resolucaoPassoAPasso}
 
 \\pagestyle{fancy}
 \\fancyhf{}
-\\lhead{\\textbf{${ap.disciplina || 'Matemática'}} -- ${ap.instituicao || 'Instituição'}}
+\\lhead{\\textbf{${ap.disciplina || 'Matemática'}} -- ${ap.instituicao || 'Instituição de Ensino'}}}
 \\rhead{${ap.serieNivel || 'Geral'}}
 \\cfoot{\\thepage}
 
@@ -232,6 +232,7 @@ ${this.converterFormatacaoBasica(pl.objetivosEspecificos || 'Não preenchido')}
 
 \\vspace{0.4cm}
 \\subsection*{3. Conteúdo Programático Bimestral}
+\\noindent
 \\begin{tabularx}{\\textwidth}{|X|X|}
   \\hline
   \\rowcolor{gray!15} \\textbf{1º Bimestre} & \\textbf{2º Bimestre} \\\\
@@ -312,7 +313,7 @@ ${this.converterFormatacaoBasica(pl.unidadesTematicas || 'Não preenchido')}
 \\subsection*{3. Calendário de Grandes Avaliações e Entregas}
 ${this.converterFormatacaoBasica(pl.grandesAvaliacoes || 'Não preenchido')}
 `;
-    } else {
+    } else { // mensal
       corpoTex = `
 \\subsection*{1. Cronograma Semanal de Aulas do Mês}
 ${this.converterFormatacaoBasica(pl.cronogramaSemanas || 'Não preenchido')}
@@ -380,7 +381,7 @@ ${corpoTex}
   },
 
   /**
-   * 4. Converte código LaTeX com \\item em lista de questões do App
+   * 4. Converte código LaTeX contendo comandos \\item em lista de questões do App
    */
   parsearLatexParaQuestoes(codigoTex) {
     if (!codigoTex || typeof codigoTex !== 'string') return [];
@@ -417,7 +418,7 @@ ${corpoTex}
   },
 
   /**
-   * 5. Envia ficheiro PDF ou Imagem para a Edge Function do Supabase
+   * 5. Envia arquivo PDF ou Imagem para a Edge Function do Supabase (Gemini OCR)
    */
   async converterArquivoViaIA(file) {
     const base64Data = await new Promise((resolve, reject) => {
@@ -441,7 +442,7 @@ ${corpoTex}
   },
 
   /**
-   * 6. Descarrega o ficheiro .tex diretamente no navegador
+   * 6. Download direto do arquivo .tex
    */
   baixarArquivoTex(nomeArquivo, conteudoTex) {
     const blob = new Blob([conteudoTex], { type: 'text/x-tex;charset=utf-8;' });
@@ -455,3 +456,5 @@ ${corpoTex}
     URL.revokeObjectURL(url);
   }
 };
+
+export default LatexService;
