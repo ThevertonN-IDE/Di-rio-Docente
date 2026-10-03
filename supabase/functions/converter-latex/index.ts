@@ -6,6 +6,17 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Modelos em ordem de prioridade caso algum enfrente pico de tráfego (503)
+const MODELOS_DISPONIVEIS = [
+  "gemini-3.8-flash",
+  "gemini-2.5-flash",
+  "gemini-1.5-flash"
+];
+
+async function esperar(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -15,8 +26,7 @@ Deno.serve(async (req) => {
     const { base64Data, mimeType } = await req.json();
 
     if (!base64Data) {
-      console.error("Erro: base64Data não foi recebido no corpo da requisição.");
-      return new Response(JSON.stringify({ error: "Nenhum ficheiro fornecido." }), {
+      return new Response(JSON.stringify({ error: "Nenhum arquivo enviado para conversão." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -24,8 +34,7 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get("GEMINI_API_KEY");
     if (!apiKey) {
-      console.error("Erro: A variável GEMINI_API_KEY não foi encontrada nas Secrets.");
-      return new Response(JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada nas Secrets." }), {
+      return new Response(JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada no Supabase." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -33,22 +42,26 @@ Deno.serve(async (req) => {
 
     const promptInstrucao = `
 Você é um especialista em transcrição e diagramação matemática em LaTeX.
-Analise detalhadamente o documento fornecido (PDF ou imagem) e extraia todas as questões.
-Retorne EXCLUSIVAMENTE um JSON válido com o seguinte formato:
+Analise detalhadamente o documento fornecido (PDF ou imagem de avaliação, simulado ou lista de exercícios) e extraia todas as questões com máxima precisão.
+
+Regras estritas:
+1. Retorne EXCLUSIVAMENTE um objeto JSON válido.
+2. Todas as fórmulas, equações e notações matemáticas DEVEM usar sintaxe LaTeX estrita ($...$ para inline e $$...$$ para destaque).
+3. Preserve a numeração e o enunciado integral de cada questão.
+4. Formato JSON obrigatório:
 {
-  "tituloSugestionado": "Título do Documento",
+  "tituloSugestionado": "string com o título deduzido do documento",
   "questoes": [
     {
-      "enunciado": "Enunciado completo com fórmulas em LaTeX ($...$ para inline e $$...$$ para display)",
-      "pontuacao": "1.0",
-      "linhasEspaco": 4,
-      "gabarito": ""
+      "enunciado": "string contendo o texto completo da questão com LaTeX",
+      "pontuacao": "string com a pontuação da questão (ex: 1.5, 2.0). Se não constar, use '1.0'",
+      "linhasEspaco": 5,
+      "gabarito": "resposta ou gabarito caso conste no documento, senão string vazia"
     }
   ]
 }
 `;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
     const payload = {
       contents: [
         {
@@ -69,17 +82,51 @@ Retorne EXCLUSIVAMENTE um JSON válido com o seguinte formato:
       },
     };
 
-    const respostaGemini = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    let respostaGemini: Response | null = null;
+    let ultimoErro = "";
 
-    if (!respostaGemini.ok) {
-      const erroTexto = await respostaGemini.text();
-      console.error(`Erro retornado pela API Gemini (${respostaGemini.status}):`, erroTexto);
-      return new Response(JSON.stringify({ error: `Falha na API Gemini: ${erroTexto}` }), {
-        status: 500,
+    // Tenta os modelos da lista com retentativas automáticas
+    for (const modelo of MODELOS_DISPONIVEIS) {
+      for (let tentativa = 1; tentativa <= 2; tentativa++) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`;
+
+        try {
+          respostaGemini = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (respostaGemini.ok) {
+            break; // Requisição com sucesso
+          }
+
+          const erroTexto = await respostaGemini.text();
+          ultimoErro = `[${modelo}] status ${respostaGemini.status}: ${erroTexto}`;
+
+          // Se for 503 (sobrecarga) ou 429 (rate limit), espera 2 segundos antes de tentar de novo
+          if (respostaGemini.status === 503 || respostaGemini.status === 429) {
+            console.warn(`Pico de tráfego no modelo ${modelo} (tentativa ${tentativa}). Aguardando 2s...`);
+            await esperar(2000);
+          } else {
+            // Se for 404 (modelo indisponível), sai do loop de tentativas e troca de modelo direto
+            break;
+          }
+        } catch (fetchErr: any) {
+          ultimoErro = fetchErr.message;
+          await esperar(1000);
+        }
+      }
+
+      if (respostaGemini && respostaGemini.ok) {
+        break; // Interrompe o loop de modelos
+      }
+    }
+
+    if (!respostaGemini || !respostaGemini.ok) {
+      console.error("Todos os modelos esgotaram tentativas:", ultimoErro);
+      return new Response(JSON.stringify({ error: `Servidores da IA sobrecarregados no momento. Detalhes: ${ultimoErro}` }), {
+        status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -104,7 +151,7 @@ Retorne EXCLUSIVAMENTE um JSON válido com o seguinte formato:
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
-    console.error("Exceção não tratada na Edge Function:", err.message);
+    console.error("Erro interno na Edge Function:", err.message);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
