@@ -3,6 +3,7 @@ import { DocumentoService } from '../services/DocumentoService.js';
 import { TurmaService } from '../services/TurmaService.js';
 import { renderizarMatematica } from '../utils/katexRenderer.js';
 import { Toast } from '../utils/ui.js';
+import { LatexModal } from '../utils/LatexModal.js'; // <-- 1. IMPORT ADICIONADO
 
 export class EditorApostilaView {
   constructor(containerId) {
@@ -90,11 +91,11 @@ export class EditorApostilaView {
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
       <div class="p-4 sm:p-6 max-w-full space-y-4">
-        <!-- BARRA RESPONSIVA PARA DISPOSITIVOS MÓVEIS (TABS) -->
+        <!-- BARRA RESPONSIVA PARA DISPOSITIVOS MÓVEIS (TABS LIMPAS) -->
         <div class="lg:hidden flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 shadow-sm">
           <div class="grid grid-cols-2 gap-1 w-full text-xs font-bold">
             <button id="btn-tab-editor" class="py-2.5 rounded-lg transition ${this.abaAtivaMobile === 'editor' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
-              ✏️️ Editor de Conteúdo
+              ✏ Editor de Conteúdo
             </button>
             <button id="btn-tab-preview" class="py-2.5 rounded-lg transition ${this.abaAtivaMobile === 'preview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
               📄 Prévia da Apostila (A4)
@@ -110,12 +111,16 @@ export class EditorApostilaView {
                 <h2 class="text-xl font-extrabold text-slate-800">Criador de Apostilas</h2>
                 <p class="text-xs text-slate-500">Teoria, boxes didáticos, gráficos matemáticos e exercícios</p>
               </div>
+              <!-- BOTÕES DE AÇÃO: EXPORTAR LATEX ADICIONADO AQUI -->
               <div class="flex items-center gap-2">
-                <button id="btn-salvar-apostila" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition">
+                <button id="btn-exportar-latex-apostila" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm transition">
+                  📄 Overleaf (.tex)
+                </button>
+                <button id="btn-salvar-apostila" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
                   💾 Salvar
                 </button>
-                <button id="btn-imprimir-apostila" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition">
-                  🖨️ PDF / Imprimir
+                <button id="btn-imprimir-apostila" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
+                  🖨️ PDF
                 </button>
               </div>
             </div>
@@ -205,7 +210,7 @@ export class EditorApostilaView {
 
           <!-- FOLHA A4 PARA PREVIEW E IMPRESSÃO (COLUNA DIREITA) -->
           <div id="coluna-preview-painel" class="w-full lg:w-7/12 flex flex-col items-center bg-slate-200/70 p-4 sm:p-6 rounded-2xl overflow-x-auto ${this.abaAtivaMobile === 'editor' ? 'hidden lg:flex' : 'flex'}">
-            <!-- Barra de Zoom para a Prévia -->
+            <!-- Barra de Zoom -->
             <div class="no-print flex items-center justify-between w-full max-w-[210mm] mb-4 bg-white px-4 py-2 rounded-xl border border-slate-300 shadow-sm text-xs font-bold text-slate-700">
               <span class="flex items-center gap-1.5 text-indigo-700">
                 <span>📄</span> Visualização Real de Impressão A4
@@ -228,7 +233,7 @@ export class EditorApostilaView {
         </div>
       </div>
 
-      <!-- MODAL PARA GERAÇÃO NATIVA DE GRÁFICOS MATEMÁTICOS -->
+      <!-- MODAL PARA GERAÇÃO NATIVA DE GRÁFICOS -->
       <div id="modal-gerador-grafico" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b pb-3">
@@ -438,7 +443,6 @@ export class EditorApostilaView {
     ctx.fillText('x', width - 14, toScreenY(0) - 6);
     ctx.fillText('y', toScreenX(0) + 6, 14);
 
-    // Tratamento de pi, Euler e potências
     const prepararExpressao = (expr) => {
       return expr
         .replace(/\s+/g, '')
@@ -583,22 +587,22 @@ export class EditorApostilaView {
                 📝 Exercícios Propostos
               </h4>
               ${sec.exercicios.map((q) => {
-                gabaritoGeral.push({ numero: q.numero, resposta: q.respostaGabarito });
+            gabaritoGeral.push({ numero: q.numero, resposta: q.respostaGabarito });
 
-                let linhasHtml = '';
-                for (let i = 0; i < (q.linhasResolucao || 5); i++) {
-                  linhasHtml += `<div class="w-full border-b border-dotted border-slate-400 h-8"></div>`;
-                }
+            let linhasHtml = '';
+            for (let i = 0; i < (q.linhasResolucao || 5); i++) {
+              linhasHtml += `<div class="w-full border-b border-dotted border-slate-400 h-8"></div>`;
+            }
 
-                return `
-                  <div class="quest-block break-inside-avoid mb-6">
-                    <p class="leading-relaxed text-sm text-slate-950 font-normal">
-                      <strong class="font-bold">${q.numero}.</strong>${renderizarMatematica(q.enunciado)}
-                    </p>
-                    <div class="mt-2 space-y-1">${linhasHtml}</div>
-                  </div>
-                `;
-              }).join('')}
+            return `
+              <div class="quest-block break-inside-avoid mb-6">
+                <p class="leading-relaxed text-sm text-slate-950 font-normal">
+                  <strong class="font-bold">${q.numero}.</strong>${renderizarMatematica(q.enunciado)}
+                </p>
+                <div class="mt-2 space-y-1">${linhasHtml}</div>
+              </div>
+            `;
+          }).join('')}
             </div>
           `;
         }
@@ -681,6 +685,16 @@ export class EditorApostilaView {
 
   bindEvents() {
     this.container.querySelector('#btn-imprimir-apostila')?.addEventListener('click', () => window.print());
+
+    // 2. EXPORTAR LATEX COM SINCRONIZAÇÃO COMPLETA
+    this.container.querySelector('#btn-exportar-latex-apostila')?.addEventListener('click', () => {
+      this.sincronizarCamposDoDOM();
+      LatexModal.abrirExportacao({
+        titulo: this.apostila.titulo || 'Apostila',
+        tipo: 'apostila',
+        docCompleto: { conteudo_json: this.apostila }
+      });
+    });
 
     // Tabs Mobile
     this.container.querySelector('#btn-tab-editor')?.addEventListener('click', () => {

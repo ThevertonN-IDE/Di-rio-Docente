@@ -2,6 +2,8 @@
 import { DocumentoService } from '../services/DocumentoService.js';
 import { TurmaService } from '../services/TurmaService.js';
 import { Toast, customConfirm } from '../utils/ui.js';
+import { LatexModal } from '../utils/LatexModal.js';
+import { LatexService } from '../services/LatexService.js';
 
 export class MeusTrabalhosView {
   constructor(containerId) {
@@ -24,6 +26,9 @@ export class MeusTrabalhosView {
             <p class="text-xs text-slate-500">Gestão integrada de Provas, Listas, Apostilas, Planos curriculares e Documentos digitais</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
+            <button id="btn-digitalizar-direto-latex" class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
+              ⚛️ Digitalizar para LaTeX
+            </button>
             <a href="#estudio-a4" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
               ✨ Prova / Lista A4
             </a>
@@ -84,7 +89,7 @@ export class MeusTrabalhosView {
         </div>
       </div>
 
-      <!-- MODAL DE UPLOAD DE ARQUIVOS (COM ASSOCIAÇÃO A ALUNO E TRABALHO) -->
+      <!-- MODAL DE UPLOAD DE ARQUIVOS -->
       <div id="modal-upload-doc" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b pb-3">
@@ -98,7 +103,7 @@ export class MeusTrabalhosView {
             </div>
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Título / Identificação</label>
-              <input type="text" id="inp-doc-titulo" required placeholder="Ex: Trabalho de Geometria, Redação entregue..." class="w-full border rounded-lg p-2">
+              <input type="text" id="inp-doc-titulo" required placeholder="Ex: Lista de Equações, Avaliação Escaneada..." class="w-full border rounded-lg p-2">
             </div>
             
             <div class="grid grid-cols-2 gap-2">
@@ -121,7 +126,6 @@ export class MeusTrabalhosView {
               </div>
             </div>
 
-            <!-- VINCULAÇÃO AVALIAÇÃO / ALUNO -->
             <div id="box-vinculos-extras" class="grid grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl hidden">
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Aluno Específico</label>
@@ -206,19 +210,52 @@ export class MeusTrabalhosView {
 
       if (doc.tipo === 'prova') {
         badge = `<span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold uppercase text-[10px]">📝 Prova A4</span>`;
-        acaoPrincipal = `<button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar no Estúdio</button>`;
+        acaoPrincipal = `
+          <div class="flex items-center gap-1.5 w-full">
+            <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar</button>
+            <button data-exportar-latex="${doc.id}" title="Exportar código .tex para Overleaf" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
+          </div>
+        `;
       } else if (doc.tipo === 'lista') {
         badge = `<span class="px-2 py-0.5 rounded bg-teal-50 text-teal-700 font-bold uppercase text-[10px]">📋 Lista A4</span>`;
-        acaoPrincipal = `<button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar Lista</button>`;
+        acaoPrincipal = `
+          <div class="flex items-center gap-1.5 w-full">
+            <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar</button>
+            <button data-exportar-latex="${doc.id}" title="Exportar código .tex para Overleaf" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
+          </div>
+        `;
       } else if (doc.tipo === 'apostila') {
         badge = `<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold uppercase text-[10px]">📘 Apostila Didática</span>`;
-        acaoPrincipal = `<button data-editar-apostila="${doc.id}" class="flex-1 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg text-xs transition">✏️ Editar Apostila</button>`;
+        acaoPrincipal = `
+          <div class="flex items-center gap-1.5 w-full">
+            <button data-editar-apostila="${doc.id}" class="flex-1 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg text-xs transition">✏️ Editar</button>
+            <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf (.tex)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
+          </div>
+        `;
       } else if (doc.tipo === 'plano_aula') {
         badge = `<span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold uppercase text-[10px]">📅 Plano (${doc.subtipo || 'Geral'})</span>`;
-        acaoPrincipal = `<button data-editar-plano="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar Plano</button>`;
+        acaoPrincipal = `
+          <div class="flex items-center gap-1.5 w-full">
+            <button data-editar-plano="${doc.id}" class="flex-1 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-lg text-xs transition">✏️ Editar</button>
+            <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf (.tex)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
+          </div>
+        `;
       } else {
         badge = `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">📁 Arquivo Digital</span>`;
-        acaoPrincipal = `<a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs transition">📥 Baixar / Abrir</a>`;
+        const ehPdfOuImg = /\.(pdf|png|jpe?g|webp)($|\?)/i.test(doc.arquivo_nome || doc.arquivo_url || '');
+
+        if (ehPdfOuImg) {
+          acaoPrincipal = `
+            <div class="flex items-center gap-1.5 w-full">
+              <a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">📥 Baixar</a>
+              <button data-converter-ia="${doc.id}" title="Extrair questões em LaTeX via IA" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-sm">
+                ✨ IA LaTeX
+              </button>
+            </div>
+          `;
+        } else {
+          acaoPrincipal = `<a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs transition">📥 Baixar / Abrir</a>`;
+        }
       }
 
       return `
@@ -259,6 +296,81 @@ export class MeusTrabalhosView {
       });
     });
 
+    // Exportação direta para Overleaf a partir do Card
+    this.container.querySelectorAll('[data-exportar-latex]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.exportarLatex);
+        if (!doc) return;
+        const cJson = doc.conteudo_json || {};
+        LatexModal.abrirExportacao({
+          titulo: doc.titulo || 'documento',
+          tipo: doc.tipo,
+          docCompleto: doc,
+          dadosCabecalho: cJson.dadosCabecalho || { tipoDocumento: doc.titulo, disciplina: 'Matemática' },
+          questoes: cJson.questoes || []
+        });
+      });
+    });
+
+    // Conversão de Anexos em Questões via IA
+    this.container.querySelectorAll('[data-converter-ia]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const btnEl = e.currentTarget;
+        const docId = btnEl.dataset.converterIa;
+        const doc = this.documentos.find(d => d.id === docId);
+        if (!doc || !doc.arquivo_url) return;
+
+        const textoOriginal = btnEl.innerHTML;
+        btnEl.disabled = true;
+        btnEl.innerHTML = '⏳ Processando...';
+
+        try {
+          const resp = await fetch(doc.arquivo_url);
+          if (!resp.ok) throw new Error('Falha ao baixar o arquivo anexado para conversão.');
+          const blob = await resp.blob();
+          const extensao = (doc.arquivo_nome || '').split('.').pop() || 'pdf';
+          const mime = blob.type || (extensao === 'pdf' ? 'application/pdf' : 'image/jpeg');
+          const file = new File([blob], doc.arquivo_nome || 'documento.pdf', { type: mime });
+
+          const resultado = await LatexService.converterArquivoViaIA(file);
+          if (resultado.questoes && resultado.questoes.length > 0) {
+            const novoDoc = {
+              tipo: 'prova',
+              titulo: resultado.tituloSugestionado || doc.titulo || 'Avaliação Extraída por IA',
+              conteudo_json: {
+                dadosCabecalho: {
+                  escola: 'INSTITUIÇÃO DE ENSINO',
+                  disciplina: 'Matemática',
+                  professor: 'Professor(a)',
+                  turma: doc.turmas?.nome || 'Turma Geral',
+                  tipoDocumento: resultado.tituloSugestionado || 'LISTA DE EXERCÍCIOS / PROVA',
+                  valor: '10.0'
+                },
+                questoes: resultado.questoes,
+                estilo: {
+                  fonte: 'font-serif',
+                  tamanhoFonte: '11pt',
+                  layoutCabecalho: 'classico',
+                  duasColunas: true,
+                  espacoPadraoLinhas: 4
+                }
+              }
+            };
+            sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(novoDoc));
+            Toast.show(`${resultado.questoes.length} questões extraídas com sucesso! Abrindo no Estúdio A4...`, 'success');
+            window.location.hash = '#estudio-a4';
+          } else {
+            Toast.show('Nenhuma questão identificada no documento anexado.', 'warning');
+          }
+        } catch (err) {
+          Toast.show('Erro na conversão por IA: ' + err.message, 'error');
+        } finally {
+          btnEl.disabled = false;
+          btnEl.innerHTML = textoOriginal;
+        }
+      });
+    });
+
     this.container.querySelectorAll('[data-editar-apostila]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.editarApostila);
@@ -296,6 +408,37 @@ export class MeusTrabalhosView {
   }
 
   bindEvents() {
+    // Atalho Superior de Digitalização Rápida
+    this.container.querySelector('#btn-digitalizar-direto-latex')?.addEventListener('click', () => {
+      LatexModal.abrirImportacaoComIA((questoes) => {
+        const novoDoc = {
+          tipo: 'prova',
+          titulo: 'Documento Digitalizado em LaTeX',
+          conteudo_json: {
+            dadosCabecalho: {
+              escola: 'INSTITUIÇÃO DE ENSINO',
+              disciplina: 'Matemática',
+              professor: 'Professor(a)',
+              turma: 'Turma Geral',
+              tipoDocumento: 'AVALIAÇÃO / LISTA',
+              valor: '10.0'
+            },
+            questoes: questoes,
+            estilo: {
+              fonte: 'font-serif',
+              tamanhoFonte: '11pt',
+              layoutCabecalho: 'classico',
+              duasColunas: true,
+              espacoPadraoLinhas: 4
+            }
+          }
+        };
+        sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(novoDoc));
+        Toast.show('Questões carregadas! Abrindo no Estúdio A4...', 'success');
+        window.location.hash = '#estudio-a4';
+      });
+    });
+
     this.container.querySelector('#inp-filtro-busca')?.addEventListener('input', (e) => {
       this.filtroBusca = e.target.value;
       this.renderCards();
@@ -343,10 +486,10 @@ export class MeusTrabalhosView {
           .map(m => m.alunos)
           .sort((a, b) => a.nome.localeCompare(b.nome));
 
-        selAluno.innerHTML = '<option value="">Toda a Turma / Nenhum</option>' + 
+        selAluno.innerHTML = '<option value="">Toda a Turma / Nenhum</option>' +
           alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
 
-        selAv.innerHTML = '<option value="">Nenhuma Avaliação</option>' + 
+        selAv.innerHTML = '<option value="">Nenhuma Avaliação</option>' +
           (avaliacoes || []).map(av => `<option value="${av.id}">${av.titulo}</option>`).join('');
 
         boxExtras.classList.remove('hidden');
@@ -366,7 +509,7 @@ export class MeusTrabalhosView {
 
       try {
         const { publicUrl, nomeOriginal, tamanhoFormatado } = await DocumentoService.uploadArquivo(file);
-        
+
         await DocumentoService.salvarDocumento({
           tipo: 'arquivo_externo',
           titulo: this.container.querySelector('#inp-doc-titulo').value,

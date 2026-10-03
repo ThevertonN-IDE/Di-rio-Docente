@@ -3,6 +3,7 @@ import { DocumentoService } from '../services/DocumentoService.js';
 import { renderizarMatematica } from '../utils/katexRenderer.js';
 import { Toast } from '../utils/ui.js';
 import { supabase } from '../core/supabaseClient.js';
+import { LatexModal } from '../utils/LatexModal.js';
 
 export class EditorDocumentoA4View {
   constructor(containerId, tipoPadrao = 'prova') {
@@ -83,10 +84,13 @@ export class EditorDocumentoA4View {
               <p class="text-xs text-slate-500">Design avançado, cabeçalhos dinâmicos e LaTeX</p>
             </div>
             <div class="flex items-center gap-2">
-              <button id="btn-salvar-estudio" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
+              <button id="btn-exportar-latex-estudio" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+                📄 Overleaf (.tex)
+              </button>
+              <button id="btn-salvar-estudio" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
                 💾 Guardar
               </button>
-              <button id="btn-imprimir-estudio" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
+              <button id="btn-imprimir-estudio" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
                 🖨️ PDF
               </button>
             </div>
@@ -104,7 +108,7 @@ export class EditorDocumentoA4View {
             <div>
               <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Modelo do Cabeçalho</label>
               <select id="sel-layout-cab" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
-                <option value="classico" ${this.estilo.layoutCabecalho === 'classico' ? 'selected' : ''}>🏛️ Oficial Clássico</option>
+                <option value="classico" ${this.estilo.layoutCabecalho === 'classico' ? 'selected' : ''}>🏛️️ Oficial Clássico</option>
                 <option value="moderno_central" ${this.estilo.layoutCabecalho === 'moderno_central' ? 'selected' : ''}>✨ Moderno Centralizado</option>
                 <option value="minimalista" ${this.estilo.layoutCabecalho === 'minimalista' ? 'selected' : ''}>📄 Minimalista Direto</option>
               </select>
@@ -127,7 +131,7 @@ export class EditorDocumentoA4View {
             </div>
           </div>
 
-          <!-- LOGOTIPO -->
+          <!-- LOGÓTIPO -->
           <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
             <div id="preview-logo-box" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
               ${this.dadosCabecalho.logoUrl 
@@ -139,7 +143,7 @@ export class EditorDocumentoA4View {
               <label class="block text-xs font-bold text-slate-700 mb-1">Logótipo da Instituição</label>
               <input type="file" id="inp-upload-logo" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
             </div>
-            ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="text-xs text-rose-500 hover:underline">Remover</button>` : ''}
+            ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="text-xs text-rose-500 hover:underline font-bold">Remover</button>` : ''}
           </div>
 
           <!-- CAMPOS DE CABEÇALHO -->
@@ -174,7 +178,14 @@ export class EditorDocumentoA4View {
           <div class="space-y-4">
             <div class="flex items-center justify-between border-b pb-2">
               <h3 class="text-xs font-bold text-slate-500 uppercase">Questões Cadastradas (${this.questoes.length})</h3>
-              <button id="btn-add-questao" class="text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-md hover:bg-indigo-100">+ Nova Questão</button>
+              <div class="flex items-center gap-2">
+                <button id="btn-importar-latex-estudio" class="text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-md hover:bg-indigo-100 flex items-center gap-1 transition">
+                  ✨ Importar LaTeX / PDF
+                </button>
+                <button id="btn-add-questao" class="text-xs font-bold bg-slate-800 text-white px-2.5 py-1 rounded-md hover:bg-slate-900 transition">
+                  + Nova Questão
+                </button>
+              </div>
             </div>
             <div id="questoes-formulario-container" class="space-y-4"></div>
           </div>
@@ -348,6 +359,26 @@ export class EditorDocumentoA4View {
 
   bindEvents() {
     this.container.querySelector('#btn-imprimir-estudio')?.addEventListener('click', () => window.print());
+
+    // Exportar para Overleaf (.tex)
+    this.container.querySelector('#btn-exportar-latex-estudio')?.addEventListener('click', () => {
+      this.sincronizarCamposDoDOM();
+      LatexModal.abrirExportacao({
+        titulo: `${this.dadosCabecalho.tipoDocumento} - ${this.dadosCabecalho.disciplina}`,
+        dadosCabecalho: this.dadosCabecalho,
+        questoes: this.questoes
+      });
+    });
+
+    // Importar via LaTeX colado ou PDF/Imagem via IA
+    this.container.querySelector('#btn-importar-latex-estudio')?.addEventListener('click', () => {
+      LatexModal.abrirImportacaoComIA((questoesNovas) => {
+        this.sincronizarCamposDoDOM();
+        this.questoes.push(...questoesNovas);
+        this.renderQuestoesFormulario();
+        this.atualizarPreviewA4();
+      });
+    });
 
     this.container.querySelector('#sel-tipo-doc')?.addEventListener('change', (e) => {
       this.tipo = e.target.value;
