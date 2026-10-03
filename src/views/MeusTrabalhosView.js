@@ -4,6 +4,7 @@ import { TurmaService } from '../services/TurmaService.js';
 import { Toast, customConfirm } from '../utils/ui.js';
 import { LatexModal } from '../utils/LatexModal.js';
 import { LatexService } from '../services/LatexService.js';
+import { CriarMaterialSheet } from '../utils/CriarMaterialSheet.js';
 
 export class MeusTrabalhosView {
   constructor(containerId) {
@@ -19,30 +20,18 @@ export class MeusTrabalhosView {
   async render() {
     this.container.innerHTML = `
       <div class="p-6 max-w-7xl mx-auto space-y-6">
-        <!-- CABEÇALHO -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-          <div>
-            <h1 class="text-2xl font-bold text-slate-800">Biblioteca Pedagógica & Meus Trabalhos</h1>
-            <p class="text-xs text-slate-500">Gestão integrada de Provas, Listas, Apostilas, Planos curriculares e Documentos digitais</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="btn-digitalizar-direto-latex" class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
-              ⚛️ Digitalizar para LaTeX
-            </button>
-            <a href="#estudio-a4" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
-              ✨ Prova / Lista A4
-            </a>
-            <a href="#apostilas" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
-              📘 Criar Apostila
-            </a>
-            <a href="#planos-aula" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
-              📅 Plano de Aula
-            </a>
-            <button id="btn-modal-upload-doc" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition">
-              📁 Anexar Arquivo
-            </button>
-          </div>
+        <!-- CABEÇALHO LIMPO E RESPONSIVO -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+         <div>
+          <h1 class="text-xl md:text-2xl font-bold text-slate-800">Biblioteca Pedagógica & Meus Trabalhos</h1>
+          <p class="text-xs text-slate-500">Gestão de Provas, Listas, Apostilas, Planos e Documentos digitais</p>
         </div>
+        <div class="flex items-center gap-2">
+          <button id="btn-abrir-sheet-criar" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition">
+            ➕ Criar Material
+          </button>
+        </div>
+      </div>
 
         <!-- FILTROS -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3 text-xs">
@@ -438,7 +427,13 @@ export class MeusTrabalhosView {
         window.location.hash = '#estudio-a4';
       });
     });
-
+    this.container.querySelector('#btn-abrir-sheet-criar')?.addEventListener('click', () => {
+      CriarMaterialSheet.abrir({
+        onAbrirUpload: () => {
+          this.container.querySelector('#modal-upload-doc')?.classList.remove('hidden');
+        }
+      });
+    });
     this.container.querySelector('#inp-filtro-busca')?.addEventListener('input', (e) => {
       this.filtroBusca = e.target.value;
       this.renderCards();

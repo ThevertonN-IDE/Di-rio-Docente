@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Diário Docente</title>
 
+  <!-- Prevenção de Cache no Navegador -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -35,7 +40,7 @@
 <body
   class="bg-slate-100 text-slate-800 min-h-screen font-sans antialiased selection:bg-indigo-100 selection:text-indigo-800">
 
-  <!-- Header Global (Inicia invisível e só aparece se estiver autenticado) -->
+  <!-- Header Global (Só aparece quando o usuário estiver autenticado) -->
   <header id="app-header" class="no-print bg-white border-b border-slate-200 sticky top-0 z-40 hidden shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
@@ -46,7 +51,7 @@
         <span>Diário Docente</span>
       </a>
 
-      <!-- Botão Hambúrguer para Mobile -->
+      <!-- Botão Hambúrguer para Mobile (Ações secundárias e Backup) -->
       <button id="btn-mobile-menu" type="button"
         class="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,13 +60,13 @@
       </button>
 
       <!-- Menu Desktop -->
-      <!-- Menu Desktop -->
       <nav id="nav-desktop" class="hidden md:flex items-center gap-4 text-xs sm:text-sm font-semibold text-slate-600">
         <a href="#dashboard" class="hover:text-indigo-600 transition py-1">Turmas</a>
         <a href="#meus-trabalhos" class="hover:text-indigo-600 transition py-1 flex items-center gap-1 text-indigo-700 font-bold">
           <span>📚</span> Meus Trabalhos
         </a>
         <a href="#estudio-a4" class="hover:text-indigo-600 transition py-1">Estúdio Provas & Listas A4</a>
+        <a href="#apostilas" class="hover:text-indigo-600 transition py-1">Apostilas</a>
         <a href="#planos-aula" class="hover:text-indigo-600 transition py-1">Planos de Aula</a>
         <button id="btn-gerar-backup" type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
@@ -70,19 +75,21 @@
       </nav>
     </div>
 
-    <!-- Gaveta do Menu Mobile (abre ao clicar no hambúrguer) -->
-    <div id="menu-mobile" class="hidden md:hidden border-t border-slate-100 px-4 py-3 space-y-2 bg-white">
+    <!-- Gaveta do Menu Mobile do Topo -->
+    <div id="menu-mobile" class="hidden md:hidden border-t border-slate-100 px-4 py-3 space-y-2 bg-white shadow-lg">
       <a href="#dashboard"
         class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Turmas</a>
       <a href="#meus-trabalhos"
         class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 flex items-center gap-1">
         <span>📚</span> Meus Trabalhos
       </a>
-      <a href="#provas"
-        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Criador de Provas A4</a>
-      <a href="#listas"
-        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Listas de Exercícios</a>
-      <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+      <a href="#estudio-a4"
+        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Estúdio Provas & Listas A4</a>
+      <a href="#apostilas"
+        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Apostilas Didáticas</a>
+      <a href="#planos-aula"
+        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Planos de Aula (BNCC)</a>
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
         <button id="btn-gerar-backup-mobile" type="button"
           class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
           💾 Fazer Backup
@@ -92,8 +99,8 @@
     </div>
   </header>
 
-  <!-- Container SPA -->
-  <main id="app" class="w-full"></main>
+  <!-- Container SPA (pb-24 reserva o espaço inferior no celular para a BottomNavBar não cobrir nada) -->
+  <main id="app" class="w-full pb-24 md:pb-8 min-h-[calc(100vh-4rem)]"></main>
 
   <script type="module" src="./src/app.js"></script>
 </body>
