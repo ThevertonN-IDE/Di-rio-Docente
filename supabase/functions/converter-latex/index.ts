@@ -6,14 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Modelos em ordem de prioridade caso algum enfrente pico de tráfego (503)
-const MODELOS_DISPONIVEIS = [
-  "gemini-3.8-flash",
+// Modelos confirmados na sua conta (do mais rápido/estável ao reserva pro)
+const MODELOS_ATIVOS = [
   "gemini-2.5-flash",
-  "gemini-1.5-flash"
+  "gemini-3.8-flash",
+  "gemini-2.5-pro"
 ];
 
-async function esperar(ms: number) {
+function esperar(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -85,8 +85,9 @@ Regras estritas:
     let respostaGemini: Response | null = null;
     let ultimoErro = "";
 
-    // Tenta os modelos da lista com retentativas automáticas
-    for (const modelo of MODELOS_DISPONIVEIS) {
+    for (const modelo of MODELOS_ATIVOS) {
+      console.log(`Tentando processar com o modelo: ${modelo}...`);
+
       for (let tentativa = 1; tentativa <= 2; tentativa++) {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`;
 
@@ -98,19 +99,19 @@ Regras estritas:
           });
 
           if (respostaGemini.ok) {
-            break; // Requisição com sucesso
+            console.log(`Sucesso no modelo ${modelo}!`);
+            break;
           }
 
           const erroTexto = await respostaGemini.text();
           ultimoErro = `[${modelo}] status ${respostaGemini.status}: ${erroTexto}`;
 
-          // Se for 503 (sobrecarga) ou 429 (rate limit), espera 2 segundos antes de tentar de novo
+          // Se for pico de tráfego (503) ou taxa limite (429), pausa antes de tentar novamente
           if (respostaGemini.status === 503 || respostaGemini.status === 429) {
-            console.warn(`Pico de tráfego no modelo ${modelo} (tentativa ${tentativa}). Aguardando 2s...`);
+            console.warn(`Pico temporário no modelo ${modelo}. Aguardando 2s...`);
             await esperar(2000);
           } else {
-            // Se for 404 (modelo indisponível), sai do loop de tentativas e troca de modelo direto
-            break;
+            break; // Outro erro, pula para o próximo modelo da lista
           }
         } catch (fetchErr: any) {
           ultimoErro = fetchErr.message;
@@ -119,13 +120,13 @@ Regras estritas:
       }
 
       if (respostaGemini && respostaGemini.ok) {
-        break; // Interrompe o loop de modelos
+        break;
       }
     }
 
     if (!respostaGemini || !respostaGemini.ok) {
-      console.error("Todos os modelos esgotaram tentativas:", ultimoErro);
-      return new Response(JSON.stringify({ error: `Servidores da IA sobrecarregados no momento. Detalhes: ${ultimoErro}` }), {
+      console.error("Falha ao comunicar com os modelos:", ultimoErro);
+      return new Response(JSON.stringify({ error: `Servidores da IA ocupados no momento. Detalhe: ${ultimoErro}` }), {
         status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -135,7 +136,7 @@ Regras estritas:
     const textoGerado = dadosGemini.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!textoGerado) {
-      throw new Error("A resposta da IA não continha texto processável.");
+      throw new Error("A IA respondeu sem texto legível.");
     }
 
     const jsonLimpo = textoGerado
