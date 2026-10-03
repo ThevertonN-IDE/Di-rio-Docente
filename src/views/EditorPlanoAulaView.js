@@ -2,6 +2,7 @@
 import { DocumentoService } from '../services/DocumentoService.js';
 import { TurmaService } from '../services/TurmaService.js';
 import { Toast } from '../utils/ui.js';
+import { LatexModal } from '../utils/LatexModal.js';
 
 export class EditorPlanoAulaView {
   constructor(containerId) {
@@ -104,11 +105,14 @@ export class EditorPlanoAulaView {
               <p class="text-xs text-slate-500">Planeamento curricular do nível macro ao micro roteiro</p>
             </div>
             <div class="flex items-center gap-2">
-              <button id="btn-salvar-plano" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
+              <button id="btn-exportar-latex-plano" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+                📄 Overleaf (.tex)
+              </button>
+              <button id="btn-salvar-plano" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
                 💾 Guardar
               </button>
-              <button id="btn-imprimir-plano" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1">
-                🖨️ PDF / Imprimir
+              <button id="btn-imprimir-plano" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+                🖨️ PDF
               </button>
             </div>
           </div>
@@ -258,7 +262,6 @@ export class EditorPlanoAulaView {
       anual: 'PLANO DE ENSINO ANUAL'
     };
 
-    // Monta o corpo específico para a folha A4
     let corpoA4 = '';
 
     if (this.subtipo === 'anual') {
@@ -487,8 +490,36 @@ export class EditorPlanoAulaView {
     `;
   }
 
+  sincronizarCamposDoDOM() {
+    this.plano.titulo = this.container.querySelector('#inp-plano-titulo')?.value || this.plano.titulo;
+    this.plano.escola = this.container.querySelector('#inp-pl-escola')?.value || this.plano.escola;
+    this.plano.professor = this.container.querySelector('#inp-pl-professor')?.value || this.plano.professor;
+    this.plano.serie = this.container.querySelector('#inp-pl-serie')?.value || this.plano.serie;
+    this.plano.turno = this.container.querySelector('#inp-pl-turno')?.value || this.plano.turno;
+    this.plano.anoLetivo = this.container.querySelector('#inp-pl-ano')?.value || this.plano.anoLetivo;
+    this.plano.cargaHorariaTotal = this.container.querySelector('#inp-pl-ch')?.value || this.plano.cargaHorariaTotal;
+    this.plano.duracaoAula = this.container.querySelector('#inp-pl-duracao')?.value || this.plano.duracaoAula;
+
+    this.container.querySelectorAll('[data-pc]').forEach(el => {
+      this.plano[el.dataset.pc] = el.value;
+    });
+  }
+
   bindEvents() {
     this.container.querySelector('#btn-imprimir-plano')?.addEventListener('click', () => window.print());
+
+    // Exportação Direta para Overleaf (.tex)
+    this.container.querySelector('#btn-exportar-latex-plano')?.addEventListener('click', () => {
+      this.sincronizarCamposDoDOM();
+      LatexModal.abrirExportacao({
+        titulo: `${this.plano.titulo} - ${this.plano.serie || 'Geral'}`,
+        tipo: 'plano_aula',
+        docCompleto: {
+          subtipo: this.subtipo,
+          conteudo_json: this.plano
+        }
+      });
+    });
 
     // Seletor de Nível do Plano
     this.container.querySelector('#sel-subtipo-plano')?.addEventListener('change', (e) => {
@@ -553,6 +584,8 @@ export class EditorPlanoAulaView {
       const btn = this.container.querySelector('#btn-salvar-plano');
       btn.disabled = true;
       btn.innerText = 'A guardar...';
+
+      this.sincronizarCamposDoDOM();
 
       try {
         const docSalvo = await DocumentoService.salvarDocumento({
