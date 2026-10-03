@@ -6,11 +6,12 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Modelos confirmados na sua conta (do mais rápido/estável ao reserva pro)
+// Modelos ativos oficiais baseados no seu terminal e na recomendação da API
 const MODELOS_ATIVOS = [
-  "gemini-2.5-flash",
-  "gemini-3.8-flash",
-  "gemini-2.5-pro"
+  "gemini-flash-latest",
+  "gemini-3.1-pro-preview",
+  "gemini-3.5-flash",
+  "gemini-3.8-flash"
 ];
 
 function esperar(ms: number) {
@@ -83,10 +84,10 @@ Regras estritas:
     };
 
     let respostaGemini: Response | null = null;
-    let ultimoErro = "";
+    let historicoErros: string[] = [];
 
     for (const modelo of MODELOS_ATIVOS) {
-      console.log(`Tentando processar com o modelo: ${modelo}...`);
+      console.log(`[TENTATIVA] Chamando modelo: ${modelo}...`);
 
       for (let tentativa = 1; tentativa <= 2; tentativa++) {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`;
@@ -99,22 +100,26 @@ Regras estritas:
           });
 
           if (respostaGemini.ok) {
-            console.log(`Sucesso no modelo ${modelo}!`);
+            console.log(`[SUCESSO] Modelo ${modelo} respondeu com sucesso!`);
             break;
           }
 
           const erroTexto = await respostaGemini.text();
-          ultimoErro = `[${modelo}] status ${respostaGemini.status}: ${erroTexto}`;
+          const logErro = `[${modelo} | Tentativa ${tentativa} | Status ${respostaGemini.status}]: ${erroTexto}`;
+          console.warn(logErro);
+          historicoErros.push(logErro);
 
-          // Se for pico de tráfego (503) ou taxa limite (429), pausa antes de tentar novamente
+          // Se for pico passageiro (503) ou rate limit (429), pausa antes de tentar novamente
           if (respostaGemini.status === 503 || respostaGemini.status === 429) {
-            console.warn(`Pico temporário no modelo ${modelo}. Aguardando 2s...`);
             await esperar(2000);
           } else {
-            break; // Outro erro, pula para o próximo modelo da lista
+            // Erro 404 ou 400: não adianta repetir o mesmo modelo, pula para o próximo
+            break;
           }
         } catch (fetchErr: any) {
-          ultimoErro = fetchErr.message;
+          const logFetch = `[${modelo} | Falha de rede]: ${fetchErr.message}`;
+          console.warn(logFetch);
+          historicoErros.push(logFetch);
           await esperar(1000);
         }
       }
@@ -125,9 +130,12 @@ Regras estritas:
     }
 
     if (!respostaGemini || !respostaGemini.ok) {
-      console.error("Falha ao comunicar com os modelos:", ultimoErro);
-      return new Response(JSON.stringify({ error: `Servidores da IA ocupados no momento. Detalhe: ${ultimoErro}` }), {
-        status: 503,
+      console.error("Todos os modelos falharam:", historicoErros.join("\n"));
+      return new Response(JSON.stringify({ 
+        error: "Não foi possível processar o documento com os modelos disponíveis.", 
+        detalhes: historicoErros 
+      }), {
+        status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -136,7 +144,7 @@ Regras estritas:
     const textoGerado = dadosGemini.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!textoGerado) {
-      throw new Error("A IA respondeu sem texto legível.");
+      throw new Error("A IA respondeu sem texto processável.");
     }
 
     const jsonLimpo = textoGerado
@@ -152,7 +160,7 @@ Regras estritas:
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
-    console.error("Erro interno na Edge Function:", err.message);
+    console.error("Exceção não tratada na Edge Function:", err.message);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
