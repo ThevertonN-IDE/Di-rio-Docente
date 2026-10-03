@@ -182,8 +182,8 @@ ${ap.exibirCapa ? `
   \\vspace{0.4cm}
   {\\large\\itshape ${ap.subtitulo || ''}\\par}
   \\vspace{1.5cm}
-  \\textbf{Docente:} ${ap.professor \vert{}\vert{} '---'}\\\\   \\textbf{Componente Curricular:}${ap.disciplina || 'Matemática'}\\\\
-  \\textbf{Turma / Nível:} ${ap.serieNivel \vert{}\vert{} 'Geral'}\\\\   \\vfill   {\\large${ap.anoLetivo || '2026'}\\par}
+  \\textbf{Docente:} ${ap.professor || '---'}\\\\   \\textbf{Componente Curricular:}${ap.disciplina || 'Matemática'}\\\\
+  \\textbf{Turma / Nível:} ${ap.serieNivel || 'Geral'}\\\\   \\vfill   {\\large${ap.anoLetivo || '2026'}\\par}
 \\end{titlepage}
 \\newpage
 ` : ''}
