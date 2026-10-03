@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Tratamento da pré-requisição de segurança do navegador (CORS)
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -16,7 +15,8 @@ Deno.serve(async (req) => {
     const { base64Data, mimeType } = await req.json();
 
     if (!base64Data) {
-      return new Response(JSON.stringify({ error: "Nenhum arquivo enviado para conversão." }), {
+      console.error("Erro: base64Data não foi recebido no corpo da requisição.");
+      return new Response(JSON.stringify({ error: "Nenhum ficheiro fornecido." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get("GEMINI_API_KEY");
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada no Supabase Secrets." }), {
+      console.error("Erro: A variável GEMINI_API_KEY não foi encontrada nas Secrets.");
+      return new Response(JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada nas Secrets." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -32,27 +33,21 @@ Deno.serve(async (req) => {
 
     const promptInstrucao = `
 Você é um especialista em transcrição e diagramação matemática em LaTeX.
-Analise detalhadamente o documento fornecido (PDF ou imagem de avaliação, simulado ou lista de exercícios) e extraia todas as questões com máxima precisão.
-
-Regras estritas:
-1. Retorne EXCLUSIVAMENTE um objeto JSON válido.
-2. Todas as fórmulas, equações e notações matemáticas DEVEM usar sintaxe LaTeX estrita ($...$ para fórmulas em linha e $$...$$ para destaque).
-3. Preserve a numeração e o enunciado integral de cada questão.
-4. Formato JSON obrigatório:
+Analise detalhadamente o documento fornecido (PDF ou imagem) e extraia todas as questões.
+Retorne EXCLUSIVAMENTE um JSON válido com o seguinte formato:
 {
-  "tituloSugestionado": "string com o título deduzido do documento",
+  "tituloSugestionado": "Título do Documento",
   "questoes": [
     {
-      "enunciado": "string contendo o texto completo da questão com LaTeX",
-      "pontuacao": "string com a pontuação da questão (ex: 1.5, 2.0). Se não constar, use '1.0'",
-      "linhasEspaco": 5,
-      "gabarito": "resposta ou gabarito caso conste no documento, senão string vazia"
+      "enunciado": "Enunciado completo com fórmulas em LaTeX ($...$ para inline e $$...$$ para display)",
+      "pontuacao": "1.0",
+      "linhasEspaco": 4,
+      "gabarito": ""
     }
   ]
 }
 `;
 
-    // Utilizando o modelo oficial estável gemini-2.0-flash
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     const payload = {
@@ -71,7 +66,7 @@ Regras estritas:
       ],
       generationConfig: {
         responseMimeType: "application/json",
-        temperature: 0.2, // Reduz alucinações e garante extração fiel
+        temperature: 0.2,
       },
     };
 
@@ -83,17 +78,20 @@ Regras estritas:
 
     if (!respostaGemini.ok) {
       const erroTexto = await respostaGemini.text();
-      throw new Error(`Erro na API Gemini (${respostaGemini.status}): ${erroTexto}`);
+      console.error(`Erro retornado pela API Gemini (${respostaGemini.status}):`, erroTexto);
+      return new Response(JSON.stringify({ error: `Falha na API Gemini: ${erroTexto}` }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const dadosGemini = await respostaGemini.json();
     const textoGerado = dadosGemini.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!textoGerado) {
-      throw new Error("A IA não retornou conteúdo legível para o documento enviado.");
+      throw new Error("A resposta da IA não continha texto processável.");
     }
 
-    // Higienização contra blocos Markdown antes do parse
     const jsonLimpo = textoGerado
       .replace(/^```json\s*/i, "")
       .replace(/^```\s*/i, "")
@@ -107,7 +105,8 @@ Regras estritas:
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message || "Erro interno ao processar documento." }), {
+    console.error("Exceção não tratada na Edge Function:", err.message);
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
