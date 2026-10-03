@@ -18,6 +18,7 @@ import { EditorDocumentoA4View } from './views/EditorDocumentoA4View.js';
 import { EditorPlanoAulaView } from './views/EditorPlanoAulaView.js';
 import { EditorApostilaView } from './views/EditorApostilaView.js';
 import { BottomNavBar } from './components/BottomNavBar.js';
+import { Sidebar } from './components/Sidebar.js';
 
 // 1. Registro nativo do Service Worker PWA (Offline & Cache)
 if ('serviceWorker' in navigator) {
@@ -178,6 +179,7 @@ async function iniciarApp() {
     }
   };
   BottomNavBar.render();
+  Sidebar.render();
   const appRouter = new Router(rotas, 'app');
   appRouter.iniciar();
 }

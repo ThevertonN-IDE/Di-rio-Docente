@@ -41,17 +41,22 @@
   class="bg-slate-100 text-slate-800 min-h-screen font-sans antialiased selection:bg-indigo-100 selection:text-indigo-800">
 
   <!-- Header Global (Só aparece quando o usuário estiver autenticado) -->
-  <header id="app-header" class="no-print bg-white border-b border-slate-200 sticky top-0 z-40 hidden shadow-sm">
+  <!-- Header Global -->
+  <header id="app-header" class="no-print bg-white border-b border-slate-200 sticky top-0 z-20 hidden shadow-sm md:pl-64">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-      <!-- Marca / Logo -->
-      <a href="#dashboard"
-        class="flex items-center gap-2 font-black text-indigo-700 text-base sm:text-lg tracking-tight">
+      <!-- No Mobile: Marca visível. No Desktop: invisível (já está no topo da Sidebar) -->
+      <a href="#dashboard" class="flex md:hidden items-center gap-2 font-black text-indigo-700 text-base tracking-tight">
         <span class="text-xl">📖</span>
         <span>Diário Docente</span>
       </a>
 
-      <!-- Botão Hambúrguer para Mobile (Ações secundárias e Backup) -->
+      <!-- No Desktop: Título discreto ou espaço em branco -->
+      <div class="hidden md:flex items-center text-xs text-slate-400 font-medium">
+        <span>Painel do Professor</span>
+      </div>
+
+      <!-- Botão Hambúrguer (Apenas Mobile) -->
       <button id="btn-mobile-menu" type="button"
         class="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,36 +64,25 @@
         </svg>
       </button>
 
-      <!-- Menu Desktop -->
-      <nav id="nav-desktop" class="hidden md:flex items-center gap-4 text-xs sm:text-sm font-semibold text-slate-600">
-        <a href="#dashboard" class="hover:text-indigo-600 transition py-1">Turmas</a>
-        <a href="#meus-trabalhos" class="hover:text-indigo-600 transition py-1 flex items-center gap-1 text-indigo-700 font-bold">
-          <span>📚</span> Meus Trabalhos
-        </a>
-        <a href="#estudio-a4" class="hover:text-indigo-600 transition py-1">Estúdio Provas & Listas A4</a>
-        <a href="#apostilas" class="hover:text-indigo-600 transition py-1">Apostilas</a>
-        <a href="#planos-aula" class="hover:text-indigo-600 transition py-1">Planos de Aula</a>
+      <!-- Ações do Desktop (Sem links duplicados, preservando os IDs necessários) -->
+      <div id="nav-desktop" class="hidden md:flex items-center gap-3">
         <button id="btn-gerar-backup" type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
           💾 Fazer Backup
         </button>
-      </nav>
+        <div id="desktop-logout-slot"></div>
+      </div>
     </div>
 
     <!-- Gaveta do Menu Mobile do Topo -->
     <div id="menu-mobile" class="hidden md:hidden border-t border-slate-100 px-4 py-3 space-y-2 bg-white shadow-lg">
-      <a href="#dashboard"
-        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Turmas</a>
-      <a href="#meus-trabalhos"
-        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 flex items-center gap-1">
+      <a href="#dashboard" class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Turmas</a>
+      <a href="#meus-trabalhos" class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 flex items-center gap-1">
         <span>📚</span> Meus Trabalhos
       </a>
-      <a href="#estudio-a4"
-        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Estúdio Provas & Listas A4</a>
-      <a href="#apostilas"
-        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Apostilas Didáticas</a>
-      <a href="#planos-aula"
-        class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Planos de Aula (BNCC)</a>
+      <a href="#estudio-a4" class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Estúdio Provas & Listas A4</a>
+      <a href="#apostilas" class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Apostilas Didáticas</a>
+      <a href="#planos-aula" class="mobile-nav-link block py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600">Planos de Aula (BNCC)</a>
       <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
         <button id="btn-gerar-backup-mobile" type="button"
           class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
@@ -100,7 +94,7 @@
   </header>
 
   <!-- Container SPA (pb-24 reserva o espaço inferior no celular para a BottomNavBar não cobrir nada) -->
-  <main id="app" class="w-full pb-24 md:pb-8 min-h-[calc(100vh-4rem)]"></main>
+  <main id="app" class="w-full pb-24 md:pb-8 min-h-[calc(100vh-4rem)] md:pl-64"></main>
 
   <script type="module" src="./src/app.js"></script>
 </body>
