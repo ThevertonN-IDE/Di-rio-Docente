@@ -4,6 +4,7 @@ import { renderizarMatematica } from '../utils/katexRenderer.js';
 import { Toast } from '../utils/ui.js';
 import { supabase } from '../core/supabaseClient.js';
 import { LatexModal } from '../utils/LatexModal.js';
+import { EquacaoModal } from '../utils/EquacaoModal.js';
 
 export class EditorDocumentoA4View {
   constructor(containerId, tipoPadrao = 'prova') {
@@ -155,10 +156,10 @@ export class EditorDocumentoA4View {
             <!-- LOGÓTIPO -->
             <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <div id="preview-logo-box" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
-                ${this.dadosCabecalho.logoUrl 
-                  ? `<img src="${this.dadosCabecalho.logoUrl}" class="w-full h-full object-contain">`
-                  : `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Sem Logo</span>`
-                }
+                ${this.dadosCabecalho.logoUrl
+        ? `<img src="${this.dadosCabecalho.logoUrl}" class="w-full h-full object-contain">`
+        : `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Sem Logo</span>`
+      }
               </div>
               <div class="flex-1 min-w-0">
                 <label class="block text-xs font-bold text-slate-700 mb-1">Logótipo Escolar</label>
@@ -375,8 +376,8 @@ export class EditorDocumentoA4View {
       const enunciadoHtml = renderizarMatematica(q.enunciado || '');
       let espacoHtml = '';
 
-      const numLinhas = q.linhasEspaco !== undefined 
-        ? parseInt(q.linhasEspaco, 10) 
+      const numLinhas = q.linhasEspaco !== undefined
+        ? parseInt(q.linhasEspaco, 10)
         : (est.espacoPadraoLinhas !== undefined ? est.espacoPadraoLinhas : 4);
 
       if (numLinhas > 0) {
@@ -426,6 +427,10 @@ export class EditorDocumentoA4View {
     if (this.tipo === 'prova') {
       this.dadosCabecalho.valor = this.container.querySelector('#cfg-valor')?.value || this.dadosCabecalho.valor;
     }
+    // Ativa a barra de equações rápidas em cada textarea de enunciado
+    this.container.querySelectorAll('textarea[data-q-texto]').forEach(txt => {
+      EquacaoModal.criarBarraRapida(txt);
+    });
   }
 
   bindEvents() {
