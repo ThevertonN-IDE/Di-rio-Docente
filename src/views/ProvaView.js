@@ -2,6 +2,7 @@
 import { PedagogicoService } from '../services/PedagogicoService.js';
 import { DocumentoService } from '../services/DocumentoService.js';
 import { Toast } from '../utils/ui.js';
+import { EquacaoModal } from '../utils/EquacaoModal.js';
 
 export class ProvaView {
   constructor(containerId, viewModel) {
@@ -142,17 +143,20 @@ export class ProvaView {
   renderFormQuestoes() {
     const container = this.container.querySelector('#editor-questoes-container');
     container.innerHTML = this.vm.questoes.map((q, idx) => `
-      <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-600">
+      <div class="border border-slate-200 p-3.5 rounded-xl bg-slate-50/70 space-y-2.5">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
           <span>Questão ${idx + 1}</span>
-          <div class="flex items-center gap-2">
-            <span>Pontos:</span>
-            <input type="text" data-q-pts="${idx}" value="${q.pontuacao}" class="w-14 text-center border rounded p-1 text-xs bg-white font-bold">
-            <button data-remove-q="${idx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold ml-2">Excluir</button>
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-1 font-normal text-slate-600">
+              Espaço:
+              <input type="number" min="0" max="30" data-q-espaco="${idx}" value="${q.linhasEspaco}" class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold">
+              linhas
+            </label>
+            <button data-remove-q="${idx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
           </div>
         </div>
 
-        <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-lg p-2 text-xs bg-white font-mono" placeholder="Enunciado... Use $fórmula$ ou $$bloco$$">${q.enunciado}</textarea>
+        <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-xl p-2.5 text-xs bg-white font-mono outline-none focus:border-indigo-400" placeholder="Enunciado da questão (use $formula$ para LaTeX)...">${q.enunciado}</textarea>
 
         <div class="flex items-center justify-between pt-1 border-t border-slate-200 text-xs">
           <div class="flex items-center gap-2">
@@ -160,17 +164,22 @@ export class ProvaView {
             <input type="file" accept="image/*" data-upload-img="${idx}" class="text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
           </div>
           ${q.imagemUrl ? `
-            <button data-remove-img="${idx}" class="touch-action text-rose-600 hover:underline text-[11px] font-bold">Remover Imagem</button>
+            <button data-remove-img="${idx}" class="touch-action text-rose-600 hover:underline text-[11px] font-bold">Remover</button>
           ` : ''}
         </div>
 
         ${q.imagemUrl ? `
-          <div class="mt-2 w-28 h-24 border rounded-lg overflow-hidden bg-white">
+          <div class="mt-2 w-28 h-24 border rounded-xl overflow-hidden bg-white">
             <img src="${q.imagemUrl}" class="w-full h-full object-contain">
           </div>
         ` : ''}
       </div>
     `).join('');
+
+    // Ativa a fita de equações e o botão de fórmulas em todos os enunciados:
+    container.querySelectorAll('textarea[data-q-texto]').forEach(txt => {
+      EquacaoModal.criarBarraRapida(txt);
+    });
   }
 
   atualizarPreview() {

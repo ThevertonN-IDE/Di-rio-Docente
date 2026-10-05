@@ -4,6 +4,7 @@ import { TurmaService } from '../services/TurmaService.js';
 import { renderizarMatematica } from '../utils/katexRenderer.js';
 import { Toast } from '../utils/ui.js';
 import { LatexModal } from '../utils/LatexModal.js';
+import { EquacaoModal } from '../utils/EquacaoModal.js';
 
 export class EditorApostilaView {
   constructor(containerId) {
@@ -273,6 +274,13 @@ export class EditorApostilaView {
 
     this.atualizarPreviewApostila();
     this.bindEvents();
+    this.container.querySelectorAll(`
+      textarea[data-sec-teoria],
+      textarea[data-ex-resolucao],
+      textarea[data-q-enunciado]
+    `).forEach(txt => {
+      EquacaoModal.criarBarraRapida(txt);
+    });
   }
 
   renderFormularioCapitulos() {

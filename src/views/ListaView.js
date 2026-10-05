@@ -2,6 +2,7 @@
 import { PedagogicoService } from '../services/PedagogicoService.js';
 import { DocumentoService } from '../services/DocumentoService.js';
 import { Toast } from '../utils/ui.js';
+import { EquacaoModal } from '../utils/EquacaoModal.js';
 
 export class ListaView {
   constructor(containerId, viewModel) {
@@ -208,6 +209,11 @@ export class ListaView {
         ` : ''}
       </div>
     `).join('');
+
+    // Ativa a fita de equações e o botão de fórmulas em todos os enunciados:
+    container.querySelectorAll('textarea[data-q-texto]').forEach(txt => {
+      EquacaoModal.criarBarraRapida(txt);
+    });
   }
 
   atualizarPreview() {
