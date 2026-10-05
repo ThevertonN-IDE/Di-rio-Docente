@@ -180,29 +180,33 @@ export class EditorDocumentoA4View {
               </div>
             </div>
 
-            <!-- COLUNAS E CONTROLO GLOBAL DE LINHAS PADRÃO -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-              <div class="flex items-center justify-between sm:justify-start gap-2">
-                <span class="font-bold text-slate-700">Colunas:</span>
-                <div class="flex gap-1">
-                  <button id="btn-col-1" class="touch-action px-2.5 py-1 rounded-lg font-bold transition ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border text-slate-600'}">1 Coluna</button>
-                  <button id="btn-col-2" class="touch-action px-2.5 py-1 rounded-lg font-bold transition ${this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border text-slate-600'}">2 Colunas</button>
+            <!-- COLUNAS E CONTROLO GLOBAL DE LINHAS PADRÃO (SEM SOBREPOSIÇÃO) -->
+            <div class="flex flex-col gap-2.5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+              <!-- Linha 1: Formato de Colunas -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-700">Colunas da Folha:</span>
+                <div class="flex gap-1.5 shrink-0">
+                  <button id="btn-col-1" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">1 Coluna</button>
+                  <button id="btn-col-2" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">2 Colunas</button>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between sm:justify-end gap-1.5 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
-                <span class="font-bold text-slate-700 whitespace-nowrap">Linhas Padrão:</span>
-                <input 
-                  type="number" 
-                  id="inp-espaco-padrao" 
-                  min="0" 
-                  max="30" 
-                  value="${this.estilo.espacoPadraoLinhas !== undefined ? this.estilo.espacoPadraoLinhas : 4}" 
-                  class="w-12 border border-slate-300 rounded-lg p-1 text-center font-bold bg-white text-xs outline-none focus:border-indigo-500"
-                >
-                <button id="btn-aplicar-espaco-todas" class="touch-action px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition active:scale-95 whitespace-nowrap" title="Aplicar esta quantidade a todas as questões existentes">
-                  Aplicar
-                </button>
+              <!-- Linha 2: Espaçamento Padrão -->
+              <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-200/80">
+                <span class="font-bold text-slate-700 whitespace-nowrap">Linhas Padrão por Questão:</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <input 
+                    type="number" 
+                    id="inp-espaco-padrao" 
+                    min="0" 
+                    max="30" 
+                    value="${this.estilo.espacoPadraoLinhas !== undefined ? this.estilo.espacoPadraoLinhas : 4}" 
+                    class="w-12 border border-slate-300 rounded-lg p-1 text-center font-bold bg-white text-xs outline-none focus:border-indigo-500"
+                  >
+                  <button id="btn-aplicar-espaco-todas" class="touch-action px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition active:scale-95 whitespace-nowrap" title="Aplicar esta quantidade a todas as questões existentes">
+                    Aplicar
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -487,7 +491,11 @@ export class EditorDocumentoA4View {
       Toast.show(`Espaçamento de ${qtdLinhas} linha(s) aplicado a todas as questões!`, 'info');
     });
 
-    this.container.querySelector('#btn-imprimir-estudio')?.addEventListener('click', () => window.print());
+    this.container.querySelector('#btn-imprimir-estudio')?.addEventListener('click', () => {
+      this.sincronizarCamposDoDOM();
+      this.atualizarPreviewA4();
+      window.print();
+    });
 
     this.container.querySelector('#btn-exportar-latex-estudio')?.addEventListener('click', () => {
       this.sincronizarCamposDoDOM();

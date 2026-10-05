@@ -272,7 +272,10 @@ export class ProvaView {
   }
 
   bindEvents() {
-    this.container.querySelector('#btn-imprimir')?.addEventListener('click', () => window.print());
+    this.container.querySelector('#btn-imprimir')?.addEventListener('click', () => {
+      this.atualizarPreview();
+      window.print();
+    });
 
     // Salvar prova no banco do professor
     this.container.querySelector('#btn-salvar-trabalho-prova')?.addEventListener('click', async () => {

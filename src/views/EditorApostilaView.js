@@ -666,7 +666,11 @@ export class EditorApostilaView {
   }
 
   bindEvents() {
-    this.container.querySelector('#btn-imprimir-apostila')?.addEventListener('click', () => window.print());
+    this.container.querySelector('#btn-imprimir-apostila')?.addEventListener('click', () => {
+      this.sincronizarCamposDoDOM();
+      this.atualizarPreviewApostila();
+      window.print();
+    });
 
     this.container.querySelector('#btn-exportar-latex-apostila')?.addEventListener('click', () => {
       this.sincronizarCamposDoDOM();

@@ -105,20 +105,20 @@ export class ListaView {
             </div>
 
             <!-- Controles de Layout -->
-            <div class="grid grid-cols-2 gap-2">
-              <div class="flex flex-col gap-1 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <span class="text-[11px] font-bold text-slate-600 uppercase">Colunas da Folha:</span>
-                <div class="flex gap-1.5 mt-1">
-                  <button id="btn-col-1" class="touch-action flex-1 py-1.5 rounded-lg text-xs font-bold transition ${!this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border text-slate-600'}">1 Coluna</button>
-                  <button id="btn-col-2" class="touch-action flex-1 py-1.5 rounded-lg text-xs font-bold transition ${this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border text-slate-600'}">2 Colunas</button>
+            <div class="flex flex-col gap-2.5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-700">Colunas da Folha:</span>
+                <div class="flex gap-1.5 shrink-0">
+                  <button id="btn-col-1" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${!this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">1 Coluna</button>
+                  <button id="btn-col-2" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">2 Colunas</button>
                 </div>
               </div>
 
-              <div class="flex flex-col gap-1 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <span class="text-[11px] font-bold text-slate-600 uppercase">Espaço Padrão:</span>
-                <div class="flex items-center gap-1.5 mt-1">
-                  <input type="number" id="inp-espaco-global" min="0" max="25" value="${this.vm.espacoGlobal}" class="w-14 border rounded-lg p-1.5 text-center text-xs bg-white font-bold">
-                  <button id="btn-aplicar-espaco" class="touch-action flex-1 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-bold transition">Aplicar</button>
+              <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-200/80">
+                <span class="font-bold text-slate-700 whitespace-nowrap">Espaço Padrão:</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <input type="number" id="inp-espaco-global" min="0" max="25" value="${this.vm.espacoGlobal}" class="w-12 border border-slate-300 rounded-lg p-1 text-center text-xs bg-white font-bold outline-none focus:border-indigo-500">
+                  <button id="btn-aplicar-espaco" class="touch-action px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-bold transition active:scale-95 whitespace-nowrap">Aplicar</button>
                 </div>
               </div>
             </div>
@@ -341,7 +341,10 @@ export class ListaView {
     btnTabPreview?.addEventListener('click', () => mudarAba('preview'));
 
     // 2. Imprimir / Salvar PDF
-    this.container.querySelector('#btn-imprimir-lista')?.addEventListener('click', () => window.print());
+    this.container.querySelector('#btn-imprimir-lista')?.addEventListener('click', () => {
+      this.atualizarPreview();
+      window.print();
+    });
 
     // 3. Salvar Trabalho no Supabase
     this.container.querySelector('#btn-salvar-trabalho-lista')?.addEventListener('click', async () => {

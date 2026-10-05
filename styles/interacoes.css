@@ -67,3 +67,55 @@
     transform: translateY(0) scale(1);
   }
 }
+/* ==========================================================================
+   REGRAS DE IMPRESSÃO LIMPA (FOLHA A4 REAL & OCULTAÇÃO DE INTERFACE)
+   ========================================================================== */
+@media print {
+  /* 1. Desaparece com a Bottom Navbar, Sidebars, Menus e Botões de Ação */
+  nav,
+  aside,
+  footer,
+  .bottom-navbar,
+  #bottom-navbar,
+  #bottom-nav,
+  .no-print,
+  [data-bottom-nav] {
+    display: none !important;
+  }
+
+  /* 2. Força a exibição dos contentores da Folha A4 (mesmo se o telemóvel estiver na aba "Editor") */
+  #painel-preview-estudio,
+  #coluna-preview-painel,
+  #painel-preview-lista,
+  #folha-relatorio-a4,
+  #folha-plano-modelo-a4,
+  #folha-a4-preview,
+  #folha-apostila-a4 {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* 3. Cancela qualquer zoom/scale inline e margens decorativas */
+  #wrapper-escala-a4,
+  #folha-apostila-a4,
+  #folha-preview-a4,
+  .sheet-a4 {
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 4. Garante que os limites de altura de ecrã não cortem as páginas */
+  body, html, #app, main {
+    overflow: visible !important;
+    height: auto !important;
+    background: white !important;
+  }
+}
