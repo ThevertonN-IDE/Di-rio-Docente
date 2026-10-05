@@ -24,7 +24,7 @@ export class TurmaView {
       this.render();
     });
     this.vm.subscribe('AVALIACAO_REMOVIDA', () => {
-      Toast.show('Avaliação excluída com sucesso.', 'info');
+      Toast.show('Avaliação eliminada com sucesso.', 'info');
       this.render();
     });
     this.vm.subscribe('MEDIA_ATUALIZADA', ({ alunoId, novaMedia }) => {
@@ -69,93 +69,114 @@ export class TurmaView {
     const mediaCorte = this.vm.mediaCorte || 6.0;
 
     this.container.innerHTML = `
-      <div class="p-6 max-w-7xl mx-auto space-y-6">
+      <div class="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
-        <!-- CABEÇALHO -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-          <div>
-            <div class="flex items-center gap-3">
-              <a href="#dashboard" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">← Painel Geral</a>
-              <span class="text-slate-300">•</span>
-              <span class="text-xs font-semibold text-slate-500 uppercase">${this.vm.turma?.tipo_media === 'ponderada' ? 'Média Ponderada' : 'Média Simples'}</span>
-              <span class="text-slate-300">•</span>
-              <div id="sync-status-container" class="inline-block"></div>
+        <!-- 1. CABEÇALHO DA TURMA E BARRA DE FERRAMENTAS -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <a href="#dashboard" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">← Painel Geral</a>
+                <span class="text-slate-300">•</span>
+                <span class="text-xs font-semibold text-slate-500 uppercase">${this.vm.turma?.tipo_media === 'ponderada' ? 'Média Ponderada' : 'Média Simples'}</span>
+                <span class="text-slate-300">•</span>
+                <div id="sync-status-container" class="inline-block"></div>
+              </div>
+              <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">${this.vm.turma?.nome || ''}</h1>
+              <p class="text-xs sm:text-sm text-slate-500 font-medium">
+                ${this.vm.turma?.disciplina || 'Sem disciplina'} • Ano: ${this.vm.turma?.ano_letivo || ''} • Total de aulas dadas: <strong>${totalAulas}</strong>
+              </p>
             </div>
-            <h1 class="text-2xl font-bold text-slate-800 mt-1">${this.vm.turma?.nome || ''}</h1>
-            <p class="text-sm text-slate-500">${this.vm.turma?.disciplina || 'Sem disciplina'} • Ano: ${this.vm.turma?.ano_letivo || ''} • Total de aulas dadas: <strong>${totalAulas}</strong></p>
+
+            <!-- Ações Prioritárias Rápidas -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <button id="btn-diario" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5">
+                <span>📅</span>
+                <span>Diário & Chamada</span>
+              </button>
+              <button id="btn-nova-avaliacao" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1">
+                <span>➕</span>
+                <span>Nova Avaliação</span>
+              </button>
+            </div>
           </div>
 
-          <!-- AÇÕES DO PROFESSOR -->
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="btn-exportar-excel" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center gap-1.5">
-              📊 Exportar Excel
+          <!-- Ações Secundárias em Linha Deslizável -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-semibold">
+            <button id="btn-exportar-excel" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap active:scale-95">
+              <span>📊</span> Exportar Excel
             </button>
-            <button id="btn-modal-add-aluno" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-sm transition">
-              + Aluno Individual
+            <button id="btn-modal-add-aluno" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+              <span>👤</span> + Aluno
             </button>
-            <button id="btn-modal-importar-lote" class="px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition">
-              📋 Colar Lista
+            <button id="btn-modal-importar-lote" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+              <span>📋</span> Colar Lista
             </button>
-            <button id="btn-nova-avaliacao" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">
-              + Nova Avaliação
-            </button>
-            <button id="btn-diario" class="px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition">
-              Diário & Presença
-            </button>
-            <button id="btn-relatorio" class="px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition">
-              🖨️ Ata / Relatório
+            <button id="btn-relatorio" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+              <span>🖨️</span> Ata / Relatório
             </button>
           </div>
         </div>
 
-        <!-- BARRA DE BIMESTRES E CONFIGURAÇÃO DA TURMA -->
-        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div class="flex items-center gap-1.5 text-xs font-bold flex-wrap">
-            <span class="text-slate-500 mr-2">Filtrar por Bimestre:</span>
-            <button data-bimestre-btn="0" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 0 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">Todos</button>
-            <button data-bimestre-btn="1" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">1º Bimestre</button>
-            <button data-bimestre-btn="2" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 2 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">2º Bimestre</button>
-            <button data-bimestre-btn="3" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 3 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">3º Bimestre</button>
-            <button data-bimestre-btn="4" class="px-3 py-1.5 rounded-lg transition ${this.vm.bimestreSelecionado === 4 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">4º Bimestre</button>
+        <!-- 2. BARRA DE BIMESTRES E CONFIGURAÇÃO DA MÉDIA -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs font-bold select-none">
+            <span class="text-slate-400 text-[11px] uppercase tracking-wider mr-1 shrink-0">Bimestre:</span>
+            <button data-bimestre-btn="0" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 0 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Todos</button>
+            <button data-bimestre-btn="1" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 1 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">1º Bim</button>
+            <button data-bimestre-btn="2" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 2 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">2º Bim</button>
+            <button data-bimestre-btn="3" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 3 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">3º Bim</button>
+            <button data-bimestre-btn="4" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 4 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">4º Bim</button>
           </div>
 
-          <button id="btn-cfg-media" class="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition flex items-center gap-1">
-            ⚙️ Média de Corte: <strong>${mediaCorte}</strong>
+          <button id="btn-cfg-media" class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl hover:bg-indigo-100 transition flex items-center gap-1 shadow-2xs">
+            ⚙️ Média Mínima: <strong class="ml-0.5">${mediaCorte}</strong>
           </button>
         </div>
 
-        <!-- GRÁFICO DE DIAGNÓSTICO -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-2">
-          <h3 class="text-sm font-bold text-slate-800">Distribuição de Desempenho da Turma</h3>
-          <div class="h-48 w-full">
+        <!-- 3. GRÁFICO DE DIAGNÓSTICO (RETINOL / COLAPSÁVEL VISUALMENTE) -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Distribuição de Desempenho da Turma</h3>
+            <span class="text-[10px] text-slate-400 font-semibold">Atualização automática</span>
+          </div>
+          <div class="h-44 sm:h-48 w-full">
             <canvas id="grafico-diagnostico"></canvas>
           </div>
         </div>
 
-        <!-- PLANILHA DE NOTAS E FREQUÊNCIA -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="overflow-x-auto">
+        <!-- 4. PLANILHA DE NOTAS E FREQUÊNCIA (COLUNAS DE ALUNOS FIXAS NO SCROLL) -->
+        <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+          <div class="overflow-x-auto relative">
             <table id="planilha-notas" class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                  <th class="py-3 px-4 w-12 text-center">Nº</th>
-                  <th class="py-3 px-4 min-w-[240px]">Aluno (clique para gerenciar)</th>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <!-- Coluna 1 Fixa: Nº de Chamada -->
+                  <th class="py-3 px-3 w-12 text-center sticky left-0 z-20 bg-slate-50 border-r border-slate-200/60 shadow-2xs">Nº</th>
+                  <!-- Coluna 2 Fixa: Nome do Aluno -->
+                  <th class="py-3 px-4 min-w-[200px] sm:min-w-[240px] sticky left-12 z-20 bg-slate-50 border-r border-slate-200 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]">
+                    Aluno (toque para gerir)
+                  </th>
+                  
+                  <!-- Colunas Dinâmicas de Avaliações -->
                   ${avaliacoes.map(av => `
                     <th class="py-3 px-3 min-w-[110px] text-center border-l border-slate-100">
                       <div class="flex items-center justify-center gap-1">
                         <span data-edit-av="${av.id}" title="Clique para editar avaliação" class="cursor-pointer hover:text-indigo-600 hover:underline transition font-bold">${av.titulo}</span>
-                        <button data-delete-av="${av.id}" data-titulo-av="${av.titulo}" title="Excluir" class="text-slate-400 hover:text-red-500 ml-1 font-bold">&times;</button>
+                        <button data-delete-av="${av.id}" data-titulo-av="${av.titulo}" title="Excluir" class="text-slate-400 hover:text-rose-600 ml-1 font-bold text-sm leading-none">&times;</button>
                       </div>
-                      <span class="block text-[10px] text-slate-400 font-normal">p.${av.peso || 1} • ${av.bimestre ? av.bimestre + 'º Bim' : '1º Bim'}</span>
+                      <span class="block text-[10px] text-slate-400 font-normal">p.${av.peso || 1} •${av.bimestre ? av.bimestre + 'º Bim' : '1º Bim'}</span>
                     </th>
                   `).join('')}
+
+                  <!-- Médias e Frequência -->
                   <th class="py-3 px-4 w-24 text-center border-l border-slate-200 bg-slate-100 font-bold">Média</th>
                   <th class="py-3 px-3 w-28 text-center border-l border-slate-200 bg-slate-50 font-bold">Frequência</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-sm">
                 ${matriz.length === 0 ? `
-                  <tr><td colspan="${avaliacoes.length + 4}" class="py-12 text-center text-slate-400 text-sm">Nenhum aluno matriculado nesta turma.</td></tr>
+                  <tr><td colspan="${avaliacoes.length + 4}" class="py-12 text-center text-slate-400 text-xs">Nenhum aluno matriculado nesta turma.</td></tr>
                 ` : matriz.map((aluno, rIndex) => {
                   const presencas = mapaPresencas[aluno.id] || 0;
                   const pct = totalAulas > 0 ? Math.round((presencas / totalAulas) * 100) : 100;
@@ -164,43 +185,54 @@ export class TurmaView {
                   const abaixoDaMedia = !isNaN(mediaNum) && mediaNum < mediaCorte;
 
                   return `
-                    <tr class="hover:bg-slate-50/80 transition">
-                      <td class="py-3 px-4 text-center text-slate-400 font-mono text-xs">${aluno.numero_chamada || '-'}</td>
-                      <td class="py-3 px-4 cursor-pointer group" data-abrir-aluno="${aluno.id}">
-                        <div class="flex items-center gap-3">
-                          <div class="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0 border border-slate-300 group-hover:ring-2 group-hover:ring-indigo-400 transition">
+                    <tr class="hover:bg-slate-50/80 transition group">
+                      <!-- Coluna 1 Fixa no Corpo -->
+                      <td class="py-3 px-3 text-center text-slate-400 font-mono text-xs sticky left-0 z-10 bg-white group-hover:bg-slate-50 border-r border-slate-100 shadow-2xs">
+                        ${aluno.numero_chamada || '-'}
+                      </td>
+
+                      <!-- Coluna 2 Fixa no Corpo -->
+                      <td class="py-3 px-4 cursor-pointer sticky left-12 z-10 bg-white group-hover:bg-slate-50 border-r border-slate-200 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]" data-abrir-aluno="${aluno.id}">
+                        <div class="flex items-center gap-2.5">
+                          <div class="relative w-8 h-8 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 flex items-center justify-center font-bold text-slate-500 text-xs">
                             ${aluno.foto_url
                               ? `<img src="${aluno.foto_url}" class="w-full h-full object-cover">`
-                              : `<div class="w-full h-full flex items-center justify-center text-slate-500 font-bold text-xs uppercase">${aluno.nome.charAt(0)}</div>`
+                              : aluno.nome.charAt(0)
                             }
                           </div>
-                          <div class="truncate">
-                            <div class="font-semibold text-slate-800 group-hover:text-indigo-600 transition flex items-center gap-1.5 truncate">
-                              ${aluno.nome}
+                          <div class="truncate min-w-0">
+                            <div class="font-bold text-xs text-slate-800 group-hover:text-indigo-600 transition flex items-center gap-1 truncate">
+                              <span class="truncate">${aluno.nome}</span>
                               <span class="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100">✏️</span>
                             </div>
-                            <div class="text-xs text-slate-400 truncate">${aluno.email || 'Sem e-mail'}</div>
+                            <div class="text-[11px] text-slate-400 truncate">${aluno.email || 'Sem e-mail'}</div>
                           </div>
                         </div>
                       </td>
+
+                      <!-- Células de Notas com inputmode decimal para telemóveis -->
                       ${aluno.notas.map((n, cIndex) => `
                         <td class="py-2 px-2 text-center border-l border-slate-100">
                           <input 
-                            type="number" step="0.1" min="0" max="10" 
+                            type="number" step="0.1" min="0" max="10" inputmode="decimal"
                             value="${n.valor}"
                             data-row="${rIndex}" data-col="${cIndex}"
                             data-aluno="${aluno.id}" data-avaliacao="${n.avaliacaoId}"
-                            class="cell-nota w-16 text-center py-1.5 border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-sm font-mono text-slate-800 outline-none transition"
+                            class="cell-nota w-16 text-center py-1.5 border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-xs font-mono font-bold text-slate-800 outline-none transition"
                           />
                         </td>
                       `).join('')}
-                      <td id="media-${aluno.id}" class="py-3 px-4 text-center border-l border-slate-200 font-bold font-mono text-slate-800 bg-slate-50/50 ${abaixoDaMedia ? 'text-rose-600 font-extrabold' : ''}">
+
+                      <!-- Média Final -->
+                      <td id="media-${aluno.id}" class="py-3 px-4 text-center border-l border-slate-200 font-bold font-mono text-xs text-slate-800 bg-slate-50/50 ${abaixoDaMedia ? 'text-rose-600 font-black' : ''}">
                         ${aluno.mediaFinal}
                       </td>
+
+                      <!-- % Frequência -->
                       <td class="py-3 px-3 text-center border-l border-slate-200 font-mono text-xs">
-                        <span class="px-2 py-0.5 rounded-md font-bold ${emAlerta
+                        <span class="px-2 py-0.5 rounded-lg font-bold ${emAlerta
                           ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse'
-                          : 'bg-emerald-50 text-emerald-700'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         }">
                           ${pct}% (${presencas}/${totalAulas})
                         </span>
@@ -214,79 +246,81 @@ export class TurmaView {
         </div>
       </div>
 
-      <!-- MODAL NOVO ALUNO -->
-      <div id="modal-novo-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <!-- MODAL NOVO ALUNO (COM GAVETA BOTTOM-SHEET NO TELEMÓVEL) -->
+      <div id="modal-novo-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
-            <h3 class="text-base font-bold text-slate-800">Cadastrar Novo Aluno</h3>
-            <button id="btn-fechar-modal-aluno" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <h3 class="text-base font-bold text-slate-800">Registar Novo Aluno</h3>
+            <button id="btn-fechar-modal-aluno" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
-          <form id="form-novo-aluno" class="space-y-3 text-sm">
-            <div class="flex items-center gap-4 py-2">
-              <div id="preview-avatar-box" class="w-16 h-16 rounded-xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 font-bold overflow-hidden shrink-0">Foto</div>
+          <form id="form-novo-aluno" class="space-y-3 text-xs">
+            <div class="flex items-center gap-4 py-1">
+              <div id="preview-avatar-box" class="w-14 h-14 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 font-bold overflow-hidden shrink-0">Foto</div>
               <div class="flex-1">
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Foto</label>
-                <input type="file" id="input-foto-arquivo" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Foto do Estudante</label>
+                <input type="file" id="input-foto-arquivo" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
               </div>
             </div>
             <div class="grid grid-cols-4 gap-2">
               <div class="col-span-1">
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nº</label>
-                <input type="number" id="campo-num-chamada" class="w-full border rounded-lg p-2 text-sm">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Nº</label>
+                <input type="number" id="campo-num-chamada" class="w-full border rounded-xl p-2 text-xs">
               </div>
               <div class="col-span-3">
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome Completo</label>
-                <input type="text" id="campo-nome-aluno" required class="w-full border rounded-lg p-2 text-sm">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Nome Completo</label>
+                <input type="text" id="campo-nome-aluno" required class="w-full border rounded-xl p-2 text-xs">
               </div>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">E-mail</label>
-              <input type="email" id="campo-email-aluno" class="w-full border rounded-lg p-2 text-sm">
+              <label class="block font-bold text-slate-600 uppercase mb-1">E-mail</label>
+              <input type="email" id="campo-email-aluno" class="w-full border rounded-xl p-2 text-xs">
             </div>
-            <div class="pt-3 flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-aluno" class="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">Cancelar</button>
-              <button type="submit" id="btn-salvar-aluno-submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Salvar Aluno</button>
+            <div class="pt-3 border-t flex justify-end gap-2">
+              <button type="button" id="btn-cancelar-aluno" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-aluno-submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Aluno</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- MODAL EDITAR / EXCLUIR ALUNO -->
-      <div id="modal-editar-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div id="modal-editar-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Dados do Aluno</h3>
-            <button id="btn-fechar-modal-editar-aluno" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <button id="btn-fechar-modal-editar-aluno" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
-          <form id="form-editar-aluno" class="space-y-3 text-sm">
-            <div class="flex items-center gap-4 py-2">
-              <div id="edit-preview-avatar-box" class="w-16 h-16 rounded-xl bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-400 font-bold overflow-hidden shrink-0"></div>
+          <form id="form-editar-aluno" class="space-y-3 text-xs">
+            <div class="flex items-center gap-4 py-1">
+              <div id="edit-preview-avatar-box" class="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-400 font-bold overflow-hidden shrink-0"></div>
               <div class="flex-1">
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Trocar Foto</label>
-                <input type="file" id="edit-foto-arquivo" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Trocar Foto</label>
+                <input type="file" id="edit-foto-arquivo" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
               </div>
             </div>
             <div class="grid grid-cols-4 gap-2">
               <div class="col-span-1">
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nº</label>
-                <input type="number" id="edit-num-chamada" class="w-full border rounded-lg p-2 text-sm">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Nº</label>
+                <input type="number" id="edit-num-chamada" class="w-full border rounded-xl p-2 text-xs">
               </div>
               <div class="col-span-3">
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome Completo</label>
-                <input type="text" id="edit-nome-aluno" required class="w-full border rounded-lg p-2 text-sm">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Nome Completo</label>
+                <input type="text" id="edit-nome-aluno" required class="w-full border rounded-xl p-2 text-xs">
               </div>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">E-mail</label>
-              <input type="email" id="edit-email-aluno" class="w-full border rounded-lg p-2 text-sm">
+              <label class="block font-bold text-slate-600 uppercase mb-1">E-mail</label>
+              <input type="email" id="edit-email-aluno" class="w-full border rounded-xl p-2 text-xs">
             </div>
             <div class="pt-3 border-t flex items-center justify-between">
-              <button type="button" id="btn-excluir-aluno" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition">
-                🗑️ Excluir da Turma
+              <button type="button" id="btn-excluir-aluno" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition">
+                🗑️ Remover da Turma
               </button>
               <div class="flex gap-2">
-                <button type="button" id="btn-cancelar-editar-aluno" class="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">Fechar</button>
-                <button type="submit" id="btn-salvar-edicao-aluno" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Salvar Alterações</button>
+                <button type="button" id="btn-cancelar-editar-aluno" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Fechar</button>
+                <button type="submit" id="btn-salvar-edicao-aluno" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar</button>
               </div>
             </div>
           </form>
@@ -294,29 +328,30 @@ export class TurmaView {
       </div>
 
       <!-- MODAL EDITAR AVALIAÇÃO -->
-      <div id="modal-editar-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div id="modal-editar-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Editar Avaliação</h3>
-            <button id="btn-fechar-modal-editar-av" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <button id="btn-fechar-modal-editar-av" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
-          <form id="form-editar-avaliacao" class="space-y-3 text-sm">
+          <form id="form-editar-avaliacao" class="space-y-3 text-xs">
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Título</label>
-              <input type="text" id="edit-titulo-av" required class="w-full border rounded-lg p-2 text-sm">
+              <label class="block font-bold text-slate-600 uppercase mb-1">Título</label>
+              <input type="text" id="edit-titulo-av" required class="w-full border rounded-xl p-2 text-xs">
             </div>
             <div class="grid grid-cols-3 gap-2">
               <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data</label>
-                <input type="date" id="edit-data-av" required class="w-full border rounded-lg p-2 text-xs">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Data</label>
+                <input type="date" id="edit-data-av" required class="w-full border rounded-xl p-2 text-xs">
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Peso</label>
-                <input type="number" step="0.1" id="edit-peso-av" required class="w-full border rounded-lg p-2 text-xs">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Peso</label>
+                <input type="number" step="0.1" id="edit-peso-av" required class="w-full border rounded-xl p-2 text-xs">
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Bimestre</label>
-                <select id="edit-bimestre-av" class="w-full border rounded-lg p-2 text-xs bg-white">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Bimestre</label>
+                <select id="edit-bimestre-av" class="w-full border rounded-xl p-2 text-xs bg-white font-semibold">
                   <option value="1">1º Bimestre</option>
                   <option value="2">2º Bimestre</option>
                   <option value="3">3º Bimestre</option>
@@ -325,53 +360,55 @@ export class TurmaView {
               </div>
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-editar-av" class="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">Cancelar</button>
-              <button type="submit" id="btn-salvar-edicao-av" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Salvar Alterações</button>
+              <button type="button" id="btn-cancelar-modal-editar-av" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-edicao-av" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Alterações</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- MODAL IMPORTAÇÃO EM LOTE -->
-      <div id="modal-lote-alunos" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div id="modal-lote-alunos" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Importação em Lote</h3>
-            <button id="btn-fechar-lote" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <button id="btn-fechar-lote" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           <p class="text-xs text-slate-500">Cole a lista com um nome por linha.</p>
-          <textarea id="txt-area-lote" rows="8" class="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono"></textarea>
-          <div class="flex justify-end gap-2">
-            <button type="button" id="btn-cancelar-lote" class="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">Cancelar</button>
-            <button type="button" id="btn-confirmar-lote" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Importar Todos</button>
+          <textarea id="txt-area-lote" rows="7" class="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono outline-none focus:border-indigo-500"></textarea>
+          <div class="flex justify-end gap-2 pt-2 border-t">
+            <button type="button" id="btn-cancelar-lote" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+            <button type="button" id="btn-confirmar-lote" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Importar Todos</button>
           </div>
         </div>
       </div>
 
       <!-- MODAL NOVA AVALIAÇÃO -->
-      <div id="modal-nova-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div id="modal-nova-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Criar Nova Avaliação</h3>
-            <button id="btn-fechar-av" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <button id="btn-fechar-av" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
-          <form id="form-nova-avaliacao" class="space-y-3 text-sm">
+          <form id="form-nova-avaliacao" class="space-y-3 text-xs">
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Título</label>
-              <input type="text" id="campo-titulo-av" required class="w-full border rounded-lg p-2 text-sm">
+              <label class="block font-bold text-slate-600 uppercase mb-1">Título</label>
+              <input type="text" id="campo-titulo-av" required class="w-full border rounded-xl p-2.5 text-xs">
             </div>
             <div class="grid grid-cols-3 gap-2">
               <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data</label>
-                <input type="date" id="campo-data-av" required class="w-full border rounded-lg p-2 text-xs">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Data</label>
+                <input type="date" id="campo-data-av" required class="w-full border rounded-xl p-2 text-xs">
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Peso</label>
-                <input type="number" step="0.1" id="campo-peso-av" value="1.0" required class="w-full border rounded-lg p-2 text-xs">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Peso</label>
+                <input type="number" step="0.1" id="campo-peso-av" value="1.0" required class="w-full border rounded-xl p-2 text-xs">
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Bimestre</label>
-                <select id="campo-bimestre-av" class="w-full border rounded-lg p-2 text-xs bg-white">
+                <label class="block font-bold text-slate-600 uppercase mb-1">Bimestre</label>
+                <select id="campo-bimestre-av" class="w-full border rounded-xl p-2 text-xs bg-white font-semibold">
                   <option value="1">1º Bim</option>
                   <option value="2">2º Bim</option>
                   <option value="3">3º Bim</option>
@@ -379,9 +416,9 @@ export class TurmaView {
                 </select>
               </div>
             </div>
-            <div class="pt-3 flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-av" class="px-3.5 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">Cancelar</button>
-              <button type="submit" id="btn-salvar-av-submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold">Criar Coluna</button>
+            <div class="pt-3 border-t flex justify-end gap-2">
+              <button type="button" id="btn-cancelar-av" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-av-submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Criar Coluna</button>
             </div>
           </form>
         </div>

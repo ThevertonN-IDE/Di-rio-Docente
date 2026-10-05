@@ -19,86 +19,120 @@ export class MeusTrabalhosView {
 
   async render() {
     this.container.innerHTML = `
-      <div class="p-6 max-w-7xl mx-auto space-y-6">
-        <!-- CABEÇALHO LIMPO E RESPONSIVO -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
-         <div>
-          <h1 class="text-xl md:text-2xl font-bold text-slate-800">Biblioteca Pedagógica & Meus Trabalhos</h1>
-          <p class="text-xs text-slate-500">Gestão de Provas, Listas, Apostilas, Planos e Documentos digitais</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="btn-abrir-sheet-criar" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition">
-            ➕ Criar Material
-          </button>
-        </div>
-      </div>
-
-        <!-- FILTROS -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3 text-xs">
-          <div class="flex-1 min-w-[200px]">
-            <input type="text" id="inp-filtro-busca" placeholder="Buscar por título ou assunto..." class="w-full border rounded-lg p-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none">
+      <div class="p-3 sm:p-6 max-w-7xl mx-auto space-y-4">
+        
+        <!-- 1. CABEÇALHO LIMPO E RESPONSIVO -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">Biblioteca Pedagógica & Meus Trabalhos</h1>
+            <p class="text-xs text-slate-500">Gestão de Provas, Listas, Apostilas, Planos e Documentos digitais</p>
           </div>
-
-          <div class="flex items-center gap-1.5">
-            <span class="font-bold text-slate-600">Tipo:</span>
-            <select id="sel-filtro-tipo" class="border rounded-lg p-1.5 font-semibold bg-white outline-none">
-              <option value="todos">Todos os Tipos</option>
-              <option value="prova">Provas A4</option>
-              <option value="lista">Listas de Exercícios</option>
-              <option value="apostila">Apostilas Didáticas</option>
-              <option value="plano_aula">Planos de Aula</option>
-              <option value="arquivo_externo">Arquivos & Anexos</option>
-            </select>
-          </div>
-
-          <div class="flex items-center gap-1.5">
-            <span class="font-bold text-slate-600">Turma:</span>
-            <select id="sel-filtro-turma" class="border rounded-lg p-1.5 font-semibold bg-white outline-none">
-              <option value="">Todas as Turmas</option>
-            </select>
-          </div>
-
-          <div class="flex items-center gap-1.5">
-            <span class="font-bold text-slate-600">Categoria:</span>
-            <select id="sel-filtro-cat" class="border rounded-lg p-1.5 font-semibold bg-white outline-none">
-              <option value="todas">Todas as Categorias</option>
-              <option value="Avaliações">Avaliações</option>
-              <option value="Listas">Listas</option>
-              <option value="Materiais Didáticos">Materiais Didáticos</option>
-              <option value="Planos de Aula">Planos de Aula</option>
-              <option value="Trabalhos de Alunos">Trabalhos de Alunos</option>
-              <option value="Documentos Oficiais">Documentos Oficiais</option>
-            </select>
+          <div class="flex items-center gap-2">
+            <button id="btn-abrir-sheet-criar" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+              ➕ Criar Material
+            </button>
           </div>
         </div>
 
-        <!-- GRID DOS DOCUMENTOS -->
-        <div id="grid-meus-documentos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- 2. BARRA DE PESQUISA E FILTROS RÁPIDOS (COMPACTAÇÃO NO CELULAR) -->
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
+          
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs">
+            <!-- Busca -->
+            <div class="relative flex-1">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">🔍</span>
+              <input 
+                type="text" 
+                id="inp-filtro-busca" 
+                placeholder="Buscar por título ou assunto..." 
+                class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:bg-white focus:ring-1 focus:ring-indigo-500 outline-none transition"
+              >
+            </div>
+
+            <!-- Turma + Categoria lado a lado no celular (grid-cols-2) -->
+            <div class="grid grid-cols-2 sm:flex items-center gap-2">
+              <div class="sm:w-44">
+                <select id="sel-filtro-turma" class="w-full py-2 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold focus:bg-white outline-none transition cursor-pointer">
+                  <option value="">Todas as Turmas</option>
+                </select>
+              </div>
+
+              <div class="sm:w-44">
+                <select id="sel-filtro-cat" class="w-full py-2 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold focus:bg-white outline-none transition cursor-pointer">
+                  <option value="todas">Todas as Categorias</option>
+                  <option value="Avaliações">Avaliações</option>
+                  <option value="Listas">Listas</option>
+                  <option value="Materiais Didáticos">Materiais Didáticos</option>
+                  <option value="Planos de Aula">Planos de Aula</option>
+                  <option value="Trabalhos de Alunos">Trabalhos de Alunos</option>
+                  <option value="Documentos Oficiais">Documentos Oficiais</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. CHIPS HORIZONTAIS COM ROLAGEM SUAVE -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-semibold select-none border-t border-slate-100">
+            <button data-chip-tipo="todos" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-xs">
+              <span>📚 Todos</span>
+              <span id="badge-total-todos" class="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+            <button data-chip-tipo="prova" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+              <span>📝 Provas A4</span>
+              <span id="badge-total-prova" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+            <button data-chip-tipo="lista" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+              <span>📋 Listas</span>
+              <span id="badge-total-lista" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+            <button data-chip-tipo="apostila" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+              <span>📘 Apostilas</span>
+              <span id="badge-total-apostila" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+            <button data-chip-tipo="plano_aula" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+              <span>📅 Planos BNCC</span>
+              <span id="badge-total-plano" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+            <button data-chip-tipo="arquivo_externo" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+              <span>📁 Anexos & Arquivos</span>
+              <span id="badge-total-externo" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- 4. GRID DOS DOCUMENTOS -->
+        <div id="grid-meus-documentos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           <div class="col-span-full text-center py-12 text-slate-400 text-xs">Carregando os seus trabalhos...</div>
         </div>
+
       </div>
 
-      <!-- MODAL DE UPLOAD DE ARQUIVOS -->
-      <div id="modal-upload-doc" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <!-- MODAL DE UPLOAD DE ARQUIVOS (PRESERVADO) -->
+      <div id="modal-upload-doc" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] md:max-h-[90vh] overflow-y-auto">
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
+
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Anexar Documento Digital</h3>
-            <button id="btn-fechar-modal-doc" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <button id="btn-fechar-modal-doc" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
+
           <form id="form-upload-documento" class="space-y-3 text-xs">
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Ficheiro (PDF, DOCX, XLSX, Imagem)</label>
-              <input type="file" id="inp-arquivo-upload" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" class="w-full border rounded-lg p-2 text-xs bg-slate-50 cursor-pointer">
+              <input type="file" id="inp-arquivo-upload" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" class="w-full border rounded-xl p-2 text-xs bg-slate-50 cursor-pointer">
             </div>
+
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Título / Identificação</label>
-              <input type="text" id="inp-doc-titulo" required placeholder="Ex: Lista de Equações, Avaliação Escaneada..." class="w-full border rounded-lg p-2">
+              <input type="text" id="inp-doc-titulo" required placeholder="Ex: Lista de Equações, Avaliação Escaneada..." class="w-full border rounded-xl p-2.5">
             </div>
             
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Categoria</label>
-                <select id="inp-doc-categoria" class="w-full border rounded-lg p-2 bg-white">
+                <select id="inp-doc-categoria" class="w-full border rounded-xl p-2.5 bg-white">
                   <option value="Trabalhos de Alunos">Trabalhos de Alunos</option>
                   <option value="Avaliações">Avaliações</option>
                   <option value="Materiais Didáticos">Materiais Didáticos</option>
@@ -109,7 +143,7 @@ export class MeusTrabalhosView {
               </div>
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Associar a Turma</label>
-                <select id="inp-doc-turma" class="w-full border rounded-lg p-2 bg-white">
+                <select id="inp-doc-turma" class="w-full border rounded-xl p-2.5 bg-white">
                   <option value="">Geral / Sem Turma</option>
                 </select>
               </div>
@@ -118,21 +152,21 @@ export class MeusTrabalhosView {
             <div id="box-vinculos-extras" class="grid grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl hidden">
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Aluno Específico</label>
-                <select id="inp-doc-aluno" class="w-full border rounded-lg p-2 bg-white">
+                <select id="inp-doc-aluno" class="w-full border rounded-xl p-2 bg-white">
                   <option value="">Toda a Turma / Nenhum</option>
                 </select>
               </div>
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Avaliação / Trabalho</label>
-                <select id="inp-doc-avaliacao" class="w-full border rounded-lg p-2 bg-white">
+                <select id="inp-doc-avaliacao" class="w-full border rounded-xl p-2 bg-white">
                   <option value="">Nenhuma Avaliação</option>
                 </select>
               </div>
             </div>
 
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-doc" class="px-3.5 py-1.5 border rounded-lg text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-upload-doc" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold">Fazer Upload</button>
+              <button type="button" id="btn-cancelar-modal-doc" class="px-4 py-2 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-upload-doc" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Fazer Upload</button>
             </div>
           </form>
         </div>
@@ -165,6 +199,7 @@ export class MeusTrabalhosView {
       if (selFiltroTurma) selFiltroTurma.innerHTML = `<option value="">Todas as Turmas</option>${optionsHtml}`;
       if (inpDocTurma) inpDocTurma.innerHTML = `<option value="">Geral / Sem Turma</option>${optionsHtml}`;
 
+      this.atualizarContadores();
       this.renderCards();
       this.bindEvents();
     } catch (err) {
@@ -172,12 +207,31 @@ export class MeusTrabalhosView {
     }
   }
 
+  atualizarContadores() {
+    const contagens = { todos: this.documentos.length, prova: 0, lista: 0, apostila: 0, plano_aula: 0, arquivo_externo: 0 };
+    this.documentos.forEach(d => {
+      if (contagens[d.tipo] !== undefined) contagens[d.tipo]++;
+    });
+
+    const setBadge = (id, val) => {
+      const el = this.container.querySelector(id);
+      if (el) el.innerText = val;
+    };
+
+    setBadge('#badge-total-todos', contagens.todos);
+    setBadge('#badge-total-prova', contagens.prova);
+    setBadge('#badge-total-lista', contagens.lista);
+    setBadge('#badge-total-apostila', contagens.apostila);
+    setBadge('#badge-total-plano', contagens.plano_aula);
+    setBadge('#badge-total-externo', contagens.arquivo_externo);
+  }
+
   renderCards() {
     const grid = this.container.querySelector('#grid-meus-documentos');
 
     const filtrados = this.documentos.filter(doc => {
       const matchTipo = this.filtroTipo === 'todos' || doc.tipo === this.filtroTipo;
-      const matchTurma = !this.filtroTurma || doc.turma_id === this.filtroTurma;
+      const matchTurma = !this.filtroTurma || String(doc.turma_id) === String(this.filtroTurma);
       const matchCat = this.filtroCategoria === 'todas' || doc.categoria === this.filtroCategoria;
       const matchBusca = !this.filtroBusca || (doc.titulo || '').toLowerCase().includes(this.filtroBusca.toLowerCase());
       return matchTipo && matchTurma && matchCat && matchBusca;
@@ -185,88 +239,106 @@ export class MeusTrabalhosView {
 
     if (filtrados.length === 0) {
       grid.innerHTML = `
-        <div class="col-span-full text-center py-16 bg-white rounded-2xl border border-slate-200">
-          <p class="text-slate-400 text-sm">Nenhum documento encontrado com os filtros aplicados.</p>
+        <div class="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">
+          <span class="text-3xl block mb-2">🔍</span>
+          <p class="text-slate-600 font-bold text-xs">Nenhum documento encontrado com os filtros aplicados.</p>
+          <p class="text-slate-400 text-[11px] mt-1">Tente selecionar outro tipo ou limpar a busca.</p>
         </div>
       `;
       return;
     }
 
     grid.innerHTML = filtrados.map(doc => {
-      const dataModif = new Date(doc.updated_at).toLocaleDateString('pt-BR');
+      const dataModif = new Date(doc.updated_at || doc.created_at || Date.now()).toLocaleDateString('pt-BR');
+      
       let badge = '';
-      let acaoPrincipal = '';
+      let botoesAcoesPrincipais = '';
 
       if (doc.tipo === 'prova') {
-        badge = `<span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold uppercase text-[10px]">📝 Prova A4</span>`;
-        acaoPrincipal = `
-          <div class="flex items-center gap-1.5 w-full">
-            <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar</button>
-            <button data-exportar-latex="${doc.id}" title="Exportar código .tex para Overleaf" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
-          </div>
+        badge = `<span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-[10px]">📝 Prova A4</span>`;
+        botoesAcoesPrincipais = `
+          <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'lista') {
-        badge = `<span class="px-2 py-0.5 rounded bg-teal-50 text-teal-700 font-bold uppercase text-[10px]">📋 Lista A4</span>`;
-        acaoPrincipal = `
-          <div class="flex items-center gap-1.5 w-full">
-            <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">✏️ Editar</button>
-            <button data-exportar-latex="${doc.id}" title="Exportar código .tex para Overleaf" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
-          </div>
+        badge = `<span class="px-2 py-0.5 rounded-lg bg-teal-50 text-teal-700 font-bold border border-teal-200 text-[10px]">📋 Lista A4</span>`;
+        botoesAcoesPrincipais = `
+          <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-teal-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'apostila') {
-        badge = `<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold uppercase text-[10px]">📘 Apostila Didática</span>`;
-        acaoPrincipal = `
-          <div class="flex items-center gap-1.5 w-full">
-            <button data-editar-apostila="${doc.id}" class="flex-1 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg text-xs transition">✏️ Editar</button>
-            <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf (.tex)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
-          </div>
+        badge = `<span class="px-2 py-0.5 rounded-lg bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[10px]">📘 Apostila</span>`;
+        botoesAcoesPrincipais = `
+          <button data-editar-apostila="${doc.id}" class="flex-1 py-1.5 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'plano_aula') {
-        badge = `<span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold uppercase text-[10px]">📅 Plano (${doc.subtipo || 'Geral'})</span>`;
-        acaoPrincipal = `
-          <div class="flex items-center gap-1.5 w-full">
-            <button data-editar-plano="${doc.id}" class="flex-1 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-lg text-xs transition">✏️ Editar</button>
-            <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf (.tex)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition flex items-center gap-1">📄 .tex</button>
-          </div>
+        badge = `<span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200 text-[10px]">📅 Plano (${doc.subtipo || 'BNCC'})</span>`;
+        botoesAcoesPrincipais = `
+          <button data-editar-plano="${doc.id}" class="flex-1 py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else {
-        badge = `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">📁 Arquivo Digital</span>`;
+        badge = `<span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold border border-slate-200 text-[10px]">📁 Arquivo Digital</span>`;
         const ehPdfOuImg = /\.(pdf|png|jpe?g|webp)($|\?)/i.test(doc.arquivo_nome || doc.arquivo_url || '');
 
         if (ehPdfOuImg) {
-          acaoPrincipal = `
-            <div class="flex items-center gap-1.5 w-full">
-              <a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">📥 Baixar</a>
-              <button data-converter-ia="${doc.id}" title="Extrair questões em LaTeX via IA" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-sm">
-                ✨ IA LaTeX
-              </button>
-            </div>
+          botoesAcoesPrincipais = `
+            <a href="${doc.arquivo_url}" target="_blank" download class="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar</a>
+            <button data-converter-ia="${doc.id}" title="Extrair questões em LaTeX via IA" class="py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-2xs">✨ IA</button>
           `;
         } else {
-          acaoPrincipal = `<a href="${doc.arquivo_url}" target="_blank" download class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs transition">📥 Baixar / Abrir</a>`;
+          botoesAcoesPrincipais = `<a href="${doc.arquivo_url}" target="_blank" download class="w-full py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar / Abrir</a>`;
         }
       }
 
       return `
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-indigo-300 transition">
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm transition">
           <div>
-            <div class="flex items-center justify-between text-[11px] mb-2">
-              ${badge}
-              <span class="text-slate-400 font-mono">${dataModif}</span>
+            <!-- Topo do Card: Badge + Menu de Três Pontos (⋮) -->
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div class="flex flex-wrap items-center gap-1">
+                ${badge}
+                ${doc.turmas?.nome ? `<span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-medium truncate max-w-[130px]">👥 ${doc.turmas.nome}</span>` : ''}
+              </div>
+
+              <!-- Menu flutuante com Duplicar e Excluir -->
+              <div class="relative dropdown-container">
+                <button type="button" class="btn-menu-dots w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center font-bold text-sm transition">
+                  ⋮
+                </button>
+                <div class="dropdown-menu hidden absolute right-0 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-20 text-xs text-slate-700 animate-in fade-in zoom-in-95 duration-100">
+                  <button data-duplicar-doc="${doc.id}" class="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700">
+                    <span>📄</span> Duplicar Material
+                  </button>
+                  <div class="my-1 border-t border-slate-100"></div>
+                  <button data-excluir-doc="${doc.id}" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2">
+                    <span>🗑️</span> Excluir Documento
+                  </button>
+                </div>
+              </div>
             </div>
-            <h3 class="font-bold text-slate-800 text-sm line-clamp-1">${doc.titulo || 'Sem título'}</h3>
-            <div class="text-[11px] text-slate-500 space-y-0.5 mt-2">
+
+            <!-- Título do Documento -->
+            <h3 class="font-bold text-slate-800 text-sm line-clamp-2 leading-snug" title="${doc.titulo || 'Sem título'}">
+              ${doc.titulo || 'Sem título'}
+            </h3>
+
+            <!-- Metadados -->
+            <div class="text-[11px] text-slate-500 space-y-0.5 mt-2.5 pt-2 border-t border-slate-100">
               <p>📂 <strong>Categoria:</strong> ${doc.categoria || 'Geral'}</p>
-              ${doc.turmas?.nome ? `<p>👥 <strong>Turma:</strong> ${doc.turmas.nome}</p>` : ''}
               ${doc.alunos?.nome ? `<p>👤 <strong>Aluno:</strong> ${doc.alunos.nome}</p>` : ''}
               ${doc.avaliacoes?.titulo ? `<p>📝 <strong>Atividade:</strong> ${doc.avaliacoes.titulo}</p>` : ''}
               ${doc.arquivo_tamanho ? `<p>💾 <strong>Tamanho:</strong> ${doc.arquivo_tamanho}</p>` : ''}
             </div>
           </div>
 
+          <!-- Rodapé do Card com as Duas Ações Principais -->
           <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-            ${acaoPrincipal}
-            <button data-excluir-doc="${doc.id}" title="Excluir" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition font-bold text-xs">🗑️</button>
+            <span class="text-[10px] text-slate-400 font-mono">${dataModif}</span>
+            <div class="flex items-center gap-1.5 flex-1 justify-end">
+              ${botoesAcoesPrincipais}
+            </div>
           </div>
         </div>
       `;
@@ -276,19 +348,20 @@ export class MeusTrabalhosView {
   }
 
   bindEventsCards() {
+    // 1. Edição no Estúdio A4 (Provas e Listas)
     this.container.querySelectorAll('[data-editar-estudio]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.editarEstudio);
+        const doc = this.documentos.find(d => String(d.id) === String(e.currentTarget.dataset.editarEstudio));
         if (!doc) return;
         sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(doc));
         window.location.hash = '#estudio-a4';
       });
     });
 
-    // Exportação direta para Overleaf a partir do Card
+    // 2. Exportação Direta para LaTeX (.tex)
     this.container.querySelectorAll('[data-exportar-latex]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.exportarLatex);
+        const doc = this.documentos.find(d => String(d.id) === String(e.currentTarget.dataset.exportarLatex));
         if (!doc) return;
         const cJson = doc.conteudo_json || {};
         LatexModal.abrirExportacao({
@@ -301,21 +374,21 @@ export class MeusTrabalhosView {
       });
     });
 
-    // Conversão de Anexos em Questões via IA
+    // 3. Conversão de Anexos em Questões via IA (Gemini)
     this.container.querySelectorAll('[data-converter-ia]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const btnEl = e.currentTarget;
         const docId = btnEl.dataset.converterIa;
-        const doc = this.documentos.find(d => d.id === docId);
+        const doc = this.documentos.find(d => String(d.id) === String(docId));
         if (!doc || !doc.arquivo_url) return;
 
         const textoOriginal = btnEl.innerHTML;
         btnEl.disabled = true;
-        btnEl.innerHTML = '⏳ Processando...';
+        btnEl.innerHTML = '⏳...';
 
         try {
           const resp = await fetch(doc.arquivo_url);
-          if (!resp.ok) throw new Error('Falha ao baixar o arquivo anexado para conversão.');
+          if (!resp.ok) throw new Error('Falha ao descarregar o arquivo anexado para conversão.');
           const blob = await resp.blob();
           const extensao = (doc.arquivo_nome || '').split('.').pop() || 'pdf';
           const mime = blob.type || (extensao === 'pdf' ? 'application/pdf' : 'image/jpeg');
@@ -360,24 +433,58 @@ export class MeusTrabalhosView {
       });
     });
 
+    // 4. Edição de Apostilas
     this.container.querySelectorAll('[data-editar-apostila]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.editarApostila);
+        const doc = this.documentos.find(d => String(d.id) === String(e.currentTarget.dataset.editarApostila));
         if (!doc) return;
         sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(doc));
         window.location.hash = '#apostilas';
       });
     });
 
+    // 5. Edição de Planos de Aula
     this.container.querySelectorAll('[data-editar-plano]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const doc = this.documentos.find(d => d.id === e.currentTarget.dataset.editarPlano);
+        const doc = this.documentos.find(d => String(d.id) === String(e.currentTarget.dataset.editarPlano));
         if (!doc) return;
         sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(doc));
         window.location.hash = '#planos-aula';
       });
     });
 
+    // 6. Duplicar Documento (Clonagem Direta)
+    this.container.querySelectorAll('[data-duplicar-doc]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const docId = e.currentTarget.dataset.duplicarDoc;
+        const doc = this.documentos.find(d => String(d.id) === String(docId));
+        if (!doc) return;
+
+        try {
+          Toast.show(`A duplicar "${doc.titulo}"...`, 'info');
+          await DocumentoService.salvarDocumento({
+            tipo: doc.tipo,
+            subtipo: doc.subtipo || '',
+            titulo: `${doc.titulo || 'Material'} (Cópia)`,
+            categoria: doc.categoria || 'Geral',
+            turmaId: doc.turma_id || null,
+            alunoId: doc.aluno_id || null,
+            avaliacaoId: doc.avaliacao_id || null,
+            conteudoJson: doc.conteudo_json || {},
+            arquivoUrl: doc.arquivo_url || '',
+            arquivoNome: doc.arquivo_nome || '',
+            arquivoTamanho: doc.arquivo_tamanho || ''
+          });
+
+          Toast.show('Documento duplicado com sucesso!', 'success');
+          await this.carregarDados();
+        } catch (err) {
+          Toast.show('Erro ao duplicar documento: ' + err.message, 'error');
+        }
+      });
+    });
+
+    // 7. Exclusão com Confirmação
     this.container.querySelectorAll('[data-excluir-doc]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const docId = e.currentTarget.dataset.excluirDoc;
@@ -386,7 +493,8 @@ export class MeusTrabalhosView {
           try {
             await DocumentoService.excluirDocumento(docId);
             Toast.show('Documento removido.', 'info');
-            this.documentos = this.documentos.filter(d => d.id !== docId);
+            this.documentos = this.documentos.filter(d => String(d.id) !== String(docId));
+            this.atualizarContadores();
             this.renderCards();
           } catch (err) {
             Toast.show('Erro ao excluir: ' + err.message, 'error');
@@ -397,36 +505,7 @@ export class MeusTrabalhosView {
   }
 
   bindEvents() {
-    // Atalho Superior de Digitalização Rápida
-    this.container.querySelector('#btn-digitalizar-direto-latex')?.addEventListener('click', () => {
-      LatexModal.abrirImportacaoComIA((questoes) => {
-        const novoDoc = {
-          tipo: 'prova',
-          titulo: 'Documento Digitalizado em LaTeX',
-          conteudo_json: {
-            dadosCabecalho: {
-              escola: 'INSTITUIÇÃO DE ENSINO',
-              disciplina: 'Matemática',
-              professor: 'Professor(a)',
-              turma: 'Turma Geral',
-              tipoDocumento: 'AVALIAÇÃO / LISTA',
-              valor: '10.0'
-            },
-            questoes: questoes,
-            estilo: {
-              fonte: 'font-serif',
-              tamanhoFonte: '11pt',
-              layoutCabecalho: 'classico',
-              duasColunas: true,
-              espacoPadraoLinhas: 4
-            }
-          }
-        };
-        sessionStorage.setItem('DOCUMENTO_ATIVO', JSON.stringify(novoDoc));
-        Toast.show('Questões carregadas! Abrindo no Estúdio A4...', 'success');
-        window.location.hash = '#estudio-a4';
-      });
-    });
+    // Abrir Menu de Criação
     this.container.querySelector('#btn-abrir-sheet-criar')?.addEventListener('click', () => {
       CriarMaterialSheet.abrir({
         onAbrirUpload: () => {
@@ -434,28 +513,67 @@ export class MeusTrabalhosView {
         }
       });
     });
+
+    // Filtro pelos Chips Horizontais
+    const chips = this.container.querySelectorAll('.chip-tipo');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        this.filtroTipo = chip.getAttribute('data-chip-tipo');
+
+        chips.forEach(c => {
+          c.className = 'chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50';
+          const badge = c.querySelector('span:last-child');
+          if (badge) badge.className = 'text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full';
+        });
+
+        chip.className = 'chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-xs';
+        const badgeAtivo = chip.querySelector('span:last-child');
+        if (badgeAtivo) badgeAtivo.className = 'text-[10px] bg-white/20 text-white px-1.5 py-0.2 rounded-full';
+
+        this.renderCards();
+      });
+    });
+
+    // Campo de Busca
     this.container.querySelector('#inp-filtro-busca')?.addEventListener('input', (e) => {
       this.filtroBusca = e.target.value;
       this.renderCards();
     });
-    this.container.querySelector('#sel-filtro-tipo')?.addEventListener('change', (e) => {
-      this.filtroTipo = e.target.value;
-      this.renderCards();
-    });
+
+    // Seletores de Turma e Categoria
     this.container.querySelector('#sel-filtro-turma')?.addEventListener('change', (e) => {
       this.filtroTurma = e.target.value;
       this.renderCards();
     });
+
     this.container.querySelector('#sel-filtro-cat')?.addEventListener('change', (e) => {
       this.filtroCategoria = e.target.value;
       this.renderCards();
     });
 
+    // Modal de Upload
     const modalDoc = this.container.querySelector('#modal-upload-doc');
-    this.container.querySelector('#btn-modal-upload-doc')?.addEventListener('click', () => modalDoc.classList.remove('hidden'));
     this.container.querySelector('#btn-fechar-modal-doc')?.addEventListener('click', () => modalDoc.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-modal-doc')?.addEventListener('click', () => modalDoc.classList.add('hidden'));
 
+    // Fechar Dropdowns ao Clicar Fora
+    document.addEventListener('click', (e) => {
+      const isDropdownBtn = e.target.closest('.btn-menu-dots');
+      const dropdownsAbertos = this.container.querySelectorAll('.dropdown-menu:not(.hidden)');
+
+      if (!isDropdownBtn) {
+        dropdownsAbertos.forEach(m => m.classList.add('hidden'));
+        return;
+      }
+
+      const menuAtual = e.target.closest('.dropdown-container').querySelector('.dropdown-menu');
+      dropdownsAbertos.forEach(m => {
+        if (m !== menuAtual) m.classList.add('hidden');
+      });
+      menuAtual.classList.toggle('hidden');
+    });
+
+    // Cascata de Alunos e Avaliações
     const inpDocTurma = this.container.querySelector('#inp-doc-turma');
     const boxExtras = this.container.querySelector('#box-vinculos-extras');
     const selAluno = this.container.querySelector('#inp-doc-aluno');
@@ -493,6 +611,7 @@ export class MeusTrabalhosView {
       }
     });
 
+    // Envio do Upload
     this.container.querySelector('#form-upload-documento')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = this.container.querySelector('#inp-arquivo-upload').files[0];
@@ -518,6 +637,7 @@ export class MeusTrabalhosView {
         });
 
         modalDoc.classList.add('hidden');
+        this.container.querySelector('#form-upload-documento').reset();
         Toast.show('Ficheiro associado e guardado com sucesso!', 'success');
         await this.carregarDados();
       } catch (err) {
