@@ -10,6 +10,7 @@ export class EditorDocumentoA4View {
     this.container = document.getElementById(containerId);
     this.documentoAtivoId = null;
     this.tipo = tipoPadrao;
+    this.abaAtivaMobile = 'editor'; // 'editor' ou 'preview'
 
     this.estilo = {
       fonte: 'font-serif',
@@ -47,7 +48,7 @@ export class EditorDocumentoA4View {
         this.dadosCabecalho.professor = `Prof(a). ${nome}`;
       }
     } catch {
-      // mantém padrão
+      // Mantém o padrão
     }
 
     const rascunho = sessionStorage.getItem('DOCUMENTO_ATIVO');
@@ -75,125 +76,145 @@ export class EditorDocumentoA4View {
     this.container.innerHTML = `
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
-      <div class="flex flex-col lg:flex-row gap-8 p-6 max-w-full">
-        <!-- PAINEL DE CONTROLO E EDIÇÃO -->
-        <div class="no-print lg:w-5/12 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6 max-h-[92vh] overflow-y-auto">
-          <div class="flex items-center justify-between border-b pb-4">
-            <div>
-              <h2 class="text-xl font-bold text-slate-800">Estúdio de Provas & Listas A4</h2>
-              <p class="text-xs text-slate-500">Design avançado, cabeçalhos dinâmicos e LaTeX</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button id="btn-exportar-latex-estudio" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
-                📄 Overleaf (.tex)
-              </button>
-              <button id="btn-salvar-estudio" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
-                💾 Guardar
-              </button>
-              <button id="btn-imprimir-estudio" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
-                🖨️ PDF
-              </button>
-            </div>
-          </div>
-
-          <!-- SELEÇÃO DE TIPO E LAYOUT -->
-          <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Finalidade</label>
-              <select id="sel-tipo-doc" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
-                <option value="prova" ${this.tipo === 'prova' ? 'selected' : ''}>📝 Avaliação / Prova</option>
-                <option value="lista" ${this.tipo === 'lista' ? 'selected' : ''}>📋 Lista de Exercícios</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Modelo do Cabeçalho</label>
-              <select id="sel-layout-cab" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
-                <option value="classico" ${this.estilo.layoutCabecalho === 'classico' ? 'selected' : ''}>🏛️️ Oficial Clássico</option>
-                <option value="moderno_central" ${this.estilo.layoutCabecalho === 'moderno_central' ? 'selected' : ''}>✨ Moderno Centralizado</option>
-                <option value="minimalista" ${this.estilo.layoutCabecalho === 'minimalista' ? 'selected' : ''}>📄 Minimalista Direto</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tipografia</label>
-              <select id="sel-fonte" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
-                <option value="font-serif" ${this.estilo.fonte === 'font-serif' ? 'selected' : ''}>Times New Roman (Serif)</option>
-                <option value="font-sans" ${this.estilo.fonte === 'font-sans' ? 'selected' : ''}>Arial / Sans-Serif</option>
-                <option value="font-mono" ${this.estilo.fonte === 'font-mono' ? 'selected' : ''}>Console Monospaced</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tamanho da Fonte</label>
-              <select id="sel-tam-fonte" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
-                <option value="10pt" ${this.estilo.tamanhoFonte === '10pt' ? 'selected' : ''}>Compacto (10pt)</option>
-                <option value="11pt" ${this.estilo.tamanhoFonte === '11pt' ? 'selected' : ''}>Padrão (11pt)</option>
-                <option value="12pt" ${this.estilo.tamanhoFonte === '12pt' ? 'selected' : ''}>Grande (12pt)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- LOGÓTIPO -->
-          <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-            <div id="preview-logo-box" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
-              ${this.dadosCabecalho.logoUrl 
-                ? `<img src="${this.dadosCabecalho.logoUrl}" class="w-full h-full object-contain">`
-                : `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Sem Logo</span>`
-              }
-            </div>
-            <div class="flex-1">
-              <label class="block text-xs font-bold text-slate-700 mb-1">Logótipo da Instituição</label>
-              <input type="file" id="inp-upload-logo" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
-            </div>
-            ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="text-xs text-rose-500 hover:underline font-bold">Remover</button>` : ''}
-          </div>
-
-          <!-- CAMPOS DE CABEÇALHO -->
-          <div class="space-y-2">
-            <h3 class="text-xs font-bold text-slate-500 uppercase">Dados da Instituição & Turma</h3>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <input type="text" id="cfg-escola" value="${this.dadosCabecalho.escola}" placeholder="Nome da Escola" class="border p-2 rounded-lg col-span-2">
-              <input type="text" id="cfg-disciplina" value="${this.dadosCabecalho.disciplina}" placeholder="Disciplina" class="border p-2 rounded-lg">
-              <input type="text" id="cfg-professor" value="${this.dadosCabecalho.professor}" placeholder="Professor(a)" class="border p-2 rounded-lg">
-              <input type="text" id="cfg-turma" value="${this.dadosCabecalho.turma}" placeholder="Turma" class="border p-2 rounded-lg">
-              <input type="text" id="cfg-tipo" value="${this.dadosCabecalho.tipoDocumento}" placeholder="Título do Documento" class="border p-2 rounded-lg">
-              ${this.tipo === 'prova' ? `<input type="text" id="cfg-valor" value="${this.dadosCabecalho.valor}" placeholder="Nota Total" class="border p-2 rounded-lg col-span-2">` : ''}
-            </div>
-          </div>
-
-          <!-- COLUNAS E ESPAÇAMENTO -->
-          <div class="flex items-center justify-between p-3 bg-slate-50 border rounded-xl">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-slate-700">Colunas:</span>
-              <button id="btn-col-1" class="px-2.5 py-1 rounded text-xs font-bold ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border'}">1 Coluna</button>
-              <button id="btn-col-2" class="px-2.5 py-1 rounded text-xs font-bold ${this.estilo.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border'}">2 Colunas</button>
-            </div>
-            ${this.tipo === 'lista' ? `
-              <div class="flex items-center gap-1.5">
-                <span class="text-xs font-bold text-slate-700">Linhas padrão:</span>
-                <input type="number" id="inp-espaco-padrao" min="0" max="25" value="${this.estilo.espacoPadraoLinhas}" class="w-12 border rounded p-1 text-center text-xs font-bold bg-white">
-              </div>
-            ` : ''}
-          </div>
-
-          <!-- LISTA DE QUESTÕES -->
-          <div class="space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
-              <h3 class="text-xs font-bold text-slate-500 uppercase">Questões Cadastradas (${this.questoes.length})</h3>
-              <div class="flex items-center gap-2">
-                <button id="btn-importar-latex-estudio" class="text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-md hover:bg-indigo-100 flex items-center gap-1 transition">
-                  ✨ Importar LaTeX / PDF
-                </button>
-                <button id="btn-add-questao" class="text-xs font-bold bg-slate-800 text-white px-2.5 py-1 rounded-md hover:bg-slate-900 transition">
-                  + Nova Questão
-                </button>
-              </div>
-            </div>
-            <div id="questoes-formulario-container" class="space-y-4"></div>
+      <div class="p-3 sm:p-6 max-w-full space-y-4">
+        <!-- BARRA RESPONSIVA PARA TELEMÓVEL (SEPARADORES DE VISTA) -->
+        <div class="lg:hidden flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 shadow-sm no-print">
+          <div class="grid grid-cols-2 gap-1 w-full text-xs font-bold select-none">
+            <button id="btn-tab-editor" class="py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'editor' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
+              <span>✏️</span> Editor de Conteúdo
+            </button>
+            <button id="btn-tab-preview" class="py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'preview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
+              <span>📄</span> Folha A4 (Prévia)
+            </button>
           </div>
         </div>
 
-        <!-- FOLHA A4 DE VISUALIZAÇÃO E IMPRESSÃO -->
-        <div class="lg:w-7/12 flex justify-center bg-slate-200/60 p-4 rounded-2xl overflow-x-auto">
-          <div id="folha-preview-a4" class="sheet-a4 bg-white text-black shadow-2xl p-8" style="width: 210mm; min-height: 297mm;"></div>
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+          <!-- PAINEL DE CONTROLO E EDIÇÃO (COLUNA ESQUERDA) -->
+          <div id="painel-editor-estudio" class="no-print w-full lg:w-5/12 bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm space-y-6 max-h-[92vh] overflow-y-auto ${this.abaAtivaMobile === 'preview' ? 'hidden lg:block' : 'block'}">
+            <div class="flex items-center justify-between border-b pb-4">
+              <div>
+                <h2 class="text-lg sm:text-xl font-bold text-slate-800">Estúdio de Provas & Listas A4</h2>
+                <p class="text-xs text-slate-500">Design avançado, cabeçalhos dinâmicos e LaTeX</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btn-exportar-latex-estudio" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+                  📄 Overleaf (.tex)
+                </button>
+                <button id="btn-salvar-estudio" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+                  💾 Guardar
+                </button>
+                <button id="btn-imprimir-estudio" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+                  🖨️ PDF
+                </button>
+              </div>
+            </div>
+
+            <!-- SELEÇÃO DE TIPO E LAYOUT -->
+            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Finalidade</label>
+                <select id="sel-tipo-doc" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
+                  <option value="prova" ${this.tipo === 'prova' ? 'selected' : ''}>📝 Avaliação / Prova</option>
+                  <option value="lista" ${this.tipo === 'lista' ? 'selected' : ''}>📋 Lista de Exercícios</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Modelo do Cabeçalho</label>
+                <select id="sel-layout-cab" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
+                  <option value="classico" ${this.estilo.layoutCabecalho === 'classico' ? 'selected' : ''}>🏛 Oficial Clássico</option>
+                  <option value="moderno_central" ${this.estilo.layoutCabecalho === 'moderno_central' ? 'selected' : ''}>✨ Moderno Centralizado</option>
+                  <option value="minimalista" ${this.estilo.layoutCabecalho === 'minimalista' ? 'selected' : ''}>📄 Minimalista Direto</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tipografia</label>
+                <select id="sel-fonte" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
+                  <option value="font-serif" ${this.estilo.fonte === 'font-serif' ? 'selected' : ''}>Times New Roman (Serif)</option>
+                  <option value="font-sans" ${this.estilo.fonte === 'font-sans' ? 'selected' : ''}>Arial / Sans-Serif</option>
+                  <option value="font-mono" ${this.estilo.fonte === 'font-mono' ? 'selected' : ''}>Console Monospaced</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tamanho da Fonte</label>
+                <select id="sel-tam-fonte" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold">
+                  <option value="10pt" ${this.estilo.tamanhoFonte === '10pt' ? 'selected' : ''}>Compacto (10pt)</option>
+                  <option value="11pt" ${this.estilo.tamanhoFonte === '11pt' ? 'selected' : ''}>Padrão (11pt)</option>
+                  <option value="12pt" ${this.estilo.tamanhoFonte === '12pt' ? 'selected' : ''}>Grande (12pt)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- LOGÓTIPO -->
+            <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div id="preview-logo-box" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                ${this.dadosCabecalho.logoUrl 
+                  ? `<img src="${this.dadosCabecalho.logoUrl}" class="w-full h-full object-contain">`
+                  : `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Sem Logo</span>`
+                }
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Logótipo da Instituição</label>
+                <input type="file" id="inp-upload-logo" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
+              </div>
+              ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="text-xs text-rose-500 hover:underline font-bold">Remover</button>` : ''}
+            </div>
+
+            <!-- CAMPOS DE CABEÇALHO -->
+            <div class="space-y-2">
+              <h3 class="text-xs font-bold text-slate-500 uppercase">Dados da Instituição & Turma</h3>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input type="text" id="cfg-escola" value="${this.dadosCabecalho.escola}" placeholder="Nome da Escola" class="border p-2 rounded-lg col-span-2">
+                <input type="text" id="cfg-disciplina" value="${this.dadosCabecalho.disciplina}" placeholder="Disciplina" class="border p-2 rounded-lg">
+                <input type="text" id="cfg-professor" value="${this.dadosCabecalho.professor}" placeholder="Professor(a)" class="border p-2 rounded-lg">
+                <input type="text" id="cfg-turma" value="${this.dadosCabecalho.turma}" placeholder="Turma" class="border p-2 rounded-lg">
+                <input type="text" id="cfg-tipo" value="${this.dadosCabecalho.tipoDocumento}" placeholder="Título do Documento" class="border p-2 rounded-lg">
+                ${this.tipo === 'prova' ? `<input type="text" id="cfg-valor" value="${this.dadosCabecalho.valor}" placeholder="Nota Total" class="border p-2 rounded-lg col-span-2">` : ''}
+              </div>
+            </div>
+
+            <!-- COLUNAS E ESPAÇAMENTO -->
+            <div class="flex items-center justify-between p-3 bg-slate-50 border rounded-xl">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-700">Colunas:</span>
+                <button id="btn-col-1" class="px-2.5 py-1 rounded text-xs font-bold ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border'}">1 Coluna</button>
+                <button id="btn-col-2" class="px-2.5 py-1 rounded text-xs font-bold ${this.estilo.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border'}">2 Colunas</button>
+              </div>
+              ${this.tipo === 'lista' ? `
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold text-slate-700">Linhas padrão:</span>
+                  <input type="number" id="inp-espaco-padrao" min="0" max="25" value="${this.estilo.espacoPadraoLinhas}" class="w-12 border rounded p-1 text-center text-xs font-bold bg-white">
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- LISTA DE QUESTÕES -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between border-b pb-2">
+                <h3 class="text-xs font-bold text-slate-500 uppercase">Questões Cadastradas (${this.questoes.length})</h3>
+                <div class="flex items-center gap-2">
+                  <button id="btn-importar-latex-estudio" class="text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-md hover:bg-indigo-100 flex items-center gap-1 transition">
+                    ✨ Importar LaTeX / PDF
+                  </button>
+                  <button id="btn-add-questao" class="text-xs font-bold bg-slate-800 text-white px-2.5 py-1 rounded-md hover:bg-slate-900 transition">
+                    + Nova Questão
+                  </button>
+                </div>
+              </div>
+              <div id="questoes-formulario-container" class="space-y-4"></div>
+            </div>
+          </div>
+
+          <!-- FOLHA A4 DE VISUALIZAÇÃO E IMPRESSÃO (COLUNA DIREITA) -->
+          <div id="painel-preview-estudio" class="w-full lg:w-7/12 flex flex-col items-center bg-slate-200/70 p-2 sm:p-6 rounded-2xl overflow-x-auto ${this.abaAtivaMobile === 'editor' ? 'hidden lg:flex' : 'flex'}">
+            <div class="w-full max-w-[210mm] flex justify-end pb-2 no-print">
+              <span class="text-[11px] text-slate-500 font-medium">Pré-visualização fiel do papel A4</span>
+            </div>
+            
+            <div class="w-full overflow-x-auto flex justify-center py-2">
+              <div id="folha-preview-a4" class="sheet-a4 bg-white text-black shadow-2xl p-6 sm:p-8 shrink-0" style="width: 210mm; min-height: 297mm;"></div>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -358,6 +379,30 @@ export class EditorDocumentoA4View {
   }
 
   bindEvents() {
+    // 1. Controlo das Abas Mobile (Editor vs Preview)
+    const btnTabEditor = this.container.querySelector('#btn-tab-editor');
+    const btnTabPreview = this.container.querySelector('#btn-tab-preview');
+    const painelEditor = this.container.querySelector('#painel-editor-estudio');
+    const painelPreview = this.container.querySelector('#painel-preview-estudio');
+
+    btnTabEditor?.addEventListener('click', () => {
+      this.abaAtivaMobile = 'editor';
+      painelEditor.classList.remove('hidden');
+      painelPreview.classList.add('hidden');
+      painelPreview.classList.remove('flex');
+      btnTabEditor.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow';
+      btnTabPreview.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-100';
+    });
+
+    btnTabPreview?.addEventListener('click', () => {
+      this.abaAtivaMobile = 'preview';
+      painelEditor.classList.add('hidden');
+      painelPreview.classList.remove('hidden');
+      painelPreview.classList.add('flex');
+      btnTabPreview.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow';
+      btnTabEditor.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-100';
+    });
+
     this.container.querySelector('#btn-imprimir-estudio')?.addEventListener('click', () => window.print());
 
     // Exportar para Overleaf (.tex)
@@ -370,7 +415,7 @@ export class EditorDocumentoA4View {
       });
     });
 
-    // Importar via LaTeX colado ou PDF/Imagem via IA
+    // Importar via LaTeX ou IA
     this.container.querySelector('#btn-importar-latex-estudio')?.addEventListener('click', () => {
       LatexModal.abrirImportacaoComIA((questoesNovas) => {
         this.sincronizarCamposDoDOM();
@@ -496,7 +541,7 @@ export class EditorDocumentoA4View {
       }
     });
 
-    // GUARDAR ATUALIZADO
+    // Guardar Documento
     this.container.querySelector('#btn-salvar-estudio')?.addEventListener('click', async () => {
       const btn = this.container.querySelector('#btn-salvar-estudio');
       btn.disabled = true;
