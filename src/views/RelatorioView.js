@@ -93,27 +93,27 @@ export class RelatorioView {
         <!-- PAINEL DE CONTROLE (Não sai na impressão) -->
         <div class="no-print bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <a href="#turma/${this.turmaId}" class="text-xs font-bold text-indigo-600 hover:underline">← Voltar à Turma</a>
+            <a href="#turma/${this.turmaId}" class="touch-action text-xs font-bold text-indigo-600 hover:underline">← Voltar à Turma</a>
             <h1 class="text-xl font-bold text-slate-800 mt-1">Central de Relatórios & Atas Oficiais</h1>
             <p class="text-xs text-slate-500">${this.turma?.nome || ''} • Média de Aprovação: <strong>${mediaCorte}</strong></p>
           </div>
 
           <!-- Seletor de Tipo de Relatório -->
           <div class="flex flex-wrap items-center gap-2">
-            <button data-tipo-rel="geral" class="px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'geral' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
+            <button data-tipo-rel="geral" class="touch-action px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'geral' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
               📋 Ata Geral
             </button>
-            <button data-tipo-rel="notas" class="px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'notas' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
+            <button data-tipo-rel="notas" class="touch-action px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'notas' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
               📝 Somente Notas
             </button>
-            <button data-tipo-rel="frequencia" class="px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'frequencia' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
+            <button data-tipo-rel="frequencia" class="touch-action px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'frequencia' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
               📅 Frequência & Faltas
             </button>
-            <button data-tipo-rel="individual" class="px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'individual' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
+            <button data-tipo-rel="individual" class="touch-action px-3 py-1.5 rounded-lg text-xs font-bold ${this.tipoRelatorio === 'individual' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">
               👤 Ficha Individual
             </button>
             
-            <button id="btn-imprimir-rel" class="ml-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5">
+            <button id="btn-imprimir-rel" class="touch-action ml-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5">
               🖨️ Imprimir / PDF
             </button>
           </div>
@@ -137,8 +137,8 @@ export class RelatorioView {
             <input type="date" id="rel-data-inicio" value="${this.dataInicio}" class="bg-white border rounded-lg p-1 text-xs">
             <span class="font-bold text-slate-600">até:</span>
             <input type="date" id="rel-data-fim" value="${this.dataFim}" class="bg-white border rounded-lg p-1 text-xs">
-            <button id="btn-filtrar-periodo" class="px-2.5 py-1 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700">Filtrar</button>
-            ${(this.dataInicio || this.dataFim) ? `<button id="btn-limpar-periodo" class="text-rose-600 hover:underline font-semibold ml-1">Limpar Datas</button>` : ''}
+            <button id="btn-filtrar-periodo" class="touch-action px-2.5 py-1 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700">Filtrar</button>
+            ${(this.dataInicio || this.dataFim) ? `<button id="btn-limpar-periodo" class="touch-action text-rose-600 hover:underline font-semibold ml-1">Limpar Datas</button>` : ''}
           </div>
 
           ${this.tipoRelatorio === 'individual' ? `

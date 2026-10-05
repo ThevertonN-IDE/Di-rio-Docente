@@ -28,13 +28,13 @@ export class MeusTrabalhosView {
             <p class="text-xs text-slate-500">Gestão de Provas, Listas, Apostilas, Planos e Documentos digitais</p>
           </div>
           <div class="flex items-center gap-2">
-            <button id="btn-abrir-sheet-criar" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+            <button id="btn-abrir-sheet-criar" class="touch-action w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
               ➕ Criar Material
             </button>
           </div>
         </div>
 
-        <!-- 2. BARRA DE PESQUISA E FILTROS RÁPIDOS (COMPACTAÇÃO NO CELULAR) -->
+        <!-- 2. BARRA DE PESQUISA E FILTROS RÁPIDOS -->
         <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
           
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs">
@@ -49,7 +49,7 @@ export class MeusTrabalhosView {
               >
             </div>
 
-            <!-- Turma + Categoria lado a lado no celular (grid-cols-2) -->
+            <!-- Turma + Categoria lado a lado no celular -->
             <div class="grid grid-cols-2 sm:flex items-center gap-2">
               <div class="sm:w-44">
                 <select id="sel-filtro-turma" class="w-full py-2 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold focus:bg-white outline-none transition cursor-pointer">
@@ -71,29 +71,29 @@ export class MeusTrabalhosView {
             </div>
           </div>
 
-          <!-- 3. CHIPS HORIZONTAIS COM ROLAGEM SUAVE -->
+          <!-- 3. CHIPS HORIZONTAIS -->
           <div class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-semibold select-none border-t border-slate-100">
-            <button data-chip-tipo="todos" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-xs">
+            <button data-chip-tipo="todos" class="touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-xs">
               <span>📚 Todos</span>
               <span id="badge-total-todos" class="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full">0</span>
             </button>
-            <button data-chip-tipo="prova" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+            <button data-chip-tipo="prova" class="touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
               <span>📝 Provas A4</span>
               <span id="badge-total-prova" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
             </button>
-            <button data-chip-tipo="lista" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+            <button data-chip-tipo="lista" class="touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
               <span>📋 Listas</span>
               <span id="badge-total-lista" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
             </button>
-            <button data-chip-tipo="apostila" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+            <button data-chip-tipo="apostila" class="touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
               <span>📘 Apostilas</span>
               <span id="badge-total-apostila" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
             </button>
-            <button data-chip-tipo="plano_aula" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+            <button data-chip-tipo="plano_aula" class="touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
               <span>📅 Planos BNCC</span>
               <span id="badge-total-plano" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
             </button>
-            <button data-chip-tipo="arquivo_externo" class="chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+            <button data-chip-tipo="arquivo_externo" class="touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
               <span>📁 Anexos & Arquivos</span>
               <span id="badge-total-externo" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full">0</span>
             </button>
@@ -108,14 +108,14 @@ export class MeusTrabalhosView {
 
       </div>
 
-      <!-- MODAL DE UPLOAD DE ARQUIVOS (PRESERVADO) -->
-      <div id="modal-upload-doc" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
-        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] md:max-h-[90vh] overflow-y-auto">
+      <!-- MODAL DE UPLOAD DE ARQUIVOS -->
+      <div id="modal-upload-doc" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] md:max-h-[90vh] overflow-y-auto">
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
 
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Anexar Documento Digital</h3>
-            <button id="btn-fechar-modal-doc" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-doc" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
 
           <form id="form-upload-documento" class="space-y-3 text-xs">
@@ -165,8 +165,8 @@ export class MeusTrabalhosView {
             </div>
 
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-doc" class="px-4 py-2 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-upload-doc" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Fazer Upload</button>
+              <button type="button" id="btn-cancelar-modal-doc" class="touch-action px-4 py-2 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-upload-doc" class="touch-action px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Fazer Upload</button>
             </div>
           </form>
         </div>
@@ -257,26 +257,26 @@ export class MeusTrabalhosView {
       if (doc.tipo === 'prova') {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-[10px]">📝 Prova A4</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-estudio="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'lista') {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-teal-50 text-teal-700 font-bold border border-teal-200 text-[10px]">📋 Lista A4</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-estudio="${doc.id}" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-teal-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-estudio="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-slate-900 hover:bg-teal-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'apostila') {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[10px]">📘 Apostila</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-apostila="${doc.id}" class="flex-1 py-1.5 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-apostila="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'plano_aula') {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200 text-[10px]">📅 Plano (${doc.subtipo || 'BNCC'})</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-plano="${doc.id}" class="flex-1 py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-plano="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold border border-slate-200 text-[10px]">📁 Arquivo Digital</span>`;
@@ -284,16 +284,16 @@ export class MeusTrabalhosView {
 
         if (ehPdfOuImg) {
           botoesAcoesPrincipais = `
-            <a href="${doc.arquivo_url}" target="_blank" download class="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar</a>
-            <button data-converter-ia="${doc.id}" title="Extrair questões em LaTeX via IA" class="py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-2xs">✨ IA</button>
+            <a href="${doc.arquivo_url}" target="_blank" download class="touch-action flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar</a>
+            <button data-converter-ia="${doc.id}" title="Extrair questões em LaTeX via IA" class="touch-action py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-2xs">✨ IA</button>
           `;
         } else {
-          botoesAcoesPrincipais = `<a href="${doc.arquivo_url}" target="_blank" download class="w-full py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar / Abrir</a>`;
+          botoesAcoesPrincipais = `<a href="${doc.arquivo_url}" target="_blank" download class="touch-action w-full py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar / Abrir</a>`;
         }
       }
 
       return `
-        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm transition">
+        <div class="touch-card bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm transition">
           <div>
             <!-- Topo do Card: Badge + Menu de Três Pontos (⋮) -->
             <div class="flex items-start justify-between gap-2 mb-2">
@@ -304,15 +304,15 @@ export class MeusTrabalhosView {
 
               <!-- Menu flutuante com Duplicar e Excluir -->
               <div class="relative dropdown-container">
-                <button type="button" class="btn-menu-dots w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center font-bold text-sm transition">
+                <button type="button" class="touch-action btn-menu-dots w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center font-bold text-sm transition">
                   ⋮
                 </button>
                 <div class="dropdown-menu hidden absolute right-0 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-20 text-xs text-slate-700 animate-in fade-in zoom-in-95 duration-100">
-                  <button data-duplicar-doc="${doc.id}" class="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700">
+                  <button data-duplicar-doc="${doc.id}" class="touch-action w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700">
                     <span>📄</span> Duplicar Material
                   </button>
                   <div class="my-1 border-t border-slate-100"></div>
-                  <button data-excluir-doc="${doc.id}" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2">
+                  <button data-excluir-doc="${doc.id}" class="touch-action w-full text-left px-3 py-1.5 hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2">
                     <span>🗑️</span> Excluir Documento
                   </button>
                 </div>
@@ -521,12 +521,12 @@ export class MeusTrabalhosView {
         this.filtroTipo = chip.getAttribute('data-chip-tipo');
 
         chips.forEach(c => {
-          c.className = 'chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50';
+          c.className = 'touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-50';
           const badge = c.querySelector('span:last-child');
           if (badge) badge.className = 'text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full';
         });
 
-        chip.className = 'chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-xs';
+        chip.className = 'touch-action chip-tipo px-3 py-1.5 rounded-full transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-xs';
         const badgeAtivo = chip.querySelector('span:last-child');
         if (badgeAtivo) badgeAtivo.className = 'text-[10px] bg-white/20 text-white px-1.5 py-0.2 rounded-full';
 

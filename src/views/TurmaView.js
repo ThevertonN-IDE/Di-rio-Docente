@@ -76,7 +76,7 @@ export class TurmaView {
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
               <div class="flex items-center gap-2 mb-1">
-                <a href="#dashboard" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">← Painel Geral</a>
+                <a href="#dashboard" class="touch-action text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">← Painel Geral</a>
                 <span class="text-slate-300">•</span>
                 <span class="text-xs font-semibold text-slate-500 uppercase">${this.vm.turma?.tipo_media === 'ponderada' ? 'Média Ponderada' : 'Média Simples'}</span>
                 <span class="text-slate-300">•</span>
@@ -90,11 +90,11 @@ export class TurmaView {
 
             <!-- Ações Prioritárias Rápidas -->
             <div class="flex items-center gap-2 flex-wrap">
-              <button id="btn-diario" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5">
+              <button id="btn-diario" class="touch-action px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5">
                 <span>📅</span>
                 <span>Diário & Chamada</span>
               </button>
-              <button id="btn-nova-avaliacao" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1">
+              <button id="btn-nova-avaliacao" class="touch-action px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1">
                 <span>➕</span>
                 <span>Nova Avaliação</span>
               </button>
@@ -103,16 +103,16 @@ export class TurmaView {
 
           <!-- Ações Secundárias em Linha Deslizável -->
           <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-semibold">
-            <button id="btn-exportar-excel" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap active:scale-95">
+            <button id="btn-exportar-excel" class="touch-action px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap active:scale-95">
               <span>📊</span> Exportar Excel
             </button>
-            <button id="btn-modal-add-aluno" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+            <button id="btn-modal-add-aluno" class="touch-action px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
               <span>👤</span> + Aluno
             </button>
-            <button id="btn-modal-importar-lote" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+            <button id="btn-modal-importar-lote" class="touch-action px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
               <span>📋</span> Colar Lista
             </button>
-            <button id="btn-relatorio" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+            <button id="btn-relatorio" class="touch-action px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
               <span>🖨️</span> Ata / Relatório
             </button>
           </div>
@@ -122,14 +122,14 @@ export class TurmaView {
         <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs">
           <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs font-bold select-none">
             <span class="text-slate-400 text-[11px] uppercase tracking-wider mr-1 shrink-0">Bimestre:</span>
-            <button data-bimestre-btn="0" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 0 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Todos</button>
-            <button data-bimestre-btn="1" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 1 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">1º Bim</button>
-            <button data-bimestre-btn="2" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 2 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">2º Bim</button>
-            <button data-bimestre-btn="3" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 3 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">3º Bim</button>
-            <button data-bimestre-btn="4" class="px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 4 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">4º Bim</button>
+            <button data-bimestre-btn="0" class="touch-action px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 0 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Todos</button>
+            <button data-bimestre-btn="1" class="touch-action px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 1 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">1º Bim</button>
+            <button data-bimestre-btn="2" class="touch-action px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 2 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">2º Bim</button>
+            <button data-bimestre-btn="3" class="touch-action px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 3 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">3º Bim</button>
+            <button data-bimestre-btn="4" class="touch-action px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 4 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">4º Bim</button>
           </div>
 
-          <button id="btn-cfg-media" class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl hover:bg-indigo-100 transition flex items-center gap-1 shadow-2xs">
+          <button id="btn-cfg-media" class="touch-action text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl hover:bg-indigo-100 transition flex items-center gap-1 shadow-2xs">
             ⚙️ Média Mínima: <strong class="ml-0.5">${mediaCorte}</strong>
           </button>
         </div>
@@ -163,7 +163,7 @@ export class TurmaView {
                     <th class="py-3 px-3 min-w-[110px] text-center border-l border-slate-100">
                       <div class="flex items-center justify-center gap-1">
                         <span data-edit-av="${av.id}" title="Clique para editar avaliação" class="cursor-pointer hover:text-indigo-600 hover:underline transition font-bold">${av.titulo}</span>
-                        <button data-delete-av="${av.id}" data-titulo-av="${av.titulo}" title="Excluir" class="text-slate-400 hover:text-rose-600 ml-1 font-bold text-sm leading-none">&times;</button>
+                        <button data-delete-av="${av.id}" data-titulo-av="${av.titulo}" title="Excluir" class="touch-action text-slate-400 hover:text-rose-600 ml-1 font-bold text-sm leading-none">&times;</button>
                       </div>
                       <span class="block text-[10px] text-slate-400 font-normal">p.${av.peso || 1} •${av.bimestre ? av.bimestre + 'º Bim' : '1º Bim'}</span>
                     </th>
@@ -203,7 +203,7 @@ export class TurmaView {
                           <div class="truncate min-w-0">
                             <div class="font-bold text-xs text-slate-800 group-hover:text-indigo-600 transition flex items-center gap-1 truncate">
                               <span class="truncate">${aluno.nome}</span>
-                              <span class="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100">✏️</span>
+                              <span class="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100">✏️️</span>
                             </div>
                             <div class="text-[11px] text-slate-400 truncate">${aluno.email || 'Sem e-mail'}</div>
                           </div>
@@ -247,12 +247,12 @@ export class TurmaView {
       </div>
 
       <!-- MODAL NOVO ALUNO (COM GAVETA BOTTOM-SHEET NO TELEMÓVEL) -->
-      <div id="modal-novo-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
-        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div id="modal-novo-aluno" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Registar Novo Aluno</h3>
-            <button id="btn-fechar-modal-aluno" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-aluno" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           <form id="form-novo-aluno" class="space-y-3 text-xs">
             <div class="flex items-center gap-4 py-1">
@@ -277,20 +277,20 @@ export class TurmaView {
               <input type="email" id="campo-email-aluno" class="w-full border rounded-xl p-2 text-xs">
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-aluno" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-aluno-submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Aluno</button>
+              <button type="button" id="btn-cancelar-aluno" class="touch-action px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-aluno-submit" class="touch-action px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Aluno</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- MODAL EDITAR / EXCLUIR ALUNO -->
-      <div id="modal-editar-aluno" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
-        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div id="modal-editar-aluno" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Dados do Aluno</h3>
-            <button id="btn-fechar-modal-editar-aluno" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-editar-aluno" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           <form id="form-editar-aluno" class="space-y-3 text-xs">
             <div class="flex items-center gap-4 py-1">
@@ -315,12 +315,12 @@ export class TurmaView {
               <input type="email" id="edit-email-aluno" class="w-full border rounded-xl p-2 text-xs">
             </div>
             <div class="pt-3 border-t flex items-center justify-between">
-              <button type="button" id="btn-excluir-aluno" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition">
+              <button type="button" id="btn-excluir-aluno" class="touch-action px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition">
                 🗑️ Remover da Turma
               </button>
               <div class="flex gap-2">
-                <button type="button" id="btn-cancelar-editar-aluno" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Fechar</button>
-                <button type="submit" id="btn-salvar-edicao-aluno" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar</button>
+                <button type="button" id="btn-cancelar-editar-aluno" class="touch-action px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Fechar</button>
+                <button type="submit" id="btn-salvar-edicao-aluno" class="touch-action px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar</button>
               </div>
             </div>
           </form>
@@ -328,12 +328,12 @@ export class TurmaView {
       </div>
 
       <!-- MODAL EDITAR AVALIAÇÃO -->
-      <div id="modal-editar-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
-        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div id="modal-editar-avaliacao" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Editar Avaliação</h3>
-            <button id="btn-fechar-modal-editar-av" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-editar-av" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           <form id="form-editar-avaliacao" class="space-y-3 text-xs">
             <div>
@@ -360,37 +360,37 @@ export class TurmaView {
               </div>
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-editar-av" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-edicao-av" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Alterações</button>
+              <button type="button" id="btn-cancelar-modal-editar-av" class="touch-action px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-edicao-av" class="touch-action px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Alterações</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- MODAL IMPORTAÇÃO EM LOTE -->
-      <div id="modal-lote-alunos" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
-        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div id="modal-lote-alunos" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Importação em Lote</h3>
-            <button id="btn-fechar-lote" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-lote" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           <p class="text-xs text-slate-500">Cole a lista com um nome por linha.</p>
           <textarea id="txt-area-lote" rows="7" class="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono outline-none focus:border-indigo-500"></textarea>
           <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" id="btn-cancelar-lote" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-            <button type="button" id="btn-confirmar-lote" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Importar Todos</button>
+            <button type="button" id="btn-cancelar-lote" class="touch-action px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+            <button type="button" id="btn-confirmar-lote" class="touch-action px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Importar Todos</button>
           </div>
         </div>
       </div>
 
       <!-- MODAL NOVA AVALIAÇÃO -->
-      <div id="modal-nova-avaliacao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
-        <div class="bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div id="modal-nova-avaliacao" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Criar Nova Avaliação</h3>
-            <button id="btn-fechar-av" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-av" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           <form id="form-nova-avaliacao" class="space-y-3 text-xs">
             <div>
@@ -417,8 +417,8 @@ export class TurmaView {
               </div>
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-av" class="px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-av-submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Criar Coluna</button>
+              <button type="button" id="btn-cancelar-av" class="touch-action px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
+              <button type="submit" id="btn-salvar-av-submit" class="touch-action px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Criar Coluna</button>
             </div>
           </form>
         </div>

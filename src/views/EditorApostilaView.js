@@ -3,7 +3,7 @@ import { DocumentoService } from '../services/DocumentoService.js';
 import { TurmaService } from '../services/TurmaService.js';
 import { renderizarMatematica } from '../utils/katexRenderer.js';
 import { Toast } from '../utils/ui.js';
-import { LatexModal } from '../utils/LatexModal.js'; // <-- 1. IMPORT ADICIONADO
+import { LatexModal } from '../utils/LatexModal.js';
 
 export class EditorApostilaView {
   constructor(containerId) {
@@ -94,10 +94,10 @@ export class EditorApostilaView {
         <!-- BARRA RESPONSIVA PARA DISPOSITIVOS MÓVEIS (TABS LIMPAS) -->
         <div class="lg:hidden flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 shadow-sm">
           <div class="grid grid-cols-2 gap-1 w-full text-xs font-bold">
-            <button id="btn-tab-editor" class="py-2.5 rounded-lg transition ${this.abaAtivaMobile === 'editor' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
+            <button id="btn-tab-editor" class="touch-action py-2.5 rounded-lg transition ${this.abaAtivaMobile === 'editor' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
               ✏ Editor de Conteúdo
             </button>
-            <button id="btn-tab-preview" class="py-2.5 rounded-lg transition ${this.abaAtivaMobile === 'preview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
+            <button id="btn-tab-preview" class="touch-action py-2.5 rounded-lg transition ${this.abaAtivaMobile === 'preview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
               📄 Prévia da Apostila (A4)
             </button>
           </div>
@@ -111,15 +111,14 @@ export class EditorApostilaView {
                 <h2 class="text-xl font-extrabold text-slate-800">Criador de Apostilas</h2>
                 <p class="text-xs text-slate-500">Teoria, boxes didáticos, gráficos matemáticos e exercícios</p>
               </div>
-              <!-- BOTÕES DE AÇÃO: EXPORTAR LATEX ADICIONADO AQUI -->
               <div class="flex items-center gap-2">
-                <button id="btn-exportar-latex-apostila" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm transition">
+                <button id="btn-exportar-latex-apostila" class="touch-action px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm transition">
                   📄 Overleaf (.tex)
                 </button>
-                <button id="btn-salvar-apostila" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
+                <button id="btn-salvar-apostila" class="touch-action px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
                   💾 Salvar
                 </button>
-                <button id="btn-imprimir-apostila" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
+                <button id="btn-imprimir-apostila" class="touch-action px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
                   🖨️ PDF
                 </button>
               </div>
@@ -168,7 +167,7 @@ export class EditorApostilaView {
                   <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Brasão ou Logo</label>
                   <input type="file" id="inp-logo-apostila-file" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
                 </div>
-                ${this.apostila.logoUrl ? `<button id="btn-remover-logo-apostila" class="text-xs text-rose-500 hover:underline font-bold">Remover</button>` : ''}
+                ${this.apostila.logoUrl ? `<button id="btn-remover-logo-apostila" class="touch-action text-xs text-rose-500 hover:underline font-bold">Remover</button>` : ''}
               </div>
 
               <!-- Opções de Impressão e Tamanho -->
@@ -197,7 +196,7 @@ export class EditorApostilaView {
             <div class="space-y-4">
               <div class="flex items-center justify-between border-b pb-2">
                 <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Capítulos & Tópicos (${this.apostila.capitulos.length})</h3>
-                <button id="btn-add-capitulo" class="text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">
+                <button id="btn-add-capitulo" class="touch-action text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">
                   + Novo Capítulo
                 </button>
               </div>
@@ -210,23 +209,20 @@ export class EditorApostilaView {
 
           <!-- FOLHA A4 PARA PREVIEW E IMPRESSÃO (COLUNA DIREITA) -->
           <div id="coluna-preview-painel" class="w-full lg:w-7/12 flex flex-col items-center bg-slate-200/70 p-4 sm:p-6 rounded-2xl overflow-x-auto ${this.abaAtivaMobile === 'editor' ? 'hidden lg:flex' : 'flex'}">
-            <!-- Barra de Zoom -->
             <div class="no-print flex items-center justify-between w-full max-w-[210mm] mb-4 bg-white px-4 py-2 rounded-xl border border-slate-300 shadow-sm text-xs font-bold text-slate-700">
               <span class="flex items-center gap-1.5 text-indigo-700">
                 <span>📄</span> Visualização Real de Impressão A4
               </span>
               <div class="flex items-center gap-2">
                 <span>Zoom:</span>
-                <button id="btn-zoom-75" class="px-2.5 py-1 rounded border ${this.zoomNivel === 75 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100'}">75%</button>
-                <button id="btn-zoom-100" class="px-2.5 py-1 rounded border ${this.zoomNivel === 100 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100'}">100%</button>
-                <button id="btn-zoom-125" class="px-2.5 py-1 rounded border ${this.zoomNivel === 125 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100'}">125%</button>
+                <button id="btn-zoom-75" class="touch-action px-2.5 py-1 rounded border ${this.zoomNivel === 75 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100'}">75%</button>
+                <button id="btn-zoom-100" class="touch-action px-2.5 py-1 rounded border ${this.zoomNivel === 100 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100'}">100%</button>
+                <button id="btn-zoom-125" class="touch-action px-2.5 py-1 rounded border ${this.zoomNivel === 125 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100'}">125%</button>
               </div>
             </div>
 
-            <!-- Documento A4 Físico -->
             <div class="w-full flex justify-center overflow-x-auto">
               <div id="folha-apostila-a4" class="sheet-a4 bg-white text-black shadow-2xl p-10 sm:p-12 transition-transform duration-200 origin-top" style="width: 210mm; min-height: 297mm; font-family: 'Times New Roman', serif; transform: scale(${this.zoomNivel / 100});">
-                <!-- Conteúdo renderizado em atualizarPreviewApostila() -->
               </div>
             </div>
           </div>
@@ -234,11 +230,11 @@ export class EditorApostilaView {
       </div>
 
       <!-- MODAL PARA GERAÇÃO NATIVA DE GRÁFICOS -->
-      <div id="modal-gerador-grafico" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div id="modal-gerador-grafico" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="sheet-smooth bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-extrabold text-slate-800">📈 Traçado de Função Cartesiana</h3>
-            <button id="btn-fechar-modal-grafico" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-grafico" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           
           <div class="space-y-4 text-xs">
@@ -261,14 +257,14 @@ export class EditorApostilaView {
 
             <div class="border rounded-xl bg-slate-50 flex flex-col items-center justify-center p-3">
               <canvas id="canvas-gerador-grafico" width="460" height="280" class="border bg-white rounded-lg shadow-inner max-w-full"></canvas>
-              <button id="btn-atualizar-tracado" class="mt-2 text-indigo-600 font-bold hover:underline text-xs">
+              <button id="btn-atualizar-tracado" class="touch-action mt-2 text-indigo-600 font-bold hover:underline text-xs">
                 🔄 Atualizar Curva
               </button>
             </div>
 
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-grafico" class="px-4 py-2 border rounded-lg text-slate-600 font-semibold text-xs">Cancelar</button>
-              <button type="button" id="btn-aplicar-grafico-secao" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs shadow-sm">Inserir na Apostila</button>
+              <button type="button" id="btn-cancelar-modal-grafico" class="touch-action px-4 py-2 border rounded-lg text-slate-600 font-semibold text-xs">Cancelar</button>
+              <button type="button" id="btn-aplicar-grafico-secao" class="touch-action px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs shadow-sm">Inserir na Apostila</button>
             </div>
           </div>
         </div>
@@ -284,7 +280,7 @@ export class EditorApostilaView {
       <div class="border border-slate-300 rounded-xl p-5 bg-slate-50 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-200 pb-3">
           <input type="text" data-cap-idx="${cIdx}" value="${cap.titulo}" placeholder="Título do Capítulo" class="font-bold text-base bg-transparent border-0 border-b border-dashed border-slate-400 focus:border-indigo-600 w-3/4 outline-none text-slate-900">
-          <button data-remove-cap="${cIdx}" class="text-rose-600 hover:text-rose-800 font-bold text-xs">Excluir Capítulo</button>
+          <button data-remove-cap="${cIdx}" class="touch-action text-rose-600 hover:text-rose-800 font-bold text-xs">Excluir Capítulo</button>
         </div>
 
         <div class="space-y-5 pl-2 sm:pl-3 border-l-2 border-indigo-200">
@@ -292,10 +288,9 @@ export class EditorApostilaView {
             <div class="border border-slate-200 rounded-xl p-4 bg-white space-y-4 shadow-sm">
               <div class="flex items-center justify-between border-b pb-2">
                 <input type="text" data-sec-subtitulo="${cIdx}_${sIdx}" value="${sec.subtitulo}" placeholder="Ex: 1.1 Introdução Teórica" class="font-bold text-sm border border-slate-300 rounded-lg p-2 w-3/4 text-slate-800">
-                <button data-remove-sec="${cIdx}_${sIdx}" class="text-rose-500 hover:text-rose-700 text-xs font-bold">Remover Tópico</button>
+                <button data-remove-sec="${cIdx}_${sIdx}" class="touch-action text-rose-500 hover:text-rose-700 text-xs font-bold">Remover Tópico</button>
               </div>
 
-              <!-- Caixa Didática de Destaque -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div class="sm:col-span-1">
                   <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Box de Destaque</label>
@@ -312,21 +307,19 @@ export class EditorApostilaView {
                 </div>
               </div>
 
-              <!-- Desenvolvimento Teórico -->
               <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Conteúdo Teórico & Explicação</label>
                 <textarea data-sec-teoria="${cIdx}_${sIdx}" rows="4" class="w-full border border-slate-300 rounded-lg p-3 font-mono text-xs leading-relaxed" placeholder="Escreva a teoria aqui. Use $formula$ para fórmulas na linha ou $$bloco$$ para equações destacadas...">${sec.conteudoTeorico || ''}</textarea>
               </div>
 
-              <!-- Gráfico Matemático da Seção -->
               <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                 <div class="flex items-center justify-between text-xs">
                   <span class="font-bold text-slate-700">Gráfico ou Figura Cartesiana:</span>
                   <div class="flex items-center gap-2">
-                    <button data-abrir-gerador-grafico="${cIdx}_${sIdx}" class="px-3 py-1.5 bg-indigo-50 border border-indigo-300 text-indigo-700 rounded-lg font-bold hover:bg-indigo-100 transition">
+                    <button data-abrir-gerador-grafico="${cIdx}_${sIdx}" class="touch-action px-3 py-1.5 bg-indigo-50 border border-indigo-300 text-indigo-700 rounded-lg font-bold hover:bg-indigo-100 transition">
                       📈 Gerar no App
                     </button>
-                    <label class="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-bold hover:bg-slate-100 cursor-pointer transition">
+                    <label class="touch-action px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-bold hover:bg-slate-100 cursor-pointer transition">
                       📁 Anexar Imagem
                       <input type="file" accept="image/*" data-upload-grafico="${cIdx}_${sIdx}" class="hidden">
                     </label>
@@ -336,22 +329,21 @@ export class EditorApostilaView {
                 ${sec.imagemGraficoUrl ? `
                   <div class="flex items-center justify-between bg-white border border-slate-200 p-2.5 rounded-lg">
                     <span class="text-xs text-emerald-700 font-bold">✓ Gráfico inserido na seção</span>
-                    <button data-remove-grafico="${cIdx}_${sIdx}" class="text-rose-500 hover:underline font-bold text-xs">Remover Gráfico</button>
+                    <button data-remove-grafico="${cIdx}_${sIdx}" class="touch-action text-rose-500 hover:underline font-bold text-xs">Remover Gráfico</button>
                   </div>
                 ` : ''}
               </div>
 
-              <!-- Exemplos Resolvidos Passo a Passo -->
               <div class="border-t pt-3 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-xs text-slate-700 uppercase">Exemplos Resolvidos Passo a Passo</span>
-                  <button data-add-exemplo="${cIdx}_${sIdx}" class="text-indigo-600 hover:underline font-bold text-xs">+ Novo Exemplo</button>
+                  <button data-add-exemplo="${cIdx}_${sIdx}" class="touch-action text-indigo-600 hover:underline font-bold text-xs">+ Novo Exemplo</button>
                 </div>
                 ${sec.exemplosResolvidos.map((ex, eIdx) => `
                   <div class="border border-slate-200 bg-slate-50/80 p-3 rounded-lg space-y-2">
                     <div class="flex justify-between items-center text-xs font-bold text-slate-600">
                       <span>Exemplo ${eIdx + 1}</span>
-                      <button data-remove-exemplo="${cIdx}_${sIdx}_${eIdx}" class="text-rose-500 hover:text-rose-700 font-bold text-sm">&times;</button>
+                      <button data-remove-exemplo="${cIdx}_${sIdx}_${eIdx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold text-sm">&times;</button>
                     </div>
                     <input type="text" data-ex-enunciado="${cIdx}_${sIdx}_${eIdx}" value="${ex.enunciado}" placeholder="Enunciado do exemplo..." class="w-full border border-slate-300 rounded p-2 bg-white text-xs">
                     <textarea data-ex-resolucao="${cIdx}_${sIdx}_${eIdx}" rows="3" placeholder="Resolução detalhada passo a passo..." class="w-full border border-slate-300 rounded p-2 bg-white font-mono text-xs leading-relaxed">${ex.resolucaoPassoAPasso}</textarea>
@@ -359,11 +351,10 @@ export class EditorApostilaView {
                 `).join('')}
               </div>
 
-              <!-- Exercícios Propostos -->
               <div class="border-t pt-3 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-xs text-slate-700 uppercase">Exercícios Propostos com Espaço</span>
-                  <button data-add-exercicio="${cIdx}_${sIdx}" class="text-indigo-600 hover:underline font-bold text-xs">+ Novo Exercício</button>
+                  <button data-add-exercicio="${cIdx}_${sIdx}" class="touch-action text-indigo-600 hover:underline font-bold text-xs">+ Novo Exercício</button>
                 </div>
                 ${sec.exercicios.map((q, qIdx) => `
                   <div class="border border-slate-200 bg-slate-50/80 p-3 rounded-lg space-y-2">
@@ -372,7 +363,7 @@ export class EditorApostilaView {
                       <div class="flex items-center gap-1.5">
                         <span class="text-slate-500">Linhas no A4:</span>
                         <input type="number" min="1" max="20" data-q-linhas="${cIdx}_${sIdx}_${qIdx}" value="${q.linhasResolucao || 5}" class="w-14 border border-slate-300 rounded text-center p-1 font-bold bg-white text-xs">
-                        <button data-remove-exercicio="${cIdx}_${sIdx}_${qIdx}" class="text-rose-500 hover:text-rose-700 font-bold text-sm ml-2">&times;</button>
+                        <button data-remove-exercicio="${cIdx}_${sIdx}_${qIdx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold text-sm ml-2">&times;</button>
                       </div>
                     </div>
                     <textarea data-q-enunciado="${cIdx}_${sIdx}_${qIdx}" rows="2" placeholder="Enunciado da questão..." class="w-full border border-slate-300 rounded p-2 bg-white font-mono text-xs leading-relaxed">${q.enunciado}</textarea>
@@ -383,7 +374,7 @@ export class EditorApostilaView {
             </div>
           `).join('')}
 
-          <button data-add-secao="${cIdx}" class="text-xs text-indigo-700 font-bold hover:underline py-1 block">
+          <button data-add-secao="${cIdx}" class="touch-action text-xs text-indigo-700 font-bold hover:underline py-1 block">
             + Adicionar Tópico a este Capítulo
           </button>
         </div>
@@ -408,7 +399,6 @@ export class EditorApostilaView {
     const toScreenX = (x) => ((x - xMin) / (xMax - xMin)) * width;
     const toScreenY = (y) => height - ((y - yMin) / (yMax - yMin)) * height;
 
-    // Grelha
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 1;
     for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
@@ -424,7 +414,6 @@ export class EditorApostilaView {
       ctx.stroke();
     }
 
-    // Eixos
     ctx.strokeStyle = '#1e293b';
     ctx.lineWidth = 1.8;
 
@@ -468,7 +457,6 @@ export class EditorApostilaView {
       }
     };
 
-    // Traçado da Linha / Curva
     ctx.strokeStyle = '#2563eb';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -506,7 +494,6 @@ export class EditorApostilaView {
     const ap = this.apostila;
     const tamanhoFonte = ap.tamanhoFonteBase || '11pt';
 
-    // 1. Capa Oficial
     let capaHtml = '';
     if (ap.exibirCapa) {
       capaHtml = `
@@ -533,7 +520,6 @@ export class EditorApostilaView {
       `;
     }
 
-    // 2. Capítulos Didáticos
     let capitulosHtml = '';
     let gabaritoGeral = [];
 
@@ -541,7 +527,6 @@ export class EditorApostilaView {
       let secoesHtml = '';
 
       cap.secoes.forEach((sec) => {
-        // Box de Destaque
         let boxHtml = '';
         if (sec.tipoBox && sec.tipoBox !== 'nenhum' && sec.textoBox) {
           const estilosBox = {
@@ -558,7 +543,6 @@ export class EditorApostilaView {
           `;
         }
 
-        // Exemplos Resolvidos Passo a Passo
         let exemplosHtml = '';
         if (sec.exemplosResolvidos?.length > 0) {
           exemplosHtml = `
@@ -578,7 +562,6 @@ export class EditorApostilaView {
           `;
         }
 
-        // Exercícios Propostos
         let exerciciosHtml = '';
         if (sec.exercicios?.length > 0) {
           exerciciosHtml = `
@@ -647,7 +630,6 @@ export class EditorApostilaView {
       `;
     });
 
-    // 3. Gabarito Final
     let gabaritoHtml = '';
     if (ap.exibirGabarito && gabaritoGeral.length > 0) {
       gabaritoHtml = `
@@ -686,7 +668,6 @@ export class EditorApostilaView {
   bindEvents() {
     this.container.querySelector('#btn-imprimir-apostila')?.addEventListener('click', () => window.print());
 
-    // 2. EXPORTAR LATEX COM SINCRONIZAÇÃO COMPLETA
     this.container.querySelector('#btn-exportar-latex-apostila')?.addEventListener('click', () => {
       this.sincronizarCamposDoDOM();
       LatexModal.abrirExportacao({
@@ -696,13 +677,12 @@ export class EditorApostilaView {
       });
     });
 
-    // Tabs Mobile
     this.container.querySelector('#btn-tab-editor')?.addEventListener('click', () => {
       this.abaAtivaMobile = 'editor';
       this.container.querySelector('#coluna-editor-painel').classList.remove('hidden');
       this.container.querySelector('#coluna-preview-painel').classList.add('hidden');
-      this.container.querySelector('#btn-tab-editor').className = 'py-2.5 rounded-lg transition bg-indigo-600 text-white shadow';
-      this.container.querySelector('#btn-tab-preview').className = 'py-2.5 rounded-lg transition text-slate-600 hover:bg-slate-100';
+      this.container.querySelector('#btn-tab-editor').className = 'touch-action py-2.5 rounded-lg transition bg-indigo-600 text-white shadow';
+      this.container.querySelector('#btn-tab-preview').className = 'touch-action py-2.5 rounded-lg transition text-slate-600 hover:bg-slate-100';
     });
 
     this.container.querySelector('#btn-tab-preview')?.addEventListener('click', () => {
@@ -710,18 +690,17 @@ export class EditorApostilaView {
       this.container.querySelector('#coluna-editor-painel').classList.add('hidden');
       this.container.querySelector('#coluna-preview-painel').classList.remove('hidden');
       this.container.querySelector('#coluna-preview-painel').classList.add('flex');
-      this.container.querySelector('#btn-tab-preview').className = 'py-2.5 rounded-lg transition bg-indigo-600 text-white shadow';
-      this.container.querySelector('#btn-tab-editor').className = 'py-2.5 rounded-lg transition text-slate-600 hover:bg-slate-100';
+      this.container.querySelector('#btn-tab-preview').className = 'touch-action py-2.5 rounded-lg transition bg-indigo-600 text-white shadow';
+      this.container.querySelector('#btn-tab-editor').className = 'touch-action py-2.5 rounded-lg transition text-slate-600 hover:bg-slate-100';
     });
 
-    // Controles de Zoom
     const aplicarZoom = (nivel) => {
       this.zoomNivel = nivel;
       const sheet = this.container.querySelector('#folha-apostila-a4');
       if (sheet) sheet.style.transform = `scale(${nivel / 100})`;
       ['75', '100', '125'].forEach(z => {
         const btn = this.container.querySelector(`#btn-zoom-${z}`);
-        if (btn) btn.className = parseInt(z) === nivel ? 'px-2.5 py-1 rounded border bg-indigo-600 text-white border-indigo-600' : 'px-2.5 py-1 rounded border bg-slate-50 hover:bg-slate-100';
+        if (btn) btn.className = parseInt(z) === nivel ? 'touch-action px-2.5 py-1 rounded border bg-indigo-600 text-white border-indigo-600' : 'touch-action px-2.5 py-1 rounded border bg-slate-50 hover:bg-slate-100';
       });
     };
 
@@ -729,13 +708,11 @@ export class EditorApostilaView {
     this.container.querySelector('#btn-zoom-100')?.addEventListener('click', () => aplicarZoom(100));
     this.container.querySelector('#btn-zoom-125')?.addEventListener('click', () => aplicarZoom(125));
 
-    // Tamanho da Fonte Base no A4
     this.container.querySelector('#sel-tam-fonte-apostila')?.addEventListener('change', (e) => {
       this.apostila.tamanhoFonteBase = e.target.value;
       this.atualizarPreviewApostila();
     });
 
-    // Identificação
     ['titulo', 'subtitulo', 'instituicao', 'disciplina', 'serie', 'professor', 'ano'].forEach(campo => {
       const el = this.container.querySelector(`#inp-ap-${campo}`);
       el?.addEventListener('input', (e) => {
@@ -754,7 +731,6 @@ export class EditorApostilaView {
       this.atualizarPreviewApostila();
     });
 
-    // Upload do Logotipo
     this.container.querySelector('#inp-logo-apostila-file')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -772,7 +748,6 @@ export class EditorApostilaView {
       this.montarInterface();
     });
 
-    // Adicionar Capítulo
     this.container.querySelector('#btn-add-capitulo')?.addEventListener('click', () => {
       this.sincronizarCamposDoDOM();
       this.apostila.capitulos.push({
@@ -782,7 +757,6 @@ export class EditorApostilaView {
       this.montarInterface();
     });
 
-    // Modal de Gráficos
     let alvoSecaoGrafico = null;
     const modalGrafico = this.container.querySelector('#modal-gerador-grafico');
 
@@ -815,7 +789,6 @@ export class EditorApostilaView {
       Toast.show('Gráfico matemático gerado e inserido na apostila!', 'success');
     });
 
-    // Delegação de Eventos de Capítulos e Seções
     this.container.addEventListener('click', (e) => {
       if (e.target.dataset.abrirGeradorGrafico !== undefined) {
         alvoSecaoGrafico = e.target.dataset.abrirGeradorGrafico;
@@ -880,7 +853,6 @@ export class EditorApostilaView {
       }
     });
 
-    // Inputs dinâmicos
     this.container.addEventListener('input', (e) => {
       const d = e.target.dataset;
       if (d.capIdx !== undefined) {
@@ -921,7 +893,6 @@ export class EditorApostilaView {
       }
     });
 
-    // Selects e Imagens
     this.container.addEventListener('change', (e) => {
       if (e.target.dataset.secBoxtipo !== undefined) {
         const [c, s] = e.target.dataset.secBoxtipo.split('_').map(Number);
@@ -941,7 +912,6 @@ export class EditorApostilaView {
       }
     });
 
-    // Salvar Documento
     this.container.querySelector('#btn-salvar-apostila')?.addEventListener('click', async () => {
       const btn = this.container.querySelector('#btn-salvar-apostila');
       btn.disabled = true;

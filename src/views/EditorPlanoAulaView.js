@@ -105,13 +105,13 @@ export class EditorPlanoAulaView {
               <p class="text-xs text-slate-500">Planeamento curricular do nível macro ao micro roteiro</p>
             </div>
             <div class="flex items-center gap-2">
-              <button id="btn-exportar-latex-plano" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+              <button id="btn-exportar-latex-plano" class="touch-action px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
                 📄 Overleaf (.tex)
               </button>
-              <button id="btn-salvar-plano" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+              <button id="btn-salvar-plano" class="touch-action px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
                 💾 Guardar
               </button>
-              <button id="btn-imprimir-plano" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
+              <button id="btn-imprimir-plano" class="touch-action px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1 transition">
                 🖨️ PDF
               </button>
             </div>
@@ -155,7 +155,7 @@ export class EditorPlanoAulaView {
                 <label class="block text-[11px] font-bold text-slate-600 uppercase mb-0.5">Logótipo da Escola</label>
                 <input type="file" id="inp-logo-plano-file" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
               </div>
-              ${this.plano.logoUrl ? `<button id="btn-remover-logo-plano" class="text-xs text-rose-500 hover:underline">Remover</button>` : ''}
+              ${this.plano.logoUrl ? `<button id="btn-remover-logo-plano" class="touch-action text-xs text-rose-500 hover:underline">Remover</button>` : ''}
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
@@ -221,7 +221,7 @@ export class EditorPlanoAulaView {
           <div><label class="block font-bold text-slate-600 uppercase mb-1">2. Unidades Temáticas</label><textarea data-pc="unidadesTematicas" rows="3" class="w-full border rounded-lg p-2 bg-slate-50" placeholder="Organização dos conteúdos em blocos...">${this.plano.unidadesTematicas || ''}</textarea></div>
           <div><label class="block font-bold text-slate-600 uppercase mb-1">3. Grandes Avaliações & Prazos</label><textarea data-pc="grandesAvaliacoes" rows="3" class="w-full border rounded-lg p-2 bg-slate-50" placeholder="Provas oficiais, conselhos de turma...">${this.plano.grandesAvaliacoes || ''}</textarea></div>
         `;
-      default: // anual (macroplaneamento estruturado)
+      default: // anual
         return `
           <div><label class="block font-bold text-slate-600 uppercase mb-1">Ementa Curricular</label><textarea data-pc="ementa" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.ementa || ''}</textarea></div>
           <div><label class="block font-bold text-slate-600 uppercase mb-1">Objetivo Geral</label><textarea data-pc="objetivoGeral" rows="2" class="w-full border rounded-lg p-2 bg-slate-50">${this.plano.objetivoGeral || ''}</textarea></div>
@@ -420,7 +420,7 @@ export class EditorPlanoAulaView {
           </div>
         </div>
       `;
-    } else { // mensal
+    } else {
       corpoA4 = `
         <div class="space-y-3 mt-3 text-xs">
           <div class="border border-black p-3">
@@ -441,7 +441,6 @@ export class EditorPlanoAulaView {
 
     preview.innerHTML = `
       <div class="space-y-2">
-        <!-- Logo e Cabeçalho de Identificação -->
         <div class="flex items-center gap-4 border-2 border-black p-3">
           ${pl.logoUrl ? `<img src="${pl.logoUrl}" class="max-h-16 max-w-[80px] object-contain shrink-0">` : ''}
           <div class="flex-1 text-center">
@@ -451,7 +450,6 @@ export class EditorPlanoAulaView {
           ${pl.logoUrl ? `<div class="w-[80px] shrink-0"></div>` : ''}
         </div>
 
-        <!-- Tabela de Identificação Escolar -->
         <table class="w-full border-collapse border border-black text-xs">
           <tr>
             <td colspan="4" class="border border-black p-1 bg-slate-100 font-bold uppercase text-center">IDENTIFICAÇÃO INSTITUCIONAL</td>
@@ -478,10 +476,8 @@ export class EditorPlanoAulaView {
           </tr>
         </table>
 
-        <!-- Conteúdo do Plano -->
         ${corpoA4}
 
-        <!-- Assinaturas de Validação -->
         <div class="pt-8 grid grid-cols-2 gap-8 text-center text-xs">
           <div><div class="border-t border-black w-4/5 mx-auto mb-1"></div><strong>Professor(a) Responsável</strong></div>
           <div><div class="border-t border-black w-4/5 mx-auto mb-1"></div><strong>Coordenação Pedagógica / Direção</strong></div>
@@ -508,7 +504,6 @@ export class EditorPlanoAulaView {
   bindEvents() {
     this.container.querySelector('#btn-imprimir-plano')?.addEventListener('click', () => window.print());
 
-    // Exportação Direta para Overleaf (.tex)
     this.container.querySelector('#btn-exportar-latex-plano')?.addEventListener('click', () => {
       this.sincronizarCamposDoDOM();
       LatexModal.abrirExportacao({
@@ -521,7 +516,6 @@ export class EditorPlanoAulaView {
       });
     });
 
-    // Seletor de Nível do Plano
     this.container.querySelector('#sel-subtipo-plano')?.addEventListener('change', (e) => {
       this.subtipo = e.target.value;
       this.container.querySelector('#campos-especificos-plano').innerHTML = this.gerarFormularioEspecificoHtml();
@@ -543,7 +537,6 @@ export class EditorPlanoAulaView {
       this.atualizarPreviewPlano();
     });
 
-    // Upload do Logótipo
     this.container.querySelector('#inp-logo-plano-file')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -561,7 +554,6 @@ export class EditorPlanoAulaView {
       this.montarInterface();
     });
 
-    // Inputs Institucionais
     ['escola', 'professor', 'serie', 'turno', 'ano', 'ch', 'duracao'].forEach(campo => {
       const id = `#inp-pl-${campo}`;
       const prop = campo === 'ano' ? 'anoLetivo' : (campo === 'ch' ? 'cargaHorariaTotal' : (campo === 'duracao' ? 'duracaoAula' : campo));
@@ -571,7 +563,6 @@ export class EditorPlanoAulaView {
       });
     });
 
-    // Delegação para campos dinâmicos com atributo data-pc
     this.container.addEventListener('input', (e) => {
       if (e.target.dataset.pc) {
         this.plano[e.target.dataset.pc] = e.target.value;
@@ -579,7 +570,6 @@ export class EditorPlanoAulaView {
       }
     });
 
-    // Guardar Documento
     this.container.querySelector('#btn-salvar-plano')?.addEventListener('click', async () => {
       const btn = this.container.querySelector('#btn-salvar-plano');
       btn.disabled = true;

@@ -54,7 +54,7 @@ export class DiarioView {
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl shadow-xs border border-slate-200">
           <div>
             <div class="flex items-center gap-2 mb-1">
-              <a href="#turma/${this.vm.turmaId}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1">
+              <a href="#turma/${this.vm.turmaId}" class="touch-action text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1">
                 <span>←</span> Voltar para Notas
               </a>
               <span class="text-slate-300">•</span>
@@ -103,7 +103,7 @@ export class DiarioView {
                     📅 ${dataFormatada}
                   </span>
                 </div>
-                <button id="btn-salvar-aula" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                <button id="btn-salvar-aula" class="touch-action px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95 flex items-center gap-1.5">
                   <span>💾</span>
                   <span>Salvar Registro</span>
                 </button>
@@ -133,11 +133,11 @@ export class DiarioView {
 
                 <!-- Botões de Ação Rápida para o Polegar -->
                 <div class="flex items-center gap-2">
-                  <button id="btn-todos-presentes" type="button" class="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs">
+                  <button id="btn-todos-presentes" type="button" class="touch-action flex-1 sm:flex-none px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs">
                     <span>✅</span>
                     <span>Todos Presentes</span>
                   </button>
-                  <button id="btn-limpar-presencas" type="button" class="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95">
+                  <button id="btn-limpar-presencas" type="button" class="touch-action flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95">
                     <span>❌</span>
                     <span>Todos Faltando</span>
                   </button>
@@ -199,7 +199,7 @@ export class DiarioView {
                       <button 
                         id="btn-presenca-${aluno.id}"
                         data-toggle-presenca="${aluno.id}"
-                        class="min-h-[44px] min-w-[76px] px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition flex items-center justify-center gap-1 active:scale-95 select-none ${
+                        class="touch-action min-h-[44px] min-w-[76px] px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition flex items-center justify-center gap-1 active:scale-95 select-none ${
                           isPresente 
                             ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' 
                             : 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs'
@@ -240,12 +240,12 @@ export class DiarioView {
 
       </div>
 
-      <!-- MODAL DE EDIÇÃO DE AULA (PRESERVADO INTEGRALMENTE) -->
-      <div id="modal-editar-aula" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <!-- MODAL DE EDIÇÃO DE AULA -->
+      <div id="modal-editar-aula" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="sheet-smooth bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Editar Registro da Aula</h3>
-            <button id="btn-fechar-modal-editar-aula" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-editar-aula" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           <form id="form-editar-aula" class="space-y-3 text-sm">
             <div class="grid grid-cols-2 gap-2">
@@ -272,8 +272,8 @@ export class DiarioView {
               <input type="text" id="edit-aula-proximo" class="w-full border rounded-xl p-2.5 text-xs text-slate-800" placeholder="Previsão futura...">
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-editar-aula" class="px-3.5 py-1.5 border rounded-xl text-xs font-semibold text-slate-600">Cancelar</button>
-              <button type="submit" id="btn-salvar-modal-editar-aula" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm">Salvar Alterações</button>
+              <button type="button" id="btn-cancelar-modal-editar-aula" class="touch-action px-3.5 py-1.5 border rounded-xl text-xs font-semibold text-slate-600">Cancelar</button>
+              <button type="submit" id="btn-salvar-modal-editar-aula" class="touch-action px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm">Salvar Alterações</button>
             </div>
           </form>
         </div>
@@ -336,12 +336,12 @@ export class DiarioView {
             ${aula.data === this.vm.dataSelecionada ? '<span class="text-indigo-600 font-extrabold text-[10px] bg-indigo-100 px-1.5 py-0.2 rounded">ABERTA</span>' : ''}
           </span>
           <div class="flex items-center gap-1">
-            <button data-btn-editar-aula="${aula.id}" title="Editar registro" class="p-1 text-slate-400 hover:text-indigo-600 hover:bg-white rounded transition">✏️</button>
-            <button data-btn-excluir-aula="${aula.id}" data-aula-data="${aula.data}" title="Excluir aula" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-white rounded transition">🗑️</button>
+            <button data-btn-editar-aula="${aula.id}" title="Editar registro" class="touch-action p-1 text-slate-400 hover:text-indigo-600 hover:bg-white rounded transition">✏️</button>
+            <button data-btn-excluir-aula="${aula.id}" data-aula-data="${aula.data}" title="Excluir aula" class="touch-action p-1 text-slate-400 hover:text-rose-600 hover:bg-white rounded transition">🗑️</button>
           </div>
         </div>
 
-        <div data-carregar-aula="${aula.data}" class="cursor-pointer">
+        <div data-carregar-aula="${aula.data}" class="touch-action cursor-pointer">
           <p class="text-xs font-semibold text-slate-800 line-clamp-2 hover:text-indigo-600 transition">
             ${aula.conteudo_ministrado || '<span class="italic text-slate-400 font-normal">Sem anotação de conteúdo</span>'}
           </p>
@@ -405,7 +405,7 @@ export class DiarioView {
     const card = document.getElementById(`card-aluno-${alunoId}`);
     if (!btn) return;
 
-    btn.className = `min-h-[44px] min-w-[76px] px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition flex items-center justify-center gap-1 active:scale-95 select-none ${
+    btn.className = `touch-action min-h-[44px] min-w-[76px] px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition flex items-center justify-center gap-1 active:scale-95 select-none ${
       presente 
         ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' 
         : 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs'

@@ -85,10 +85,10 @@ export class EditorDocumentoA4View {
         <!-- BARRA RESPONSIVA PARA TELEMÓVEL (SEPARADORES DE VISTA) -->
         <div class="lg:hidden flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 shadow-sm no-print">
           <div class="grid grid-cols-2 gap-1 w-full text-xs font-bold select-none">
-            <button id="btn-tab-editor" class="py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'editor' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
+            <button id="btn-tab-editor" class="touch-action py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'editor' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
               <span>✏️</span> Editor de Conteúdo
             </button>
-            <button id="btn-tab-preview" class="py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'preview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
+            <button id="btn-tab-preview" class="touch-action py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'preview' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}">
               <span>📄</span> Folha A4 (Prévia)
             </button>
           </div>
@@ -105,13 +105,13 @@ export class EditorDocumentoA4View {
                 <p class="text-xs text-slate-500">Design oficial com fórmulas em LaTeX e paginação</p>
               </div>
               <div class="flex items-center gap-1.5">
-                <button id="btn-exportar-latex-estudio" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
+                <button id="btn-exportar-latex-estudio" class="touch-action px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
                   📄 .tex
                 </button>
-                <button id="btn-salvar-estudio" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
+                <button id="btn-salvar-estudio" class="touch-action px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
                   💾 Guardar
                 </button>
-                <button id="btn-imprimir-estudio" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
+                <button id="btn-imprimir-estudio" class="touch-action px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
                   🖨️ PDF
                 </button>
               </div>
@@ -164,7 +164,7 @@ export class EditorDocumentoA4View {
                 <label class="block text-xs font-bold text-slate-700 mb-1">Logótipo Escolar</label>
                 <input type="file" id="inp-upload-logo" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
               </div>
-              ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="text-xs text-rose-500 hover:underline font-bold shrink-0">Remover</button>` : ''}
+              ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="touch-action text-xs text-rose-500 hover:underline font-bold shrink-0">Remover</button>` : ''}
             </div>
 
             <!-- CAMPOS DO CABEÇALHO -->
@@ -180,17 +180,16 @@ export class EditorDocumentoA4View {
               </div>
             </div>
 
-            <!-- COLUNAS E CONTROLO GLOBAL DE LINHAS PADRÃO (PROVA E LISTA) -->
+            <!-- COLUNAS E CONTROLO GLOBAL DE LINHAS PADRÃO -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
               <div class="flex items-center justify-between sm:justify-start gap-2">
                 <span class="font-bold text-slate-700">Colunas:</span>
                 <div class="flex gap-1">
-                  <button id="btn-col-1" class="px-2.5 py-1 rounded-lg font-bold transition ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border text-slate-600'}">1 Coluna</button>
-                  <button id="btn-col-2" class="px-2.5 py-1 rounded-lg font-bold transition ${this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border text-slate-600'}">2 Colunas</button>
+                  <button id="btn-col-1" class="touch-action px-2.5 py-1 rounded-lg font-bold transition ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border text-slate-600'}">1 Coluna</button>
+                  <button id="btn-col-2" class="touch-action px-2.5 py-1 rounded-lg font-bold transition ${this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border text-slate-600'}">2 Colunas</button>
                 </div>
               </div>
 
-              <!-- CONTROLO GLOBAL RESTAURADO: SERVE TANTO PARA PROVA QUANTO PARA LISTA -->
               <div class="flex items-center justify-between sm:justify-end gap-1.5 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
                 <span class="font-bold text-slate-700 whitespace-nowrap">Linhas Padrão:</span>
                 <input 
@@ -201,7 +200,7 @@ export class EditorDocumentoA4View {
                   value="${this.estilo.espacoPadraoLinhas !== undefined ? this.estilo.espacoPadraoLinhas : 4}" 
                   class="w-12 border border-slate-300 rounded-lg p-1 text-center font-bold bg-white text-xs outline-none focus:border-indigo-500"
                 >
-                <button id="btn-aplicar-espaco-todas" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition active:scale-95 whitespace-nowrap" title="Aplicar esta quantidade a todas as questões existentes">
+                <button id="btn-aplicar-espaco-todas" class="touch-action px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition active:scale-95 whitespace-nowrap" title="Aplicar esta quantidade a todas as questões existentes">
                   Aplicar
                 </button>
               </div>
@@ -212,10 +211,10 @@ export class EditorDocumentoA4View {
               <div class="flex items-center justify-between border-b pb-2">
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Questões (${this.questoes.length})</h3>
                 <div class="flex items-center gap-1.5">
-                  <button id="btn-importar-latex-estudio" class="text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-lg hover:bg-indigo-100 flex items-center gap-1 transition">
+                  <button id="btn-importar-latex-estudio" class="touch-action text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-lg hover:bg-indigo-100 flex items-center gap-1 transition">
                     ✨ IA / LaTeX
                   </button>
-                  <button id="btn-add-questao" class="text-xs font-bold bg-slate-800 text-white px-2.5 py-1 rounded-lg hover:bg-slate-900 transition">
+                  <button id="btn-add-questao" class="touch-action text-xs font-bold bg-slate-800 text-white px-2.5 py-1 rounded-lg hover:bg-slate-900 transition">
                     + Questão
                   </button>
                 </div>
@@ -225,10 +224,10 @@ export class EditorDocumentoA4View {
 
           </div>
 
-          <!-- FOLHA A4 DE VISUALIZAÇÃO E IMPRESSÃO (COLUNA DIREITA ANTICORTE) -->
+          <!-- FOLHA A4 DE VISUALIZAÇÃO E IMPRESSÃO -->
           <div id="painel-preview-estudio" class="w-full lg:w-7/12 flex flex-col items-center bg-slate-200/70 p-2 sm:p-5 rounded-2xl ${this.abaAtivaMobile === 'editor' ? 'hidden lg:flex' : 'flex'}">
             
-            <!-- BARRA DE ZOOM E CONTROLO DE ESCALA (SEM CORTES) -->
+            <!-- BARRA DE ZOOM E CONTROLO DE ESCALA -->
             <div class="no-print flex items-center justify-between w-full max-w-[210mm] mb-3 bg-white px-3.5 py-2 rounded-xl border border-slate-300 shadow-2xs text-xs font-bold text-slate-700">
               <span class="flex items-center gap-1.5 text-indigo-700">
                 <span>📄</span>
@@ -237,13 +236,13 @@ export class EditorDocumentoA4View {
               </span>
               <div class="flex items-center gap-1.5">
                 <span class="text-slate-400 text-[11px] mr-1">Zoom:</span>
-                <button id="btn-zoom-50" class="px-2 py-1 rounded-lg border text-xs font-bold transition ${this.zoomNivel === 50 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-600'}">50%</button>
-                <button id="btn-zoom-75" class="px-2 py-1 rounded-lg border text-xs font-bold transition ${this.zoomNivel === 75 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-600'}">75%</button>
-                <button id="btn-zoom-100" class="px-2 py-1 rounded-lg border text-xs font-bold transition ${this.zoomNivel === 100 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-600'}">100%</button>
+                <button id="btn-zoom-50" class="touch-action px-2 py-1 rounded-lg border text-xs font-bold transition ${this.zoomNivel === 50 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-600'}">50%</button>
+                <button id="btn-zoom-75" class="touch-action px-2 py-1 rounded-lg border text-xs font-bold transition ${this.zoomNivel === 75 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-600'}">75%</button>
+                <button id="btn-zoom-100" class="touch-action px-2 py-1 rounded-lg border text-xs font-bold transition ${this.zoomNivel === 100 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-600'}">100%</button>
               </div>
             </div>
             
-            <!-- CONTENTOR DE ROLAGEM COM MARGEM SEGURA (m-auto EVITA CORTE NAS LATERAIS) -->
+            <!-- CONTENTOR DE ROLAGEM COM MARGEM SEGURA -->
             <div class="w-full overflow-x-auto py-2 flex flex-col items-center">
               <div id="wrapper-escala-a4" class="m-auto transition-transform duration-200 origin-top shrink-0" style="transform: scale(${this.zoomNivel / 100});">
                 <div id="folha-preview-a4" class="sheet-a4 bg-white text-black shadow-2xl p-6 sm:p-10 shrink-0" style="width: 210mm; min-height: 297mm; box-sizing: border-box;"></div>
@@ -275,7 +274,6 @@ export class EditorDocumentoA4View {
               <input type="text" data-q-pts="${idx}" value="${q.pontuacao || '1.0'}" class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold outline-none">
             ` : ''}
 
-            <!-- CAMPO DE LINHAS DISPONÍVEL TANTO PARA PROVA QUANTO PARA LISTA -->
             <span class="text-slate-500 font-normal">Linhas:</span>
             <input 
               type="number" 
@@ -286,7 +284,7 @@ export class EditorDocumentoA4View {
               class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold outline-none"
             >
 
-            <button data-remove-q="${idx}" class="text-rose-500 hover:text-rose-700 font-bold ml-1 text-xs">Excluir</button>
+            <button data-remove-q="${idx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold ml-1 text-xs">Excluir</button>
           </div>
         </div>
 
@@ -297,7 +295,7 @@ export class EditorDocumentoA4View {
             <span class="font-bold text-slate-600">🖼️ Imagem:</span>
             <input type="file" accept="image/*" data-upload-q-img="${idx}" class="text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
           </div>
-          ${q.imagemUrl ? `<button data-remove-q-img="${idx}" class="text-rose-600 hover:underline text-[11px] font-bold">Remover</button>` : ''}
+          ${q.imagemUrl ? `<button data-remove-q-img="${idx}" class="touch-action text-rose-600 hover:underline text-[11px] font-bold">Remover</button>` : ''}
         </div>
 
         ${q.imagemUrl ? `
@@ -373,7 +371,6 @@ export class EditorDocumentoA4View {
       const enunciadoHtml = renderizarMatematica(q.enunciado || '');
       let espacoHtml = '';
 
-      // Determina a quantidade de linhas: se 0, não gera nada
       const numLinhas = q.linhasEspaco !== undefined 
         ? parseInt(q.linhasEspaco, 10) 
         : (est.espacoPadraoLinhas !== undefined ? est.espacoPadraoLinhas : 4);
@@ -428,7 +425,6 @@ export class EditorDocumentoA4View {
   }
 
   bindEvents() {
-    // 1. Controlo de Abas Mobile (Editor vs Prévia)
     const btnTabEditor = this.container.querySelector('#btn-tab-editor');
     const btnTabPreview = this.container.querySelector('#btn-tab-preview');
     const painelEditor = this.container.querySelector('#painel-editor-estudio');
@@ -439,8 +435,8 @@ export class EditorDocumentoA4View {
       painelEditor.classList.remove('hidden');
       painelPreview.classList.add('hidden');
       painelPreview.classList.remove('flex');
-      btnTabEditor.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow';
-      btnTabPreview.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-100';
+      btnTabEditor.className = 'touch-action py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow';
+      btnTabPreview.className = 'touch-action py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-100';
     });
 
     btnTabPreview?.addEventListener('click', () => {
@@ -448,11 +444,10 @@ export class EditorDocumentoA4View {
       painelEditor.classList.add('hidden');
       painelPreview.classList.remove('hidden');
       painelPreview.classList.add('flex');
-      btnTabPreview.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow';
-      btnTabEditor.className = 'py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-100';
+      btnTabPreview.className = 'touch-action py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow';
+      btnTabEditor.className = 'touch-action py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-100';
     });
 
-    // 2. Controlo de Zoom / Escala (50%, 75%, 100%)
     const aplicarZoom = (nivel) => {
       this.zoomNivel = nivel;
       const wrapper = this.container.querySelector('#wrapper-escala-a4');
@@ -462,8 +457,8 @@ export class EditorDocumentoA4View {
         const btn = this.container.querySelector(`#btn-zoom-${z}`);
         if (btn) {
           btn.className = parseInt(z, 10) === nivel
-            ? 'px-2 py-1 rounded-lg border text-xs font-bold transition bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-            : 'px-2 py-1 rounded-lg border text-xs font-bold transition bg-slate-50 hover:bg-slate-100 text-slate-600';
+            ? 'touch-action px-2 py-1 rounded-lg border text-xs font-bold transition bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+            : 'touch-action px-2 py-1 rounded-lg border text-xs font-bold transition bg-slate-50 hover:bg-slate-100 text-slate-600';
         }
       });
     };
@@ -472,7 +467,6 @@ export class EditorDocumentoA4View {
     this.container.querySelector('#btn-zoom-75')?.addEventListener('click', () => aplicarZoom(75));
     this.container.querySelector('#btn-zoom-100')?.addEventListener('click', () => aplicarZoom(100));
 
-    // 3. Aplicação do Espaço Padrão Global de Linhas
     this.container.querySelector('#inp-espaco-padrao')?.addEventListener('input', (e) => {
       const val = parseInt(e.target.value, 10);
       this.estilo.espacoPadraoLinhas = isNaN(val) || val < 0 ? 0 : val;
@@ -495,7 +489,6 @@ export class EditorDocumentoA4View {
 
     this.container.querySelector('#btn-imprimir-estudio')?.addEventListener('click', () => window.print());
 
-    // Exportação LaTeX
     this.container.querySelector('#btn-exportar-latex-estudio')?.addEventListener('click', () => {
       this.sincronizarCamposDoDOM();
       LatexModal.abrirExportacao({
@@ -505,7 +498,6 @@ export class EditorDocumentoA4View {
       });
     });
 
-    // Importar com IA ou Código
     this.container.querySelector('#btn-importar-latex-estudio')?.addEventListener('click', () => {
       LatexModal.abrirImportacaoComIA((questoesNovas) => {
         this.sincronizarCamposDoDOM();
@@ -515,7 +507,6 @@ export class EditorDocumentoA4View {
       });
     });
 
-    // Mudança de Tipo (Prova vs Lista)
     this.container.querySelector('#sel-tipo-doc')?.addEventListener('change', (e) => {
       this.tipo = e.target.value;
       this.dadosCabecalho.tipoDocumento = this.tipo === 'prova' ? 'AVALIAÇÃO BIMESTRAL' : 'LISTA DE EXERCÍCIOS';
@@ -545,7 +536,6 @@ export class EditorDocumentoA4View {
       this.render();
     });
 
-    // Upload do Logótipo
     this.container.querySelector('#inp-upload-logo')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -575,7 +565,6 @@ export class EditorDocumentoA4View {
       });
     });
 
-    // Adicionar Nova Questão com o Espaçamento Padrão Ativo
     this.container.querySelector('#btn-add-questao')?.addEventListener('click', () => {
       this.sincronizarCamposDoDOM();
       this.questoes.push({
@@ -588,7 +577,6 @@ export class EditorDocumentoA4View {
       this.atualizarPreviewA4();
     });
 
-    // Eventos nas Questões Individuais
     this.container.addEventListener('input', (e) => {
       if (e.target.dataset.qTexto !== undefined) {
         const idx = parseInt(e.target.dataset.qTexto, 10);
@@ -635,7 +623,6 @@ export class EditorDocumentoA4View {
       }
     });
 
-    // Guardar Documento no Supabase
     this.container.querySelector('#btn-salvar-estudio')?.addEventListener('click', async () => {
       const btn = this.container.querySelector('#btn-salvar-estudio');
       btn.disabled = true;
