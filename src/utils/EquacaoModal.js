@@ -268,12 +268,11 @@ export class EquacaoModal {
     const textoAntes = el.value.substring(0, start);
     const textoDepois = el.value.substring(end);
 
-    // Se já estiver entre delimitadores $, insere puro; caso contrário, envolve em $...$const dentroDeMath = (textoAntes.split('$').length % 2 === 0);
+    const dentroDeMath = (textoAntes.split('$').length % 2 === 0);
     const conteudoInserir = dentroDeMath ? codigoLatex : `$${codigoLatex}$`;
 
     el.value = textoAntes + conteudoInserir + textoDepois;
 
-    // Atualiza a memória de posição para caso queira inserir outra fórmula em seguida
     const novaPosicao = start + conteudoInserir.length;
     this.cursorInicio = novaPosicao;
     this.cursorFim = novaPosicao;
@@ -282,11 +281,9 @@ export class EquacaoModal {
       el.selectionEnd = novaPosicao;
     } catch (_) {}
 
-    // Dispara eventos 'input' e 'change' para atualizar o KaTeX e salvar o rascunho em tempo real
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
 
-    // Atualiza aviso de confirmação no rodapé do próprio modal
     const feedbackEl = document.getElementById('feedback-insercao-eq');
     if (feedbackEl) {
       feedbackEl.innerHTML = `<span class="text-emerald-600 font-bold">✓ Inserido:</span> <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-mono">${conteudoInserir}</code>`;
