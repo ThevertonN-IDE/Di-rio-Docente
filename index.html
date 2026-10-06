@@ -28,6 +28,9 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
+  <!-- Dexie.js (Banco Local IndexedDB para Suporte Offline) -->
+  <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+
   <!-- Favicon da aba -->
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon.png">
 
@@ -46,9 +49,9 @@
   <header id="app-header" class="no-print bg-white border-b border-slate-200 sticky top-0 z-20 hidden shadow-sm md:pl-64">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-      <!-- Marca visível apenas no Mobile -->
+      <!-- Marca visível apenas no Mobile com Logótipo Oficial -->
       <a href="#dashboard" class="flex md:hidden items-center gap-2 font-black text-indigo-700 text-base tracking-tight">
-        <span class="text-xl">📖</span>
+        <img src="./assets/apple-touch-icon.png" alt="Logótipo Diário Docente" class="w-6 h-6 rounded-md object-cover shadow-2xs">
         <span>Diário Docente</span>
       </a>
 

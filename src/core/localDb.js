@@ -1,10 +1,11 @@
 // src/core/localDb.js
 import { supabase } from './supabaseClient.js';
+import Dexie from 'https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.mjs';
 
-// Suporte para Dexie importado via CDN ou bundler
-const DexieLib = typeof Dexie !== 'undefined' ? Dexie : window.Dexie;
+// Recupera a classe Dexie quer via módulo ES quer via escopo global (window.Dexie)
+const ConstrutorDexie = Dexie || (typeof window !== 'undefined' && (window.Dexie?.default || window.Dexie));
 
-export const localDb = new DexieLib('DiarioDocenteDB');
+export const localDb = new ConstrutorDexie('DiarioDocenteDB');
 
 // Versionamento do banco local Dexie (v3 inclui suporte offline completo a aulas e frequências)
 localDb.version(1).stores({
@@ -196,7 +197,6 @@ export const SyncManager = {
         await localDb.sync_queue.delete(item.id);
       } catch (err) {
         console.warn(`[SyncManager] Falha ao sincronizar item #${item.id} (${item.tipo}):`, err.message);
-        // Atualiza tentativas para não travar a fila
         await localDb.sync_queue.update(item.id, {
           tentativas: (item.tentativas || 0) + 1
         });
