@@ -46,6 +46,7 @@ async function iniciarApp() {
     const gerirRotaPublica = () => {
       const hash = window.location.hash;
       const appContainer = document.getElementById('app');
+      appContainer?.classList.remove('md:ml-64', 'lg:ml-64', 'ml-64');
 
       if (hash === '#login') {
         const loginView = new LoginView('app', () => {

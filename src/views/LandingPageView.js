@@ -3,12 +3,14 @@ import { AssinaturaModal } from '../utils/AssinaturaModal.js';
 import { PoliticasModal } from '../utils/PoliticasModal.js';
 
 export class LandingPageView {
-    static render(container, { onAbrirLogin, onAbrirCadastro }) {
-        container.innerHTML = `
-      <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans select-none">
+  static render(container, { onAbrirLogin, onAbrirCadastro }) {
+    const cookiesJaAceitos = localStorage.getItem('dd_cookies_aceitos') === 'true';
+
+    container.innerHTML = `
+      <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans select-none w-full">
         
         <!-- BARRA SUPERIOR FIXA -->
-        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 w-full">
           <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
               <span class="text-2xl">📓</span>
@@ -26,7 +28,7 @@ export class LandingPageView {
           </div>
         </header>
 
-        <!-- HERO SECTION (PRIMEIRA DOBRA) -->
+        <!-- HERO SECTION -->
         <section class="py-12 sm:py-20 px-4 max-w-4xl mx-auto text-center space-y-5">
           <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-bold">
             <span>✨</span> O sistema do professor moderno
@@ -52,7 +54,7 @@ export class LandingPageView {
         </section>
 
         <!-- RECURSOS PRINCIPAIS -->
-        <section class="py-12 bg-white border-y border-slate-200">
+        <section class="py-12 bg-white border-y border-slate-200 w-full">
           <div class="max-w-6xl mx-auto px-4">
             <div class="text-center max-w-xl mx-auto mb-10">
               <h2 class="text-xl sm:text-2xl font-black text-slate-800">Recursos feitos para a rotina em sala de aula</h2>
@@ -81,8 +83,8 @@ export class LandingPageView {
           </div>
         </section>
 
-        <!-- TABELA DE PLANOS (PRICING) -->
-        <section id="tabela-planos" class="py-14 max-w-5xl mx-auto px-4">
+        <!-- TABELA DE PLANOS -->
+        <section id="tabela-planos" class="py-14 max-w-5xl mx-auto px-4 w-full">
           <div class="text-center max-w-xl mx-auto mb-10">
             <h2 class="text-xl sm:text-2xl font-black text-slate-800">Escolha o plano ideal para você</h2>
             <p class="text-xs text-slate-500 mt-1">Comece grátis e faça upgrade quando suas turmas aumentarem.</p>
@@ -121,7 +123,7 @@ export class LandingPageView {
                   <li class="flex items-center gap-2"><span>✓</span> <strong>Turmas ilimitadas</strong></li>
                   <li class="flex items-center gap-2"><span>✓</span> <strong>Digitalização de provas com IA</strong></li>
                   <li class="flex items-center gap-2"><span>✓</span> Exportação para Overleaf / TeX</li>
-                  <li class="flex items-center gap-2"><span>✓</span> Todos os modelos de cabeçalho A4</li>
+                  <li class="flex items-center gap-2"><span>✓</span> Modelos de cabeçalho A4</li>
                   <li class="flex items-center gap-2"><span>✓</span> Ativação direta via Pix</li>
                 </ul>
               </div>
@@ -130,13 +132,13 @@ export class LandingPageView {
               </button>
             </div>
 
-            <!-- PLANO ESCOLAR -->
+            <!-- PLANO INSTITUCIONAL -->
             <div class="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-6">
               <div class="space-y-4">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Institucional</span>
                 <div class="text-3xl font-black text-slate-800">Escolas <span class="text-xs font-normal text-slate-400">/equipe</span></div>
                 <ul class="text-xs text-slate-600 space-y-2.5">
-                  <li class="flex items-center gap-2"><span>✓</span> Acesso para toda a equipe docente</li>
+                  <li class="flex items-center gap-2"><span>✓</span> Licença para todos os professores</li>
                   <li class="flex items-center gap-2"><span>✓</span> Banco de questões compartilhado</li>
                   <li class="flex items-center gap-2"><span>✓</span> Logotipo escolar oficial na folha A4</li>
                   <li class="flex items-center gap-2"><span>✓</span> Suporte e treinamento</li>
@@ -154,30 +156,68 @@ export class LandingPageView {
           </div>
         </section>
 
-        <!-- RODAPÉ -->
-        <footer class="mt-auto py-6 bg-slate-900 text-slate-400 text-xs border-t border-slate-800 text-center">
-          <p>© 2026 Diário Docente. Todos os direitos reservados.</p>
+        <!-- RODAPÉ COM LINKS JURÍDICOS E LGPD -->
+        <footer class="mt-auto py-8 bg-slate-900 text-slate-400 text-xs border-t border-slate-800 w-full">
+          <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <p>© 2026 Diário Docente. Todos os direitos reservados.</p>
+            
+            <div class="flex items-center flex-wrap justify-center gap-4 text-[11px]">
+              <button id="btn-footer-privacidade" class="hover:text-white transition underline underline-offset-4">
+                LGPD & Dados de Menores
+              </button>
+              <button id="btn-footer-termos" class="hover:text-white transition underline underline-offset-4">
+                Termos de Uso
+              </button>
+              <button id="btn-footer-cookies" class="hover:text-white transition underline underline-offset-4">
+                Cookies & Armazenamento
+              </button>
+            </div>
+          </div>
         </footer>
+
+        <!-- BANNER FLUTUANTE DE COOKIES (PRIMEIRA VISITA) -->
+        ${!cookiesJaAceitos ? `
+          <div id="banner-cookies-flutuante" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md bg-white border border-slate-200 rounded-2xl p-4 shadow-2xl z-50 flex flex-col gap-2.5 animate-in slide-in-from-bottom duration-300">
+            <div class="flex items-start gap-2.5">
+              <span class="text-xl">🍪</span>
+              <div class="text-xs text-slate-600 leading-relaxed">
+                Utilizamos apenas armazenamento local técnico (essencial) para manter sua sessão conectada. Não coletamos dados de alunos para publicidade.
+              </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-1">
+              <button id="btn-saber-mais-cookies" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold px-2 py-1">
+                Saber mais
+              </button>
+              <button id="btn-aceitar-cookies" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2 rounded-xl transition shadow-xs">
+                Entendi
+              </button>
+            </div>
+          </div>
+        ` : ''}
 
       </div>
     `;
 
-        // Listeners dos botões de ação
-        container.querySelector('#btn-lp-login')?.addEventListener('click', () => onAbrirLogin?.());
-        container.querySelector('#btn-lp-cadastro-topo')?.addEventListener('click', () => onAbrirCadastro?.());
-        container.querySelector('#btn-lp-comecar-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
-        container.querySelector('#btn-lp-escolher-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
-        container.querySelector('#btn-lp-escolher-pro')?.addEventListener('click', () => {
-            // Se não estiver logado, encaminha para criar conta ou abre o modal Pix diretamente
-            AssinaturaModal.abrir('');
-        });
-        container.querySelector('#link-privacidade')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            PoliticasModal.abrir('privacidade');
-        });
-        container.querySelector('#link-termos')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            PoliticasModal.abrir('termos');
-        });
-    }
+    // Eventos de Acesso
+    container.querySelector('#btn-lp-login')?.addEventListener('click', () => onAbrirLogin?.());
+    container.querySelector('#btn-lp-cadastro-topo')?.addEventListener('click', () => onAbrirCadastro?.());
+    container.querySelector('#btn-lp-comecar-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
+    container.querySelector('#btn-lp-escolher-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
+    container.querySelector('#btn-lp-escolher-pro')?.addEventListener('click', () => AssinaturaModal.abrir(''));
+
+    // Eventos do Rodapé (Abertura do Modal Legal)
+    container.querySelector('#btn-footer-privacidade')?.addEventListener('click', () => PoliticasModal.abrir('privacidade'));
+    container.querySelector('#btn-footer-termos')?.addEventListener('click', () => PoliticasModal.abrir('termos'));
+    container.querySelector('#btn-footer-cookies')?.addEventListener('click', () => PoliticasModal.abrir('cookies'));
+
+    // Eventos do Banner Flutuante de Cookies
+    const banner = container.querySelector('#banner-cookies-flutuante');
+    container.querySelector('#btn-saber-mais-cookies')?.addEventListener('click', () => {
+      PoliticasModal.abrir('cookies');
+    });
+    container.querySelector('#btn-aceitar-cookies')?.addEventListener('click', () => {
+      localStorage.setItem('dd_cookies_aceitos', 'true');
+      banner?.classList.add('hidden');
+    });
+  }
 }
