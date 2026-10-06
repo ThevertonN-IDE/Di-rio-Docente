@@ -2,7 +2,31 @@
 import { supabase } from '../core/supabaseClient.js';
 
 export const AlunoService = {
-  // Faz upload do arquivo para o bucket privado "fotos-alunos" e devolve a URL assinada (LGPD)
+  /**
+   * Extrai o caminho relativo dentro do bucket fotos-alunos,
+   * mesmo que o valor armazenado seja uma URL legada completa ou Signed URL.
+   */
+  extrairCaminhoStorage(caminhoOuUrl) {
+    if (!caminhoOuUrl) return '';
+
+    // Se for URL completa do Supabase Storage
+    if (caminhoOuUrl.includes('/fotos-alunos/')) {
+      const partes = caminhoOuUrl.split('/fotos-alunos/');
+      if (partes[1]) {
+        // Remove parâmetros de consulta de Signed URLs (?token=...)
+        return decodeURIComponent(partes[1].split('?')[0]);
+      }
+    }
+
+    // Se já for o caminho relativo salvo
+    return caminhoOuUrl;
+  },
+
+  /**
+   * Upload de foto do estudante para bucket privado (LGPD)
+   * Retorna APENAS o caminho relativo interno (ex: user_id/123456.jpg).
+   * A URL assinada é gerada sob demanda na hora da exibição.
+   */
   async uploadFoto(file, alunoIdTemporario) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error('Usuário não autenticado.');
@@ -17,52 +41,48 @@ export const AlunoService = {
 
     if (uploadError) throw uploadError;
 
-    // Gera URL assinada (Signed URL) com validade de 1 ano para exibição segura sem bucket público
-    const { data: signedData, error: signedError } = await supabase.storage
-      .from('fotos-alunos')
-      .createSignedUrl(filePath, 60 * 60 * 24 * 365);
-
-    if (signedError || !signedData?.signedUrl) {
-      return filePath;
-    }
-
-    return signedData.signedUrl;
+    // Retorna apenas o caminho relativo interno para persistência no banco
+    return filePath;
   },
 
-  // Gera Signed URL temporária sob demanda caso a URL guardada seja o caminho interno do storage
+  /**
+   * Gera uma Signed URL temporária válida por 24 horas para exibição segura.
+   */
   async obterUrlAssinadaFoto(caminhoOuUrl, validadeSegundos = 86400) {
     if (!caminhoOuUrl) return '';
 
-    // Se já for data URI (base64) ou blob de pré-visualização local
+    // Preview local ou base64
     if (caminhoOuUrl.startsWith('data:') || caminhoOuUrl.startsWith('blob:')) {
       return caminhoOuUrl;
     }
 
-    // Se já for uma URL completa externa ou pública prévia
-    if (caminhoOuUrl.startsWith('http://') || caminhoOuUrl.startsWith('https://')) {
-      return caminhoOuUrl;
-    }
+    const caminhoReal = this.extrairCaminhoStorage(caminhoOuUrl);
 
-    // Solicita URL assinada do Supabase Storage
     const { data, error } = await supabase.storage
       .from('fotos-alunos')
-      .createSignedUrl(caminhoOuUrl, validadeSegundos);
+      .createSignedUrl(caminhoReal, validadeSegundos);
 
     if (error) {
-      console.warn('Não foi possível gerar Signed URL para a foto:', caminhoOuUrl, error.message);
+      console.warn('Aviso: Não foi possível gerar Signed URL para a foto:', caminhoReal, error.message);
       return '';
     }
 
     return data?.signedUrl || '';
   },
 
-  // Resolve em lote as fotos de uma lista de alunos para URLs assinadas
+  /**
+   * Converte a lista de alunos para que todas as fotos apontem para Signed URLs válidas na interface.
+   */
   async resolverFotosAlunos(alunos = []) {
     return Promise.all(
       alunos.map(async (aluno) => {
         if (aluno.foto_url) {
-          const urlAssinada = await AlunoService.obterUrlAssinadaFoto(aluno.foto_url);
-          return { ...aluno, foto_url: urlAssinada, foto_path_original: aluno.foto_url };
+          const urlAssinada = await this.obterUrlAssinadaFoto(aluno.foto_url);
+          return {
+            ...aluno,
+            foto_url: urlAssinada,
+            foto_path_original: this.extrairCaminhoStorage(aluno.foto_url)
+          };
         }
         return aluno;
       })
@@ -74,14 +94,16 @@ export const AlunoService = {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error('Usuário não autenticado.');
 
+    const caminhoFotoNormalizado = this.extrairCaminhoStorage(fotoUrl);
+
     // 1. Cria o registro do aluno com o user_id do professor logado
     const { data: aluno, error: alunoError } = await supabase
       .from('alunos')
       .insert([{
-        user_id: user.id, // <-- Vincula ao seu usuário
+        user_id: user.id,
         nome: nome.trim(),
         email: email ? email.trim() : null,
-        foto_url: fotoUrl || null,
+        foto_url: caminhoFotoNormalizado || null,
         observacoes_gerais: observacao || null
       }])
       .select()
@@ -100,10 +122,10 @@ export const AlunoService = {
       }]);
 
     if (matError) {
-      // Rollback imediato para evitar registro órfão se a matrícula falhar
+      // Rollback imediato: limpa o aluno e a foto se a matrícula falhar
       await supabase.from('alunos').delete().eq('id', aluno.id);
-      if (fotoUrl && !fotoUrl.startsWith('http') && !fotoUrl.startsWith('data:')) {
-        await supabase.storage.from('fotos-alunos').remove([fotoUrl]);
+      if (caminhoFotoNormalizado) {
+        await supabase.storage.from('fotos-alunos').remove([caminhoFotoNormalizado]);
       }
       throw matError;
     }
@@ -111,7 +133,7 @@ export const AlunoService = {
     return aluno;
   },
 
-  // Importação em massa com user_id
+  // Importação em massa de nomes
   async importarAlunosEmLote(turmaId, listaNomes) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error('Usuário não autenticado.');
@@ -130,7 +152,7 @@ export const AlunoService = {
       const { data: aluno, error: alunoError } = await supabase
         .from('alunos')
         .insert([{
-          user_id: user.id, // <-- Vincula ao seu usuário
+          user_id: user.id,
           nome: nomeLimpo
         }])
         .select()
@@ -147,7 +169,6 @@ export const AlunoService = {
         if (!matError) {
           resultados.push(aluno);
         } else {
-          // Limpa o aluno órfão se a matrícula der erro
           await supabase.from('alunos').delete().eq('id', aluno.id);
         }
       }
@@ -156,11 +177,16 @@ export const AlunoService = {
     return resultados;
   },
 
-  // Atualiza dados cadastrais e número de chamada
+  // Atualiza dados cadastrais
   async atualizarDadosAluno(turmaId, alunoId, { nome, email, numeroChamada, fotoUrl }) {
-    // 1. Atualiza dados gerais do aluno
-    const dadosAtualizacao = { nome: nome.trim(), email: email ? email.trim() : null };
-    if (fotoUrl !== undefined) dadosAtualizacao.foto_url = fotoUrl;
+    const dadosAtualizacao = { 
+      nome: nome.trim(), 
+      email: email ? email.trim() : null 
+    };
+
+    if (fotoUrl !== undefined) {
+      dadosAtualizacao.foto_url = this.extrairCaminhoStorage(fotoUrl);
+    }
 
     const { error: errAluno } = await supabase
       .from('alunos')
@@ -169,7 +195,7 @@ export const AlunoService = {
 
     if (errAluno) throw errAluno;
 
-    // 2. Atualiza número de chamada na turma
+    // Atualiza número de chamada na turma
     const { error: errMatricula } = await supabase
       .from('matriculas')
       .update({ numero_chamada: numeroChamada ? parseInt(numeroChamada, 10) : null })
@@ -179,14 +205,14 @@ export const AlunoService = {
     if (errMatricula) throw errMatricula;
   },
 
-  // Exclusão completa em cascata sem deixar registros órfãos
+  // Exclusão completa em cascata sem deixar registros ou fotos órfãs (LGPD)
   async removerAlunoDaTurma(turmaId, alunoId) {
-    // 1. Obtém dados do aluno para inspecionar eventual foto física
+    // 1. Obtém dados do aluno para inspecionar eventual foto
     const { data: aluno } = await supabase
       .from('alunos')
       .select('id, foto_url')
       .eq('id', alunoId)
-      .single();
+      .maybeSingle();
 
     // 2. Remove notas do aluno vinculadas a avaliações desta turma específica
     const { data: avaliacoesTurma } = await supabase
@@ -203,7 +229,7 @@ export const AlunoService = {
         .in('avaliacao_id', avIds);
     }
 
-    // 3. Remove presenças/frequências do aluno em aulas desta turma
+    // 3. Remove presenças do aluno em aulas desta turma
     const { data: aulasTurma } = await supabase
       .from('aulas')
       .select('id')
@@ -233,13 +259,16 @@ export const AlunoService = {
       .select('id')
       .eq('aluno_id', alunoId);
 
-    // 6. Se não estiver em mais nenhuma turma, elimina o registro base do aluno e a foto física no Storage
+    // 6. Se não estiver em mais nenhuma turma, elimina o registro base e a foto física no Storage
     if (!outrasMatriculas || outrasMatriculas.length === 0) {
-      if (aluno?.foto_url && !aluno.foto_url.startsWith('http') && !aluno.foto_url.startsWith('data:')) {
-        try {
-          await supabase.storage.from('fotos-alunos').remove([aluno.foto_url]);
-        } catch (errFoto) {
-          console.warn('Aviso ao excluir foto do aluno no storage:', errFoto);
+      if (aluno?.foto_url) {
+        const caminhoReal = this.extrairCaminhoStorage(aluno.foto_url);
+        if (caminhoReal && !caminhoReal.startsWith('data:')) {
+          try {
+            await supabase.storage.from('fotos-alunos').remove([caminhoReal]);
+          } catch (errFoto) {
+            console.warn('Aviso ao excluir foto do aluno no storage:', errFoto);
+          }
         }
       }
 

@@ -22,33 +22,49 @@ export const PerfilService = {
   async verificarStatusAssinatura() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { isPro: false, totalTurmas: 0, limiteAtingido: true };
+      return { isPro: false, totalTurmas: 0, limiteAtingido: true, expirado: false };
     }
 
     const perfil = await this.getPerfil();
-    
-    // Normaliza para aceitar 'pro', 'Pro', 'PRO' ou espaços extras
     const planoNormalizado = String(perfil?.plano || '').trim().toLowerCase();
-    const isPro = planoNormalizado === 'pro';
+    
+    let isPro = planoNormalizado === 'pro';
+    let expirado = false;
 
-    // Contagem de turmas atuais do professor
+    // Checagem estrita de expiração de assinatura
+    if (isPro && perfil?.pro_expira_em) {
+      const dataExpiracao = new Date(perfil.pro_expira_em);
+      const agora = new Date();
+      if (!isNaN(dataExpiracao.getTime()) && dataExpiracao.getTime() < agora.getTime()) {
+        isPro = false;
+        expirado = true;
+      }
+    }
+
+    // Total de turmas cadastradas pelo professor
     const { count, error } = await supabase
       .from('turmas')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
     const totalTurmas = error ? 0 : (count || 0);
+    const limiteAtingido = !isPro && totalTurmas >= 1;
 
     return {
       isPro,
+      expirado,
       totalTurmas,
-      limiteAtingido: !isPro && totalTurmas >= 1
+      limiteAtingido
     };
   },
 
   async podeCriarTurma() {
     const status = await this.verificarStatusAssinatura();
-    if (status.isPro) return true;
-    return status.totalTurmas < 1;
+    const permitido = status.isPro || status.totalTurmas < 1;
+
+    return {
+      permitido,
+      ...status
+    };
   }
 };

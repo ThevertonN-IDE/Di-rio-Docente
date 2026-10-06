@@ -68,11 +68,18 @@ export const BackupService = {
       }
     };
 
-    // Dispara o download nativo do arquivo no navegador
+    // Dispara o download nativo do arquivo no navegador respeitando o fuso de Brasília (UTC-3)
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const dataFormatada = new Date().toISOString().split('T')[0];
+    
+    // Formatação no fuso brasileiro que impede o avanço de dia após as 21:00
+    const dataFormatada = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date()).split('/').reverse().join('-');
     
     a.href = url;
     a.download = `backup-diario-docente-${dataFormatada}.json`;

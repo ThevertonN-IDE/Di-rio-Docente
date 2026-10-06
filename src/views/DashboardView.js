@@ -3,6 +3,7 @@ import { Skeletons } from '../utils/skeletons.js';
 import { supabase } from '../core/supabaseClient.js';
 import { PerfilService } from '../services/PerfilService.js';
 import { AssinaturaModal } from '../utils/AssinaturaModal.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export class DashboardView {
   constructor(containerId, viewModel, onNavegar) {
@@ -108,8 +109,8 @@ export class DashboardView {
               ${provasProximas.map(p => `
                 <div class="bg-white border border-amber-200 rounded-xl p-3 shadow-2xs flex items-center justify-between gap-2">
                   <div class="min-w-0 flex-1">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 truncate inline-block max-w-[150px]">${p.turmaNome}</span>
-                    <h4 class="text-xs font-bold text-slate-800 mt-1 truncate" title="${p.titulo}">${p.titulo}</h4>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 truncate inline-block max-w-[150px]">${escapeHtml(p.turmaNome)}</span>
+                    <h4 class="text-xs font-bold text-slate-800 mt-1 truncate" title="${escapeHtml(p.titulo)}">${escapeHtml(p.titulo)}</h4>
                     <p class="text-[11px] text-slate-400">Data: ${p.data.split('-').reverse().join('/')}</p>
                   </div>
                   <div class="text-right shrink-0">
@@ -151,9 +152,9 @@ export class DashboardView {
                 <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 p-4 sm:p-5 text-white relative">
                   <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0 flex-1">
-                      <span class="text-[10px] font-bold tracking-wider uppercase bg-white/20 px-2 py-0.5 rounded-lg text-white truncate inline-block max-w-[180px]">${t.disciplina || 'Geral'}</span>
-                      <h3 class="text-lg sm:text-xl font-bold mt-1 tracking-tight truncate" title="${t.nome}">${t.nome}</h3>
-                      <p class="text-[11px] text-indigo-100/80 mt-0.5 font-medium">${t.periodo || 'Anual'} • Ano Letivo: ${t.anoLetivo || '2026'}</p>
+                      <span class="text-[10px] font-bold tracking-wider uppercase bg-white/20 px-2 py-0.5 rounded-lg text-white truncate inline-block max-w-[180px]">${escapeHtml(t.disciplina || 'Geral')}</span>
+                      <h3 class="text-lg sm:text-xl font-bold mt-1 tracking-tight truncate" title="${escapeHtml(t.nome)}">${escapeHtml(t.nome)}</h3>
+                      <p class="text-[11px] text-indigo-100/80 mt-0.5 font-medium">${escapeHtml(t.periodo || 'Anual')} • Ano Letivo: ${escapeHtml(t.anoLetivo || '2026')}</p>
                     </div>
                     
                     <!-- Botão de Arquivar / Restaurar com Touch Target 44px -->
@@ -178,13 +179,13 @@ export class DashboardView {
                   <div>
                     <span class="font-bold text-slate-500 uppercase block text-[10px] tracking-wider mb-0.5">Último Conteúdo:</span>
                     <p class="text-slate-700 line-clamp-2 italic font-sans leading-relaxed">
-                      ${t.ultimoConteudo ? `"${t.ultimoConteudo}"` : '<span class="text-slate-400 not-italic">Nenhum conteúdo registado ainda.</span>'}
+                      ${t.ultimoConteudo ? `"${escapeHtml(t.ultimoConteudo)}"` : '<span class="text-slate-400 not-italic">Nenhum conteúdo registado ainda.</span>'}
                     </p>
                   </div>
                   <div class="border-t border-slate-200/60 pt-2">
                     <span class="font-bold text-indigo-600 uppercase block text-[10px] tracking-wider mb-0.5">Previsão Próxima Aula:</span>
                     <p class="text-slate-800 line-clamp-2 font-medium leading-relaxed">
-                      ${t.proximoConteudo ? `↳ ${t.proximoConteudo}` : '<span class="text-slate-400 font-normal">Sem planeamento futuro anotado.</span>'}
+                      ${t.proximoConteudo ? `↳ ${escapeHtml(t.proximoConteudo)}` : '<span class="text-slate-400 font-normal">Sem planeamento futuro anotado.</span>'}
                     </p>
                   </div>
                 </div>
@@ -317,8 +318,9 @@ export class DashboardView {
       if (!user) return;
 
       const status = await PerfilService.podeCriarTurma(user.id);
+      const podeCriar = typeof status === 'object' && status !== null ? status.permitido : Boolean(status);
 
-      if (!status.permitido) {
+      if (!podeCriar) {
         // Bloqueia e abre o modal Pix com WhatsApp
         AssinaturaModal.abrir(user.email);
         return;

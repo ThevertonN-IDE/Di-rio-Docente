@@ -1,5 +1,7 @@
 // src/services/PedagogicoService.js
 import { supabase } from '../core/supabaseClient.js';
+import { obterDataLocalBrasil } from '../utils/date.js';
+import { SyncManager, localDb } from '../core/localDb.js';
 
 export const PedagogicoService = {
   // 1. GESTÃO DO BANCO DE QUESTÕES
@@ -12,6 +14,7 @@ export const PedagogicoService = {
     if (error) throw error;
     return data || [];
   },
+
   async atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre }) {
     const bimestreNum = parseInt(bimestre, 10) || 1;
 
@@ -34,6 +37,26 @@ export const PedagogicoService = {
 
   async carregarFrequenciasAula(aulaId) {
     if (!aulaId) return {};
+
+    // 1. Se estiver offline, lê direto do Dexie
+    if (!navigator.onLine) {
+      try {
+        const registrosLocais = await localDb.frequencias.where('aula_id').equals(aulaId).toArray();
+        const mapa = {};
+        registrosLocais.forEach(f => {
+          mapa[f.aluno_id] = {
+            presente: Boolean(f.presente),
+            observacao: f.observacao || ''
+          };
+        });
+        return mapa;
+      } catch (e) {
+        console.warn('Erro ao ler frequências locais:', e);
+        return {};
+      }
+    }
+
+    // 2. Se estiver online, consulta no Supabase
     try {
       const { data, error } = await supabase
         .from('frequencias')
@@ -44,7 +67,6 @@ export const PedagogicoService = {
 
       const mapa = {};
       (data || []).forEach(f => {
-        // Garante boolean estrito: true se for true, false se for false
         const isPresente = f.presente === true || f.presente === 'true' || f.presente === 1 || f.presente === 't';
         mapa[f.aluno_id] = {
           presente: isPresente,
@@ -53,69 +75,125 @@ export const PedagogicoService = {
       });
       return mapa;
     } catch (err) {
-      console.warn('Erro ao carregar presencas da aula:', err);
-      return {};
+      console.warn('Erro ao carregar presencas da nuvem, tentando cache local:', err);
+      try {
+        const registrosLocais = await localDb.frequencias.where('aula_id').equals(aulaId).toArray();
+        const mapa = {};
+        registrosLocais.forEach(f => {
+          mapa[f.aluno_id] = {
+            presente: Boolean(f.presente),
+            observacao: f.observacao || ''
+          };
+        });
+        return mapa;
+      } catch {
+        return {};
+      }
     }
   },
-  async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaPresencas) {
-    const bimestreNum = parseInt(bimestre, 10) || 1;
 
-    // 1. Verifica se já existe uma aula cadastrada nesta data
-    let { data: aulaExistente } = await supabase
-      .from('aulas')
-      .select('id')
-      .eq('turma_id', turmaId)
-      .eq('data', data)
-      .maybeSingle();
+  // Método UNIFICADO: gerencia cadastro/atualização da aula e salva presenças com observações individuais
+  async registrarAulaComChamada(turmaId, dadosAula, listaPresencas = []) {
+    const data = dadosAula.data || obterDataLocalBrasil();
+    const conteudo = dadosAula.conteudo || dadosAula.conteudo_ministrado || '';
+    const proximoConteudo = dadosAula.proximoConteudo || dadosAula.proximo_conteudo || null;
+    const observacoes = dadosAula.observacoes || null;
+    const bimestre = parseInt(dadosAula.bimestre, 10) || 1;
 
-    let aulaId = aulaExistente?.id;
-
-    if (!aulaId) {
-      // Cria a nova aula com o bimestre correto
-      const { data: novaAula, error: errAula } = await supabase
-        .from('aulas')
-        .insert({
-          turma_id: turmaId,
-          data,
-          conteudo_ministrado: conteudo,
-          proximo_conteudo: proximoConteudo,
-          observacoes: observacoes || '',
-          bimestre: bimestreNum
-        })
-        .select('id')
-        .single();
-
-      if (errAula) throw errAula;
-      aulaId = novaAula.id;
-    } else {
-      // Atualiza a aula existente forçando a atualização da coluna bimestre
-      await this.atualizarAula(aulaId, {
+    // Se estiver sem internet, grava no Dexie e enfileira na sync_queue imediatamente
+    if (!navigator.onLine) {
+      return await SyncManager.salvarChamadaOffline(turmaId, {
         data,
         conteudo,
         proximoConteudo,
         observacoes,
-        bimestre: bimestreNum
-      });
+        bimestre
+      }, listaPresencas);
     }
 
-    // 2. Registra as frequências
-    if (listaPresencas && listaPresencas.length > 0) {
-      const payloadFreq = listaPresencas.map(p => ({
-        aula_id: aulaId,
-        aluno_id: p.alunoId,
-        presente: p.presente,
-        observacao: (p.observacao || '').trim()
-      }));
+    try {
+      // 1. Tenta salvar na nuvem
+      let { data: aulaExistente } = await supabase
+        .from('aulas')
+        .select('id')
+        .eq('turma_id', turmaId)
+        .eq('data', data)
+        .maybeSingle();
 
-      const { error: errFreq } = await supabase
-        .from('frequencias')
-        .upsert(payloadFreq, { onConflict: 'aula_id, aluno_id' });
+      let aulaId = aulaExistente?.id;
 
-      if (errFreq) throw errFreq;
+      if (!aulaId) {
+        const { data: novaAula, error: errAula } = await supabase
+          .from('aulas')
+          .insert({
+            turma_id: turmaId,
+            data,
+            conteudo_ministrado: conteudo,
+            proximo_conteudo: proximoConteudo,
+            observacoes,
+            bimestre
+          })
+          .select('id')
+          .single();
+
+        if (errAula) throw errAula;
+        aulaId = novaAula.id;
+      } else {
+        await this.atualizarAula(aulaId, {
+          data,
+          conteudo,
+          proximoConteudo,
+          observacoes,
+          bimestre
+        });
+      }
+
+      // 2. Salva lista de frequências com observações individuais
+      if (listaPresencas && listaPresencas.length > 0) {
+        const payloadFreq = listaPresencas.map(p => ({
+          aula_id: aulaId,
+          aluno_id: p.alunoId,
+          presente: p.presente === true || p.presente === 'true' || p.presente === 1 || p.presente === 't',
+          observacao: (p.observacao || '').trim() || null
+        }));
+
+        const { error: errFreq } = await supabase
+          .from('frequencias')
+          .upsert(payloadFreq, { onConflict: 'aula_id, aluno_id' });
+
+        if (errFreq) throw errFreq;
+      }
+
+      // Também mantém cópia local em cache no Dexie
+      try {
+        await localDb.aulas.put({
+          id: aulaId,
+          turma_id: turmaId,
+          data,
+          conteudo_ministrado: conteudo,
+          proximo_conteudo: proximoConteudo,
+          observacoes,
+          bimestre,
+          offline: false
+        });
+      } catch (e) {
+        // Ignora falhas menores de cache local
+      }
+
+      return { id: aulaId, offline: false };
+    } catch (errRede) {
+      // Se falhou por queda súbita de conexão durante o envio, cai suavemente para o modo offline
+      console.warn('Conexão falhou ao salvar chamada. Salvando localmente:', errRede.message);
+      return await SyncManager.salvarChamadaOffline(turmaId, {
+        data,
+        conteudo,
+        proximoConteudo,
+        observacoes,
+        bimestre
+      }, listaPresencas);
     }
-
-    return aulaId;
   },
+
   async listarObservacoesDiariasAluno(turmaId, alunoId, bimestre = 0, dataInicio = null, dataFim = null) {
     let queryAulas = supabase
       .from('aulas')
@@ -145,7 +223,6 @@ export const PedagogicoService = {
 
     const mapaFreq = {};
     (frequencias || []).forEach(f => {
-      // Leitura estrita: apenas true real é presença
       mapaFreq[f.aula_id] = {
         presente: f.presente === true || f.presente === 'true' || f.presente === 1,
         observacao: f.observacao || ''
@@ -165,60 +242,13 @@ export const PedagogicoService = {
       })
       .filter(item => item.observacao && item.observacao.trim() !== '');
   },
-  async registrarAulaComChamada(turmaId, { data, conteudo, proximoConteudo, observacoes, bimestre }, listaPresencas) {
-    // Registra ou atualiza aula com o bimestre correto
-    let { data: aulaExistente } = await supabase
-      .from('aulas')
-      .select('id')
-      .eq('turma_id', turmaId)
-      .eq('data', data)
-      .maybeSingle();
-
-    let aulaId = aulaExistente?.id;
-
-    if (!aulaId) {
-      const { data: novaAula, error: errAula } = await supabase
-        .from('aulas')
-        .insert({
-          turma_id: turmaId,
-          data,
-          conteudo_ministrado: conteudo,
-          proximo_conteudo: proximoConteudo,
-          observacoes,
-          bimestre: parseInt(bimestre) || 1
-        })
-        .select('id')
-        .single();
-
-      if (errAula) throw errAula;
-      aulaId = novaAula.id;
-    } else {
-      await this.atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre });
-    }
-
-    // Salva a lista de frequência
-    const payloadFreq = listaPresencas.map(p => ({
-      aula_id: aulaId,
-      aluno_id: p.alunoId,
-      presente: Boolean(p.presente) // Garante boolean estrito true/false
-    }));
-
-    const { error: errFreq } = await supabase
-      .from('frequencias')
-      .upsert(payloadFreq, { onConflict: 'aula_id, aluno_id' });
-
-    if (errFreq) throw errFreq;
-    return aulaId;
-  },
 
   async excluirAula(aulaId) {
-    // 1. Remove registros de presença vinculados a esta aula
     await supabase.from('frequencias').delete().eq('aula_id', aulaId);
-
-    // 2. Remove o registro da aula
     const { error } = await supabase.from('aulas').delete().eq('id', aulaId);
     if (error) throw error;
   },
+
   async criarQuestao({ assunto, enunciado, nivel }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado.');
@@ -279,7 +309,6 @@ export const PedagogicoService = {
       if (errFreq) throw errFreq;
 
       (frequencias || []).forEach(f => {
-        // Trata conversão para boolean real independente do formato retornado
         const ehVerdadeiro = f.presente === true || f.presente === 'true' || f.presente === 1 || f.presente === 't';
         
         if (ehVerdadeiro) {
@@ -292,12 +321,13 @@ export const PedagogicoService = {
       return { totalAulas, mapaPresencas, mapaFaltas, aulas };
     } catch (err) {
       console.error('Erro ao calcular frequências:', err);
-      return { totalAulas: 0, mapaPresencas: {}, mapaFaltas: {}, aulas: [] };
+      return { totalAulas: 0, mapaPresencas, mapaFaltas, aulas: [] };
     }
   },
 
-  // 3. EXPORTAÇÃO PARA EXCEL (.XLSX) VIA SHEETJS
-  exportarPlanilhaExcel(nomeTurma, disciplina, matrizAlunos, avaliacoes, totalAulas, mapaPresencas) {
+  // 3. EXPORTAÇÃO PARA EXCEL (.XLSX) COM MÉDIA PERSONALIZADA DA TURMA E DATA BRASIL
+  exportarPlanilhaExcel(nomeTurma, disciplina, matrizAlunos, avaliacoes, totalAulas, mapaPresencas, mediaAprovacao = 6.0) {
+    const notaCorte = parseFloat(mediaAprovacao) || 6.0;
     const cabecalho = ['Nº Chamada', 'Nome do Aluno', 'E-mail'];
 
     // Adiciona colunas de avaliações
@@ -312,7 +342,11 @@ export const PedagogicoService = {
     const linhas = matrizAlunos.map(aluno => {
       const presencas = mapaPresencas[aluno.id] || 0;
       const pct = totalAulas > 0 ? ((presencas / totalAulas) * 100).toFixed(1) : '100.0';
-      const situacao = (parseFloat(aluno.mediaFinal) >= 6.0 && parseFloat(pct) >= 75) ? 'Aprovado' : 'Atenção / Reprovado';
+      const mediaCalculada = parseFloat(aluno.mediaFinal) || 0;
+      const frequenciaCalculada = parseFloat(pct) || 0;
+
+      // Validação dinâmica com a nota de corte da turma
+      const situacao = (mediaCalculada >= notaCorte && frequenciaCalculada >= 75) ? 'Aprovado' : 'Atenção / Reprovado';
 
       const linha = [
         aluno.numero_chamada || '-',
@@ -323,7 +357,7 @@ export const PedagogicoService = {
       // Notas das avaliações
       aluno.notas.forEach(n => linha.push(n.valor !== '' ? parseFloat(n.valor) : '-'));
 
-      linha.push(parseFloat(aluno.mediaFinal) || 0);
+      linha.push(mediaCalculada);
       linha.push(totalAulas);
       linha.push(presencas);
       linha.push(`${pct}%`);
@@ -332,13 +366,14 @@ export const PedagogicoService = {
       return linha;
     });
 
-    // Criação da planilha
+    // Criação da planilha com SheetJS
     const ws = XLSX.utils.aoa_to_sheet([cabecalho, ...linhas]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Rendimento Escolar');
 
-    // Dispara o download
-    const nomeArquivo = `Planilha_${nomeTurma.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    // Data local sem risco de UTC deslocado
+    const dataFormatada = obterDataLocalBrasil();
+    const nomeArquivo = `Planilha_${nomeTurma.replace(/\s+/g, '_')}_${dataFormatada}.xlsx`;
     XLSX.writeFile(wb, nomeArquivo);
   }
 };

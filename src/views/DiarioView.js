@@ -2,6 +2,7 @@
 import { BackupService } from '../services/BackupService.js';
 import { PedagogicoService } from '../services/PedagogicoService.js';
 import { debounce, Toast, customConfirm } from '../utils/ui.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export class DiarioView {
   constructor(containerId, viewModel) {
@@ -60,8 +61,8 @@ export class DiarioView {
               <span class="text-slate-300">•</span>
               <span class="text-xs text-slate-500 font-medium">Controle de Frequência & Aulas</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">${turma?.nome || ''}</h1>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium">${turma?.disciplina || ''}</p>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">${escapeHtml(turma?.nome || '')}</h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium">${escapeHtml(turma?.disciplina || '')}</p>
           </div>
 
           <!-- Controles de Data e Bimestre -->
@@ -112,11 +113,11 @@ export class DiarioView {
               <div class="space-y-3">
                 <div>
                   <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Conteúdo Ministrado em Sala</label>
-                  <textarea id="txt-conteudo-ministrado" rows="2" class="w-full border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Descreva os tópicos, exercícios ou atividades trabalhadas hoje...">${aula?.conteudo_ministrado || ''}</textarea>
+                  <textarea id="txt-conteudo-ministrado" rows="2" class="w-full border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Descreva os tópicos, exercícios ou atividades trabalhadas hoje...">${escapeHtml(aula?.conteudo_ministrado || '')}</textarea>
                 </div>
                 <div>
                   <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Previsão para a Próxima Aula</label>
-                  <input type="text" id="txt-proximo-conteudo" value="${aula?.proximo_conteudo || ''}" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Ex: Continuação da lista 02, prova bimestral, aula prática...">
+                  <input type="text" id="txt-proximo-conteudo" value="${escapeHtml(aula?.proximo_conteudo || '')}" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Ex: Continuação da lista 02, prova bimestral, aula prática...">
                 </div>
               </div>
             </div>
@@ -175,20 +176,20 @@ export class DiarioView {
                         <!-- Avatar / Letra inicial -->
                         <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center font-bold text-slate-500 text-xs">
                           ${aluno.foto_url 
-                            ? `<img src="${aluno.foto_url}" alt="${aluno.nome}" class="w-full h-full object-cover">`
-                            : aluno.nome.charAt(0)
+                            ? `<img src="${aluno.foto_url}" alt="${escapeHtml(aluno.nome)}" class="w-full h-full object-cover">`
+                            : escapeHtml(aluno.nome.charAt(0))
                           }
                         </div>
 
                         <!-- Identificação e Observação -->
                         <div class="min-w-0 flex-1">
-                          <p class="text-xs font-bold text-slate-800 truncate" title="${aluno.nome}">
-                            ${aluno.numero_chamada ? aluno.numero_chamada + '. ' : ''}${aluno.nome}
+                          <p class="text-xs font-bold text-slate-800 truncate" title="${escapeHtml(aluno.nome)}">
+                            ${aluno.numero_chamada ? escapeHtml(aluno.numero_chamada) + '. ' : ''}${escapeHtml(aluno.nome)}
                           </p>
                           <input 
                             type="text" 
                             data-obs-dia="${aluno.id}"
-                            value="${obsDoDia}" 
+                            value="${escapeHtml(obsDoDia)}" 
                             placeholder="Observação deste dia..." 
                             class="text-[11px] bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-600 outline-none focus:border-indigo-400 w-full transition mt-1"
                           />
@@ -343,10 +344,10 @@ export class DiarioView {
 
         <div data-carregar-aula="${aula.data}" class="touch-action cursor-pointer">
           <p class="text-xs font-semibold text-slate-800 line-clamp-2 hover:text-indigo-600 transition">
-            ${aula.conteudo_ministrado || '<span class="italic text-slate-400 font-normal">Sem anotação de conteúdo</span>'}
+            ${aula.conteudo_ministrado ? escapeHtml(aula.conteudo_ministrado) : '<span class="italic text-slate-400 font-normal">Sem anotação de conteúdo</span>'}
           </p>
           ${aula.proximo_conteudo ? `
-            <p class="text-[10px] text-slate-400 mt-1 line-clamp-1">↳ Próx: ${aula.proximo_conteudo}</p>
+            <p class="text-[10px] text-slate-400 mt-1 line-clamp-1">↳ Próx: ${escapeHtml(aula.proximo_conteudo)}</p>
           ` : ''}
         </div>
       </div>

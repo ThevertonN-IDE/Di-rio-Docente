@@ -145,7 +145,7 @@ export class LandingPageView {
                 </ul>
               </div>
               <a 
-                href="https://wa.me/5584999999999?text=Ol%C3%A1!%20Tenho%20interesse%20no%20plano%20institucional%20do%20Di%C3%A1rio%20Docente%20para%20minha%20escola." 
+                href="https://wa.me/5584986743960?text=Ol%C3%A1!%20Tenho%20interesse%20no%20plano%20institucional%20do%20Di%C3%A1rio%20Docente%20para%20minha%20escola." 
                 target="_blank" 
                 class="touch-action min-h-[44px] w-full py-2.5 border border-slate-300 font-bold text-xs text-slate-700 rounded-xl hover:bg-slate-50 transition text-center flex items-center justify-center"
               >

@@ -1,6 +1,6 @@
 {
   "name": "diario-docente",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev:css": "npx tailwindcss -i ./styles/tailwind-input.css -o ./styles/tailwind.css --watch",
