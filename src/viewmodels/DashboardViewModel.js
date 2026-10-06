@@ -1,125 +1,192 @@
 // src/viewmodels/DashboardViewModel.js
-import { Observable } from '../core/Observable.js';
-import { DashboardService } from '../services/DashboardService.js';
+import { supabase } from '../core/supabaseClient.js';
+import { TurmaService } from '../services/TurmaService.js';
 
-export class DashboardViewModel extends Observable {
+export class DashboardViewModel {
   constructor() {
-    super();
     this.turmas = [];
+    this.turmasAtivas = [];
+    this.turmasArquivadas = [];
     this.provasProximas = [];
-    this.abaAtual = 'ativas'; // 'ativas' ou 'arquivadas'
+    this.abaAtual = 'ativas';
+    this.listeners = {};
     this.carregando = false;
   }
 
-  async carregarDashboard() {
+  subscribe(evento, callback) {
+    if (!this.listeners[evento]) {
+      this.listeners[evento] = [];
+    }
+    this.listeners[evento].push(callback);
+  }
+
+  notify(evento, dados) {
+    if (this.listeners[evento]) {
+      this.listeners[evento].forEach(cb => cb(dados));
+    }
+  }
+
+  alternarAba(aba) {
+    this.abaAtual = aba;
+    this.turmas = aba === 'ativas' ? this.turmasAtivas : this.turmasArquivadas;
+    this.notify('TURMA_ATUALIZADA');
+  }
+
+  /**
+   * Carrega os dados com resiliência contra tokens expirados (401)
+   */
+  async carregarDashboard(tentativa = 1) {
     this.carregando = true;
-    this.notify('CARREGANDO', true);
 
     try {
-      const isArquivada = this.abaAtual === 'arquivadas';
-      const [turmasData, provas] = await Promise.all([
-        DashboardService.getTurmas(isArquivada),
-        DashboardService.getProvasProximas(7)
-      ]);
+      // 1. Assegura sessão ativa e renova se necessário
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        // Tenta recuperar sessão caso o token esteja a renovar
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        if (!refreshed?.session) {
+          throw new Error('Sessão expirada. Inicie sessão novamente.');
+        }
+      }
 
-      // Formata e extrai a última aula de cada turma
-      this.turmas = turmasData.map(t => {
-        const aulasOrdenadas = (t.aulas || []).sort((a, b) => new Date(b.data) - new Date(a.data));
-        const ultimaAula = aulasOrdenadas[0] || null;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilizador não autenticado.');
 
-        return {
-          id: t.id,
-          nome: t.nome,
-          disciplina: t.disciplina || 'Geral',
-          anoLetivo: t.ano_letivo,
-          periodo: t.periodo || 'Anual',
-          arquivada: t.arquivada,
-          totalAlunos: t.matriculas?.[0]?.count || 0,
-          ultimoConteudo: ultimaAula ? ultimaAula.conteudo_ministrado : 'Nenhum registro ainda',
-          proximoConteudo: ultimaAula ? ultimaAula.proximo_conteudo : 'A definir',
-          dataUltimaAula: ultimaAula ? ultimaAula.data : null
-        };
-      });
+      // 2. Consulta paralela de turmas e contagem de alunos
+      const { data: turmasData, error: turmasError } = await supabase
+        .from('turmas')
+        .select(`
+          id,
+          nome,
+          disciplina,
+          ano_letivo,
+          arquivada,
+          created_at,
+          matriculas (count)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      this.provasProximas = provas.map(p => {
-        const diasRestantes = this.calcularDiasRestantes(p.data_prevista);
-        return {
-          id: p.id,
-          titulo: p.titulo,
-          data: p.data_prevista,
-          turmaNome: p.turmas?.nome || 'Turma',
-          diasRestantes
-        };
-      });
+      if (turmasError) throw turmasError;
 
-      this.notify('DASHBOARD_CARREGADO', {
-        turmas: this.turmas,
-        provas: this.provasProximas,
-        abaAtual: this.abaAtual
-      });
+      // 3. Processa e categoriza as turmas
+      const turmasProcessadas = (turmasData || []).map(t => ({
+        id: t.id,
+        nome: t.nome,
+        disciplina: t.disciplina,
+        anoLetivo: t.ano_letivo,
+        arquivada: Boolean(t.arquivada),
+        totalAlunos: t.matriculas?.[0]?.count || 0
+      }));
+
+      this.turmasAtivas = turmasProcessadas.filter(t => !t.arquivada);
+      this.turmasArquivadas = turmasProcessadas.filter(t => t.arquivada);
+      this.turmas = this.abaAtual === 'ativas' ? this.turmasAtivas : this.turmasArquivadas;
+
+      // 4. Consulta de avaliações dos próximos 7 dias (com tratamento gracioso se não existirem colunas)
+      try {
+        const hojeStr = new Intl.DateTimeFormat('pt-BR', {
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date()).split('/').reverse().join('-');
+
+        const { data: avaliacoesData, error: avError } = await supabase
+          .from('avaliacoes')
+          .select('id, titulo, created_at, turma_id, turmas(nome)')
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (!avError && avaliacoesData) {
+          this.provasProximas = avaliacoesData.map(av => ({
+            id: av.id,
+            titulo: av.titulo,
+            turmaNome: av.turmas?.nome || 'Geral',
+            data: hojeStr,
+            diasRestantes: 0
+          }));
+        } else {
+          this.provasProximas = [];
+        }
+      } catch (errAv) {
+        console.warn('Aviso ao carregar avaliações próximas:', errAv.message);
+        this.provasProximas = [];
+      }
+
     } catch (err) {
-      this.notify('ERRO', err.message);
+      console.warn(`[DashboardViewModel] Falha na tentativa ${tentativa}:`, err.message);
+
+      // Se falhou por 401 ou token expirado e ainda não tentou recuperar
+      if (tentativa === 1 && (err.status === 401 || err.message?.includes('401') || err.message?.includes('JWT'))) {
+        try {
+          await supabase.auth.refreshSession();
+          return await this.carregarDashboard(2);
+        } catch (eRefresh) {
+          console.error('Falha ao renovar token:', eRefresh);
+        }
+      }
+
+      // Em caso de falha de rede persistente, define listas vazias para não congelar o ecrã
+      this.turmas = [];
+      this.turmasAtivas = [];
+      this.turmasArquivadas = [];
+      this.provasProximas = [];
     } finally {
       this.carregando = false;
-      this.notify('CARREGANDO', false);
-    }
-  }
-
-  calcularDiasRestantes(dataIso) {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const alvo = new Date(dataIso + 'T00:00:00');
-    const diffTempo = alvo - hoje;
-    return Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
-  }
-
-  async alternarAba(novaAba) {
-    this.abaAtual = novaAba;
-    await this.carregarDashboard();
-  }
-
-  async arquivarOuDesarquivarTurma(turmaId, arquivar) {
-    try {
-      await DashboardService.alternarArquivamento(turmaId, arquivar);
-      // Remove da lista atual e notifica
-      this.turmas = this.turmas.filter(t => t.id !== turmaId);
-      this.notify('TURMA_ATUALIZADA', { turmaId, arquivada: arquivar });
-    } catch (err) {
-      this.notify('ERRO', 'Erro ao alterar status da turma: ' + err.message);
-    }
-  }
-
-  async atualizarTurma(turmaId, dados) {
-    try {
-      await TurmaService.atualizarDadosGeraisTurma(turmaId, dados);
-      await this.carregarDashboard();
-      this.notify('TURMA_ATUALIZADA');
-      return true;
-    } catch (err) {
-      console.error('Erro ao atualizar turma:', err);
-      throw err;
-    }
-  }
-
-  async excluirTurma(turmaId) {
-    try {
-      await TurmaService.excluirTurmaCompletamente(turmaId);
-      await this.carregarDashboard();
-      this.notify('TURMA_ATUALIZADA');
-      return true;
-    } catch (err) {
-      console.error('Erro ao excluir turma:', err);
-      throw err;
+      // Notifica sempre a vista para retirar os esqueletos e renderizar o conteúdo real
+      this.notify('DASHBOARD_CARREGADO');
     }
   }
 
   async cadastrarTurma(dados) {
-    try {
-      await DashboardService.criarTurma(dados);
-      await this.carregarDashboard();
-      this.notify('TURMA_CRIADA_SUCESSO');
-    } catch (err) {
-      this.notify('ERRO', 'Erro ao cadastrar turma: ' + err.message);
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Não autenticado.');
+
+    const { data, error } = await supabase
+      .from('turmas')
+      .insert([{
+        user_id: user.id,
+        nome: dados.nome,
+        disciplina: dados.disciplina,
+        ano_letivo: dados.ano_letivo,
+        media_aprovacao: 6.0,
+        arquivada: false
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await this.carregarDashboard();
+    this.notify('TURMA_CRIADA_SUCESSO');
+    return data;
+  }
+
+  async atualizarTurma(turmaId, dados) {
+    await TurmaService.atualizarDadosGeraisTurma(turmaId, dados);
+    await this.carregarDashboard();
+    this.notify('TURMA_ATUALIZADA');
+    return true;
+  }
+
+  async excluirTurma(turmaId) {
+    await TurmaService.excluirTurmaCompletamente(turmaId);
+    await this.carregarDashboard();
+    this.notify('TURMA_ATUALIZADA');
+    return true;
+  }
+
+  async arquivarOuDesarquivarTurma(turmaId, statusArquivada) {
+    const { error } = await supabase
+      .from('turmas')
+      .update({ arquivada: statusArquivada })
+      .eq('id', turmaId);
+
+    if (error) throw error;
+
+    await this.carregarDashboard();
+    this.notify('TURMA_ATUALIZADA');
   }
 }
