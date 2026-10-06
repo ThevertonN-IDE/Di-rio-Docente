@@ -140,6 +140,34 @@ export const TurmaService = {
     if (error) throw error;
   },
 
+  async excluirTurma(turmaId) {
+    // A remoção em cascata (ON DELETE CASCADE) no Supabase tratará das matrículas,
+    // avaliações, aulas e frequências vinculadas
+    const { error } = await supabase
+      .from('turmas')
+      .delete()
+      .eq('id', turmaId);
+
+    if (error) throw error;
+    return true;
+  },
+
+  async atualizarDadosGeraisTurma(turmaId, { nome, disciplina, anoLetivo }) {
+    const { data, error } = await supabase
+      .from('turmas')
+      .update({
+        nome: nome.trim(),
+        disciplina: (disciplina || '').trim(),
+        ano_letivo: parseInt(anoLetivo, 10) || new Date().getFullYear()
+      })
+      .eq('id', turmaId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async atualizarConfiguracaoTurma(turmaId, { mediaAprovacao, tipoMedia }) {
     const { error } = await supabase
       .from('turmas')

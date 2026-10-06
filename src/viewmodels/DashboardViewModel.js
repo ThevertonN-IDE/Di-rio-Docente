@@ -89,6 +89,30 @@ export class DashboardViewModel extends Observable {
     }
   }
 
+  async atualizarTurma(turmaId, dados) {
+    try {
+      await TurmaService.atualizarDadosGeraisTurma(turmaId, dados);
+      await this.carregarDashboard();
+      this.notify('TURMA_ATUALIZADA');
+      return true;
+    } catch (err) {
+      console.error('Erro ao atualizar turma:', err);
+      throw err;
+    }
+  }
+
+  async excluirTurma(turmaId) {
+    try {
+      await TurmaService.excluirTurmaCompletamente(turmaId);
+      await this.carregarDashboard();
+      this.notify('TURMA_ATUALIZADA');
+      return true;
+    } catch (err) {
+      console.error('Erro ao excluir turma:', err);
+      throw err;
+    }
+  }
+
   async cadastrarTurma(dados) {
     try {
       await DashboardService.criarTurma(dados);

@@ -4,14 +4,15 @@ import { supabase } from '../core/supabaseClient.js';
 import { PerfilService } from '../services/PerfilService.js';
 import { AssinaturaModal } from '../utils/AssinaturaModal.js';
 import { escapeHtml } from '../utils/sanitize.js';
+import { Toast, customConfirm } from '../utils/ui.js';
 
 export class DashboardView {
   constructor(containerId, viewModel, onNavegar) {
     this.container = document.getElementById(containerId);
     this.vm = viewModel;
-    this.onNavegar = onNavegar; // Callback para navegar via router
+    this.onNavegar = onNavegar;
+    this.turmaEmEdicao = null;
 
-    // Estado inicial com Skeleton Loading enquanto os dados do Supabase carregam
     if (this.container && !this.container.innerHTML.trim()) {
       this.container.innerHTML = `
         <div class="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
@@ -41,8 +42,6 @@ export class DashboardView {
 
   render() {
     const { turmas, provasProximas, abaAtual } = this.vm;
-
-    // Métricas rápidas da visão geral
     const totalAlunosGeral = turmas.reduce((acc, t) => acc + (parseInt(t.totalAlunos, 10) || 0), 0);
     const totalTurmasAtivas = abaAtual === 'ativas' ? turmas.length : (this.vm.turmasAtivas?.length || turmas.length);
 
@@ -60,18 +59,18 @@ export class DashboardView {
           </div>
 
           <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <button id="btn-abrir-modal-turma" class="touch-action min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95">
+            <button id="btn-abrir-modal-turma" class="touch-action min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 cursor-pointer">
               <span class="text-base leading-none">➕</span>
               <span>Nova Turma</span>
             </button>
-            <button id="btn-ir-provas" class="touch-action min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition active:scale-95">
+            <button id="btn-ir-provas" class="touch-action min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition active:scale-95 cursor-pointer">
               <span>📝</span>
               <span>Banco de Provas A4</span>
             </button>
           </div>
         </div>
 
-        <!-- 2. INDICADORES RÁPIDOS (KPIs PEDAGÓGICOS) -->
+        <!-- 2. INDICADORES RÁPIDOS -->
         <div class="grid grid-cols-3 gap-2 sm:gap-4 select-none">
           <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
             <span class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Turmas</span>
@@ -98,7 +97,7 @@ export class DashboardView {
           </div>
         </div>
 
-        <!-- 3. SEÇÃO DE ALERTAS: AVALIAÇÕES PRÓXIMAS (SE HOUVER) -->
+        <!-- 3. ALERTAS DE AVALIAÇÕES PRÓXIMAS -->
         ${provasProximas.length > 0 ? `
           <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
             <div class="flex items-center gap-2">
@@ -126,11 +125,11 @@ export class DashboardView {
 
         <!-- 4. NAVEGAÇÃO DE ABAS: ATIVAS VS ARQUIVADAS -->
         <div class="flex items-center gap-1.5 border-b border-slate-200 pb-2 select-none">
-          <button id="tab-ativas" class="touch-action min-h-[44px] px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${abaAtual === 'ativas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
+          <button id="tab-ativas" class="touch-action min-h-[44px] px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${abaAtual === 'ativas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
             <span>Turmas Ativas</span>
             <span class="text-[10px] px-1.5 py-0.2 rounded-full ${abaAtual === 'ativas' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}">${abaAtual === 'ativas' ? turmas.length : '•'}</span>
           </button>
-          <button id="tab-arquivadas" class="touch-action min-h-[44px] px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${abaAtual === 'arquivadas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
+          <button id="tab-arquivadas" class="touch-action min-h-[44px] px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${abaAtual === 'arquivadas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
             <span>Arquivadas</span>
             <span class="text-[10px] px-1.5 py-0.2 rounded-full ${abaAtual === 'arquivadas' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}">${abaAtual === 'arquivadas' ? turmas.length : '•'}</span>
           </button>
@@ -157,15 +156,31 @@ export class DashboardView {
                       <p class="text-[11px] text-indigo-100/80 mt-0.5 font-medium">${escapeHtml(t.periodo || 'Anual')} • Ano Letivo: ${escapeHtml(t.anoLetivo || '2026')}</p>
                     </div>
                     
-                    <!-- Botão de Arquivar / Restaurar com Touch Target 44px -->
-                    <button 
-                      data-btn-arquivar="${t.id}" 
-                      data-status="${t.arquivada}" 
-                      title="${t.arquivada ? 'Restaurar Turma' : 'Arquivar Turma'}"
-                      class="touch-action touch-target-44 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition shrink-0 active:scale-95"
-                    >
-                      ${t.arquivada ? '📂' : '📦'}
-                    </button>
+                    <!-- Ações Rápidas: Editar, Arquivar e Eliminar -->
+                    <div class="flex items-center gap-1 shrink-0">
+                      <button 
+                        data-btn-editar="${t.id}"
+                        title="Editar Turma"
+                        class="touch-action touch-target-44 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition active:scale-95 cursor-pointer flex items-center justify-center p-2"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        data-btn-arquivar="${t.id}" 
+                        data-status="${t.arquivada}" 
+                        title="${t.arquivada ? 'Restaurar Turma' : 'Arquivar Turma'}"
+                        class="touch-action touch-target-44 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition active:scale-95 cursor-pointer flex items-center justify-center p-2"
+                      >
+                        ${t.arquivada ? '📂' : '📦'}
+                      </button>
+                      <button 
+                        data-btn-excluir="${t.id}"
+                        title="Eliminar Turma"
+                        class="touch-action touch-target-44 text-rose-300 hover:text-rose-100 bg-rose-500/20 hover:bg-rose-500/30 rounded-xl transition active:scale-95 cursor-pointer flex items-center justify-center p-2"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                   
                   <div class="mt-3.5 flex items-center gap-1.5 text-xs text-indigo-100 font-medium">
@@ -190,18 +205,18 @@ export class DashboardView {
                   </div>
                 </div>
 
-                <!-- Barra de Ações Rápidas (Toque Amplo) -->
+                <!-- Barra de Ações Rápidas -->
                 <div class="p-3 sm:p-4 bg-white border-t border-slate-100 flex items-center justify-between gap-2">
                   <button 
                     data-nav-turma="${t.id}"
-                    class="touch-action flex-1 min-h-[44px] py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+                    class="touch-action flex-1 min-h-[44px] py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
                   >
                     <span>📊</span>
                     <span>Notas & Alunos</span>
                   </button>
                   <button 
                     data-nav-diario="${t.id}"
-                    class="touch-action flex-1 min-h-[44px] py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95"
+                    class="touch-action flex-1 min-h-[44px] py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
                   >
                     <span>📅</span>
                     <span>Chamada / Diário</span>
@@ -215,15 +230,14 @@ export class DashboardView {
 
       </div>
 
-      <!-- MODAL PARA CADASTRAR NOVA TURMA (BOTTOM-SHEET NO TELEMÓVEL) -->
+      <!-- MODAL PARA CADASTRAR NOVA TURMA -->
       <div id="modal-nova-turma" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
         <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
-          <!-- Puxador tátil mobile -->
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
 
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-bold text-slate-800">Criar Nova Turma</h3>
-            <button id="btn-fechar-modal" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
           </div>
           
           <form id="form-criar-turma" class="space-y-3.5 text-xs">
@@ -242,15 +256,46 @@ export class DashboardView {
               </div>
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Cálculo de Média</label>
-                <select id="campo-tipo-media" class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500 bg-white font-semibold">
+                <select id="campo-tipo-media" class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500 bg-white font-semibold cursor-pointer">
                   <option value="aritmetica">Aritmética Simples</option>
                   <option value="ponderada">Ponderada (Pesos)</option>
                 </select>
               </div>
             </div>
             <div class="pt-2 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal" class="touch-action min-h-[44px] px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs hover:bg-slate-50 transition">Cancelar</button>
-              <button type="submit" class="touch-action min-h-[44px] px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition shadow-sm">Salvar Turma</button>
+              <button type="button" id="btn-cancelar-modal" class="touch-action min-h-[44px] px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs hover:bg-slate-50 transition cursor-pointer">Cancelar</button>
+              <button type="submit" class="touch-action min-h-[44px] px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition shadow-sm cursor-pointer">Salvar Turma</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL PARA EDITAR TURMA -->
+      <div id="modal-editar-turma" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
+        <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
+
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-800">Editar Dados da Turma</h3>
+            <button id="btn-fechar-modal-editar" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
+          </div>
+          
+          <form id="form-editar-turma" class="space-y-3.5 text-xs">
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1">Nome da Turma</label>
+              <input type="text" id="edit-nome-turma" required class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1">Disciplina</label>
+              <input type="text" id="edit-disciplina-turma" class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1">Ano Letivo</label>
+              <input type="number" id="edit-ano-turma" required class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+            </div>
+            <div class="pt-2 border-t flex justify-end gap-2">
+              <button type="button" id="btn-cancelar-modal-editar" class="touch-action min-h-[44px] px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs hover:bg-slate-50 transition cursor-pointer">Cancelar</button>
+              <button type="submit" id="btn-salvar-edicao-turma" class="touch-action min-h-[44px] px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition shadow-sm cursor-pointer">Salvar Alterações</button>
             </div>
           </form>
         </div>
@@ -268,8 +313,24 @@ export class DashboardView {
     this.container.querySelector('#modal-nova-turma')?.classList.add('hidden');
   }
 
+  abrirModalEditarTurma(turma) {
+    this.turmaEmEdicao = turma;
+    const modal = this.container.querySelector('#modal-editar-turma');
+    if (!modal) return;
+
+    this.container.querySelector('#edit-nome-turma').value = turma.nome || '';
+    this.container.querySelector('#edit-disciplina-turma').value = turma.disciplina || '';
+    this.container.querySelector('#edit-ano-turma').value = turma.anoLetivo || turma.ano_letivo || 2026;
+
+    modal.classList.remove('hidden');
+  }
+
+  fecharModalEditarTurma() {
+    this.turmaEmEdicao = null;
+    this.container.querySelector('#modal-editar-turma')?.classList.add('hidden');
+  }
+
   bindEvents() {
-    // Abas de navegação
     this.container.querySelector('#tab-ativas')?.addEventListener('click', () => {
       this.vm.alternarAba('ativas');
     });
@@ -277,7 +338,6 @@ export class DashboardView {
       this.vm.alternarAba('arquivadas');
     });
 
-    // Navegações via callback do Router
     this.container.querySelectorAll('[data-nav-turma]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.dataset.navTurma;
@@ -296,6 +356,63 @@ export class DashboardView {
       if (this.onNavegar) this.onNavegar('provas');
     });
 
+    // Abrir modal de edição da turma
+    this.container.querySelectorAll('[data-btn-editar]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.btnEditar;
+        const turma = this.vm.turmas.find(t => t.id === id);
+        if (turma) this.abrirModalEditarTurma(turma);
+      });
+    });
+
+    // Submissão de Edição da Turma
+    this.container.querySelector('#form-editar-turma')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!this.turmaEmEdicao) return;
+
+      const btnSalvar = this.container.querySelector('#btn-salvar-edicao-turma');
+      btnSalvar.disabled = true;
+      btnSalvar.innerText = 'A guardar...';
+
+      try {
+        const nome = this.container.querySelector('#edit-nome-turma').value;
+        const disciplina = this.container.querySelector('#edit-disciplina-turma').value;
+        const anoLetivo = parseInt(this.container.querySelector('#edit-ano-turma').value, 10);
+
+        await this.vm.atualizarTurma(this.turmaEmEdicao.id, { nome, disciplina, anoLetivo });
+        this.fecharModalEditarTurma();
+        Toast.show('Turma atualizada com sucesso!', 'success');
+      } catch (err) {
+        Toast.show('Erro ao atualizar turma: ' + err.message, 'error');
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerText = 'Salvar Alterações';
+      }
+    });
+
+    // Eliminar Turma Completamente
+    this.container.querySelectorAll('[data-btn-excluir]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.btnExcluir;
+        const turma = this.vm.turmas.find(t => t.id === id);
+        const nomeTurma = turma?.nome || 'esta turma';
+
+        const confirmado = await customConfirm(
+          `Eliminar "${nomeTurma}"?`,
+          'Atenção: todas as chamadas, avaliações, notas e matrículas desta turma serão permanentemente removidas.'
+        );
+
+        if (confirmado) {
+          try {
+            await this.vm.excluirTurma(id);
+            Toast.show('Turma eliminada com sucesso.', 'info');
+          } catch (err) {
+            Toast.show('Erro ao eliminar turma: ' + err.message, 'error');
+          }
+        }
+      });
+    });
+
     // Arquivar / Restaurar turma
     this.container.querySelectorAll('[data-btn-arquivar]').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -312,7 +429,7 @@ export class DashboardView {
       });
     });
 
-    // Abertura e fecho do modal com validação de assinatura
+    // Abertura do modal com verificação de plano
     this.container.querySelector('#btn-abrir-modal-turma')?.addEventListener('click', async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -321,26 +438,30 @@ export class DashboardView {
       const podeCriar = typeof status === 'object' && status !== null ? status.permitido : Boolean(status);
 
       if (!podeCriar) {
-        // Bloqueia e abre o modal Pix com WhatsApp
         AssinaturaModal.abrir(user.email);
         return;
       }
 
-      // Se tiver permissão (0 turmas no plano Free ou plano Pro ativo), abre o modal
       this.abrirModalNovaTurma();
     });
+
     this.container.querySelector('#btn-fechar-modal')?.addEventListener('click', () => this.fecharModalNovaTurma());
     this.container.querySelector('#btn-cancelar-modal')?.addEventListener('click', () => this.fecharModalNovaTurma());
+    this.container.querySelector('#btn-fechar-modal-editar')?.addEventListener('click', () => this.fecharModalEditarTurma());
+    this.container.querySelector('#btn-cancelar-modal-editar')?.addEventListener('click', () => this.fecharModalEditarTurma());
 
-    // Fechar ao clicar no backdrop do modal
-    const modal = this.container.querySelector('#modal-nova-turma');
-    modal?.addEventListener('click', (e) => {
-      if (e.target === modal) this.fecharModalNovaTurma();
+    const modalNova = this.container.querySelector('#modal-nova-turma');
+    modalNova?.addEventListener('click', (e) => {
+      if (e.target === modalNova) this.fecharModalNovaTurma();
     });
 
-    // Submit de criação de turma
-    const form = this.container.querySelector('#form-criar-turma');
-    form?.addEventListener('submit', (e) => {
+    const modalEditar = this.container.querySelector('#modal-editar-turma');
+    modalEditar?.addEventListener('click', (e) => {
+      if (e.target === modalEditar) this.fecharModalEditarTurma();
+    });
+
+    // Submissão de Criação de Turma
+    this.container.querySelector('#form-criar-turma')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const nome = this.container.querySelector('#campo-nome-turma').value;
       const disciplina = this.container.querySelector('#campo-disciplina').value;

@@ -13,7 +13,7 @@ export class LandingPageView {
         <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 w-full">
           <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-              <span class="text-2xl">📓</span>
+              <img src="./assets/apple-touch-icon.png" alt="Logótipo Diário Docente" class="w-8 h-8 rounded-lg shadow-xs object-cover" />
               <span class="font-black text-lg text-slate-800 tracking-tight">Diário Docente</span>
             </div>
             

@@ -17,7 +17,7 @@ export class LoginView {
         
         <!-- Cabeçalho -->
         <div class="text-center space-y-1">
-          <span class="text-3xl block">📓</span>
+          <img src="./assets/apple-touch-icon.png" alt="Logótipo Diário Docente" class="w-12 h-12 rounded-xl mx-auto mb-3 shadow-md object-cover" />
           <h2 class="text-2xl font-black text-slate-800 tracking-tight">Diário Docente</h2>
           <p class="text-xs text-slate-500 font-medium">Aceda à sua conta ou crie um novo registo</p>
         </div>

@@ -14,7 +14,7 @@ export const Sidebar = {
       <div class="flex flex-col flex-1">
         <!-- 1. Logo / Identidade -->
         <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
-          <span class="text-2xl">📖</span>
+          <img src="./assets/apple-touch-icon.png" alt="Logótipo Diário Docente" class="w-8 h-8 rounded-lg shadow-xs object-cover" />
           <div class="flex flex-col leading-tight">
             <span class="font-black text-indigo-700 text-base tracking-tight">Diário Docente</span>
             <span class="text-[10px] text-slate-400 font-medium">Gestão & Criação Pedagógica</span>
