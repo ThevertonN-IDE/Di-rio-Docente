@@ -46,7 +46,11 @@ async function iniciarApp() {
     const gerirRotaPublica = () => {
       const hash = window.location.hash;
       const appContainer = document.getElementById('app');
-      appContainer?.classList.remove('md:ml-64', 'lg:ml-64', 'ml-64');
+      
+      // Zera qualquer margem/padding da sidebar herdada do index.html
+      if (appContainer) {
+        appContainer.className = 'w-full min-h-screen m-0 p-0';
+      }
 
       if (hash === '#login') {
         const loginView = new LoginView('app', () => {
