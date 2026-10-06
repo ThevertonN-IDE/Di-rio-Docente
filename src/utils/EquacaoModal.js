@@ -1,10 +1,14 @@
 // src/utils/EquacaoModal.js
+import { Toast } from './ui.js';
+
 export class EquacaoModal {
   static alvoAtual = null;
   static containerModal = null;
   static abaAtiva = 'calculo';
+  static cursorInicio = 0;
+  static cursorFim = 0;
 
-  // Banco de equações categorizado com LaTeX completo
+  // Catálogo pedagógico completo categorizado
   static categorias = {
     calculo: {
       nome: '∫ Cálculo & Limites',
@@ -118,10 +122,13 @@ export class EquacaoModal {
   };
 
   /**
-   * Abre o seletor vinculado a um elemento textarea específico
+   * Abre o seletor vinculado a um textarea, gravando a posição atual do cursor
    */
   static abrir(textareaElement) {
     this.alvoAtual = textareaElement;
+    this.cursorInicio = textareaElement.selectionStart ?? textareaElement.value.length;
+    this.cursorFim = textareaElement.selectionEnd ?? textareaElement.value.length;
+
     if (!this.containerModal) {
       this.construirDOM();
     }
@@ -141,7 +148,7 @@ export class EquacaoModal {
   static construirDOM() {
     const modalEl = document.createElement('div');
     modalEl.id = 'modal-paleta-equacoes';
-    modalEl.className = 'backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4';
+    modalEl.className = 'backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 select-none';
 
     modalEl.innerHTML = `
       <div class="sheet-smooth bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-2xl max-w-xl w-full p-4 sm:p-5 shadow-2xl space-y-3 max-h-[85vh] flex flex-col">
@@ -154,13 +161,13 @@ export class EquacaoModal {
             <span class="text-base">📐</span>
             <h3 class="text-sm font-black text-slate-800 tracking-tight">Inserir Equação em LaTeX</h3>
           </div>
-          <button id="btn-fechar-paleta-eq" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold leading-none p-1">&times;</button>
+          <button id="btn-fechar-paleta-eq" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-2xl font-bold leading-none">&times;</button>
         </div>
 
         <!-- Abas Categorizadas -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-slate-100 text-xs font-bold select-none" id="abas-paleta-eq">
           ${Object.entries(this.categorias).map(([chave, cat]) => `
-            <button data-aba-eq="${chave}" class="touch-action px-3 py-1.5 rounded-xl whitespace-nowrap transition ${chave === this.abaAtiva ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            <button data-aba-eq="${chave}" class="touch-action min-h-[38px] px-3 py-1.5 rounded-xl whitespace-nowrap transition ${chave === this.abaAtiva ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
               ${cat.nome}
             </button>
           `).join('')}
@@ -171,8 +178,8 @@ export class EquacaoModal {
 
         <!-- Rodapé explicativo -->
         <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
-          <span>Toque no botão para inserir no cursor.</span>
-          <button id="btn-concluir-eq" class="touch-action px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition">Concluir</button>
+          <span>Clique para inserir no cursor. Pode inserir várias seguidas.</span>
+          <button id="btn-concluir-eq" class="touch-action touch-target-44 px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition">Concluir</button>
         </div>
       </div>
     `;
@@ -195,7 +202,7 @@ export class EquacaoModal {
 
       modalEl.querySelectorAll('[data-aba-eq]').forEach(b => {
         const ativo = b.dataset.abaEq === this.abaAtiva;
-        b.className = `touch-action px-3 py-1.5 rounded-xl whitespace-nowrap transition ${ativo ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
+        b.className = `touch-action min-h-[38px] px-3 py-1.5 rounded-xl whitespace-nowrap transition ${ativo ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
       });
 
       this.atualizarListaBotoes();
@@ -211,31 +218,40 @@ export class EquacaoModal {
       <button 
         type="button"
         data-insert-latex="${encodeURIComponent(item.latex)}" 
-        class="touch-action p-2.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl font-mono text-xs font-bold text-slate-800 hover:text-indigo-700 flex flex-col items-center justify-center text-center transition active:scale-95 shadow-2xs"
+        class="touch-action p-2.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl font-mono text-xs font-bold text-slate-800 hover:text-indigo-700 flex flex-col items-center justify-center text-center transition active:scale-95 shadow-2xs min-h-[50px]"
         title="${item.latex}"
       >
-        <span class="text-sm font-sans mb-0.5">${item.rotulo}</span>
-        <span class="text-[9px] text-slate-400 font-normal truncate max-w-full">${item.latex.replace(/\\\\/g, '\\')}</span>
+        <span class="text-sm font-sans mb-0.5 pointer-events-none">${item.rotulo}</span>
+        <span class="text-[9px] text-slate-400 font-normal truncate max-w-full pointer-events-none">${item.latex.replace(/\\\\/g, '\\')}</span>
       </button>
     `).join('');
 
+    // Listener de clique com delegação robusta (closest)
     grid.querySelectorAll('[data-insert-latex]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const latex = decodeURIComponent(e.currentTarget.dataset.insertLatex);
+        const elementoBotao = e.target.closest('[data-insert-latex]');
+        if (!elementoBotao) return;
+        const latex = decodeURIComponent(elementoBotao.dataset.insertLatex);
         this.inserirNoTextarea(latex);
+
+        // Feedback visual rápido de inserção
+        elementoBotao.classList.add('bg-indigo-600', 'text-white');
+        setTimeout(() => {
+          elementoBotao.classList.remove('bg-indigo-600', 'text-white');
+        }, 150);
       });
     });
   }
 
   /**
-   * Injeta o texto na posição do cursor do textarea ativo e dispara evento input
+   * Injeta o texto na posição memorizada do cursor e sincroniza os previews
    */
   static inserirNoTextarea(codigoLatex) {
     if (!this.alvoAtual) return;
 
     const el = this.alvoAtual;
-    const start = el.selectionStart || 0;
-    const end = el.selectionEnd || 0;
+    const start = this.cursorInicio ?? (el.selectionStart || 0);
+    const end = this.cursorFim ?? (el.selectionEnd || 0);
     const textoAntes = el.value.substring(0, start);
     const textoDepois = el.value.substring(end);
 
@@ -244,17 +260,22 @@ export class EquacaoModal {
 
     el.value = textoAntes + conteudoInserir + textoDepois;
 
-    // Reposiciona o cursor logo após o código inserido
+    // Atualiza a memória de posição para caso queira inserir outra fórmula em seguida
     const novaPosicao = start + conteudoInserir.length;
+    this.cursorInicio = novaPosicao;
+    this.cursorFim = novaPosicao;
     el.selectionStart = novaPosicao;
     el.selectionEnd = novaPosicao;
 
-    // Dispara o evento 'input' para disparar renderizações reativas KaTeX automáticas
+    // Dispara eventos 'input' e 'change' para atualizar o KaTeX e salvar o rascunho em tempo real
     el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+
+    Toast.show('Fórmula inserida!', 'info');
   }
 
   /**
-   * Cria uma barra horizontal compacta acima de qualquer textarea com atalhos rápidos
+   * Cria o botão compacto acima de qualquer textarea
    */
   static criarBarraRapida(textareaIdOuElement) {
     const textarea = typeof textareaIdOuElement === 'string'
@@ -265,11 +286,11 @@ export class EquacaoModal {
     textarea.dataset.hasMathToolbar = 'true';
 
     const barra = document.createElement('div');
-    barra.className = 'flex items-center justify-end mb-1.5 select-none';
+    barra.className = 'flex items-center justify-end mb-1.5 select-none no-print';
 
     barra.innerHTML = `
-      <button type="button" data-abrir-paleta class="touch-action px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs border border-indigo-200 transition active:scale-95 flex items-center gap-1 shadow-2xs">
-        <span>📐</span>
+      <button type="button" data-abrir-paleta class="touch-action touch-target-44 px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs border border-indigo-200 transition active:scale-95 flex items-center gap-1.5 shadow-2xs">
+        <span class="text-sm">📐</span>
         <span>Inserir Fórmula / LaTeX</span>
       </button>
     `;
