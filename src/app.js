@@ -3,6 +3,7 @@ import { SyncManager } from './core/localDb.js';
 import { Router } from './core/router.js';
 import { AuthService } from './services/AuthService.js';
 import { LoginView } from './views/LoginView.js';
+import { LandingPageView } from './views/LandingPageView.js'; // <-- Importação da Landing Page
 import { DashboardViewModel } from './viewmodels/DashboardViewModel.js';
 import { DashboardView } from './views/DashboardView.js';
 import { TurmaViewModel } from './viewmodels/TurmaViewModel.js';
@@ -21,7 +22,7 @@ import { BottomNavBar } from './components/BottomNavBar.js';
 import { Sidebar } from './components/Sidebar.js';
 import { checarNovaVersao } from './utils/versionCheck.js';
 
-// 1. Registro nativo do Service Worker PWA (Offline & Cache)
+// 1. Registo nativo do Service Worker PWA (Offline & Cache)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((err) => {
@@ -30,27 +31,47 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// 2. Inicia monitoramento de conectividade e fila de sincronização
+// 2. Inicia monitorização de conectividade e fila de sincronização
 SyncManager.init();
 
 async function iniciarApp() {
   const usuario = await AuthService.getUsuarioAtual();
   const header = document.getElementById('app-header');
 
-  // Se não houver login: aplica cor de login, esconde header e exibe tela de login
+  // FLUXO PÚBLICO: Alterna entre Landing Page e Login quando não há sessão ativa
   if (!usuario) {
     atualizarCorTema('login');
     if (header) header.classList.add('hidden');
 
-    const loginView = new LoginView('app', () => {
-      window.location.hash = '#dashboard';
-      window.location.reload();
-    });
-    loginView.render();
+    const gerirRotaPublica = () => {
+      const hash = window.location.hash;
+      const appContainer = document.getElementById('app');
+
+      if (hash === '#login') {
+        const loginView = new LoginView('app', () => {
+          window.location.hash = '#dashboard';
+          window.location.reload();
+        });
+        loginView.render();
+      } else {
+        // Exibe a Landing Page institucional por predefinição
+        LandingPageView.render(appContainer, {
+          onAbrirLogin: () => {
+            window.location.hash = '#login';
+          },
+          onAbrirCadastro: () => {
+            window.location.hash = '#login';
+          }
+        });
+      }
+    };
+
+    window.addEventListener('hashchange', gerirRotaPublica);
+    gerirRotaPublica();
     return;
   }
 
-  // Se autenticado: exibe o cabeçalho e inicializa menus
+  // FLUXO AUTENTICADO: Se autenticado, exibe o cabeçalho e inicializa menus
   if (header) {
     header.classList.remove('hidden');
 
@@ -65,13 +86,13 @@ async function iniciarApp() {
       link.addEventListener('click', () => menuMobile?.classList.add('hidden'));
     });
 
-    // Ação unificada de backup completo (JSON)
+    // Ação unificada de cópia de segurança completa (JSON)
     const dispararBackup = async (btn) => {
       btn.disabled = true;
-      btn.innerText = 'Exportando...';
+      btn.innerText = 'A exportar...';
       try {
         await BackupService.gerarSnapshotCompleto();
-        Toast.show('Backup JSON baixado com sucesso!', 'success');
+        Toast.show('Cópia de segurança JSON descarregada com sucesso!', 'success');
       } catch (err) {
         Toast.show('Erro ao exportar: ' + err.message, 'error');
       } finally {
@@ -85,7 +106,7 @@ async function iniciarApp() {
     btnBackupDesktop?.addEventListener('click', () => dispararBackup(btnBackupDesktop));
     btnBackupMobile?.addEventListener('click', () => dispararBackup(btnBackupMobile));
 
-    // Botão Sair Desktop
+    // Botão Terminar Sessão Desktop
     if (!document.getElementById('btn-logout')) {
       const navDesktop = document.getElementById('nav-desktop');
       const logoutBtn = document.createElement('button');
@@ -94,12 +115,13 @@ async function iniciarApp() {
       logoutBtn.innerText = 'Sair';
       logoutBtn.addEventListener('click', async () => {
         await AuthService.sair();
+        window.location.hash = '';
         window.location.reload();
       });
       navDesktop?.appendChild(logoutBtn);
     }
 
-    // Botão Sair Mobile
+    // Botão Terminar Sessão Mobile
     const mobileLogoutSlot = document.getElementById('mobile-logout-slot');
     if (mobileLogoutSlot && !document.getElementById('btn-logout-mobile')) {
       const logoutMobile = document.createElement('button');
@@ -108,13 +130,14 @@ async function iniciarApp() {
       logoutMobile.innerText = 'Sair da Conta';
       logoutMobile.addEventListener('click', async () => {
         await AuthService.sair();
+        window.location.hash = '';
         window.location.reload();
       });
       mobileLogoutSlot.appendChild(logoutMobile);
     }
   }
 
-  // Rotas do SPA
+  // Rotas internas do SPA para docentes autenticados
   const rotas = {
     dashboard: (container) => {
       const vm = new DashboardViewModel();
@@ -159,7 +182,6 @@ async function iniciarApp() {
       const view = new EditorApostilaView(container.id);
       view.render();
     },
-    // Redireciona links antigos (#provas e #listas) para o novo estúdio unificado
     provas: (container) => {
       const view = new EditorDocumentoA4View(container.id, 'prova');
       view.render();
@@ -179,6 +201,7 @@ async function iniciarApp() {
       `;
     }
   };
+
   BottomNavBar.render();
   Sidebar.render();
   checarNovaVersao();

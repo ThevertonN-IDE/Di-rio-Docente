@@ -1,5 +1,8 @@
 // src/views/DashboardView.js
 import { Skeletons } from '../utils/skeletons.js';
+import { supabase } from '../supabase.js';
+import { PerfilService } from '../services/PerfilService.js';
+import { AssinaturaModal } from '../utils/AssinaturaModal.js';
 
 export class DashboardView {
   constructor(containerId, viewModel, onNavegar) {
@@ -298,8 +301,8 @@ export class DashboardView {
         const id = e.currentTarget.dataset.btnArquivar;
         const statusAtual = e.currentTarget.dataset.status === 'true';
         const confirmar = confirm(
-          statusAtual 
-            ? 'Deseja desarquivar e restaurar esta turma para as ativas?' 
+          statusAtual
+            ? 'Deseja desarquivar e restaurar esta turma para as ativas?'
             : 'Deseja arquivar esta turma? Ela sairá do seu painel principal.'
         );
         if (confirmar) {
@@ -308,8 +311,22 @@ export class DashboardView {
       });
     });
 
-    // Abertura e fecho do modal
-    this.container.querySelector('#btn-abrir-modal-turma')?.addEventListener('click', () => this.abrirModalNovaTurma());
+    // Abertura e fecho do modal com validação de assinatura
+    this.container.querySelector('#btn-abrir-modal-turma')?.addEventListener('click', async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const status = await PerfilService.podeCriarTurma(user.id);
+
+      if (!status.permitido) {
+        // Bloqueia e abre o modal Pix com WhatsApp
+        AssinaturaModal.abrir(user.email);
+        return;
+      }
+
+      // Se tiver permissão (0 turmas no plano Free ou plano Pro ativo), abre o modal
+      this.abrirModalNovaTurma();
+    });
     this.container.querySelector('#btn-fechar-modal')?.addEventListener('click', () => this.fecharModalNovaTurma());
     this.container.querySelector('#btn-cancelar-modal')?.addEventListener('click', () => this.fecharModalNovaTurma());
 
