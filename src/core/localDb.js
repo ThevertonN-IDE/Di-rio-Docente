@@ -2,7 +2,7 @@
 import { supabase } from './supabaseClient.js';
 import Dexie from 'https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.mjs';
 
-// Recupera a classe Dexie quer via módulo ES quer via escopo global (window.Dexie)
+// Recupera a classe Dexie via módulo ES ou via escopo global
 const ConstrutorDexie = Dexie || (typeof window !== 'undefined' && (window.Dexie?.default || window.Dexie));
 
 export const localDb = new ConstrutorDexie('DiarioDocenteDB');
@@ -36,6 +36,22 @@ localDb.version(3).stores({
 });
 
 export const SyncManager = {
+  /**
+   * Inicializa o gestor de sincronização e processa itens pendentes
+   */
+  init() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => {
+        this.processarFila();
+      });
+
+      // Se já houver internet no arranque da aplicação, tenta sincronizar
+      if (navigator.onLine) {
+        this.processarFila();
+      }
+    }
+  },
+
   /**
    * Adiciona uma tarefa à fila de sincronização
    */
@@ -204,13 +220,6 @@ export const SyncManager = {
     }
   }
 };
-
-// Dispara sincronização em segundo plano assim que a internet voltar
-if (typeof window !== 'undefined') {
-  window.addEventListener('online', () => {
-    SyncManager.processarFila();
-  });
-}
 
 /**
  * Limpa todos os caches e filas locais ao deslogar
