@@ -1,9 +1,10 @@
 // src/views/LandingPageView.js
 import { AssinaturaModal } from '../utils/AssinaturaModal.js';
+import { PoliticasModal } from '../utils/PoliticasModal.js';
 
 export class LandingPageView {
-  static render(container, { onAbrirLogin, onAbrirCadastro }) {
-    container.innerHTML = `
+    static render(container, { onAbrirLogin, onAbrirCadastro }) {
+        container.innerHTML = `
       <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans select-none">
         
         <!-- BARRA SUPERIOR FIXA -->
@@ -161,14 +162,22 @@ export class LandingPageView {
       </div>
     `;
 
-    // Listeners dos botões de ação
-    container.querySelector('#btn-lp-login')?.addEventListener('click', () => onAbrirLogin?.());
-    container.querySelector('#btn-lp-cadastro-topo')?.addEventListener('click', () => onAbrirCadastro?.());
-    container.querySelector('#btn-lp-comecar-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
-    container.querySelector('#btn-lp-escolher-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
-    container.querySelector('#btn-lp-escolher-pro')?.addEventListener('click', () => {
-      // Se não estiver logado, encaminha para criar conta ou abre o modal Pix diretamente
-      AssinaturaModal.abrir('');
-    });
-  }
+        // Listeners dos botões de ação
+        container.querySelector('#btn-lp-login')?.addEventListener('click', () => onAbrirLogin?.());
+        container.querySelector('#btn-lp-cadastro-topo')?.addEventListener('click', () => onAbrirCadastro?.());
+        container.querySelector('#btn-lp-comecar-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
+        container.querySelector('#btn-lp-escolher-gratis')?.addEventListener('click', () => onAbrirCadastro?.());
+        container.querySelector('#btn-lp-escolher-pro')?.addEventListener('click', () => {
+            // Se não estiver logado, encaminha para criar conta ou abre o modal Pix diretamente
+            AssinaturaModal.abrir('');
+        });
+        container.querySelector('#link-privacidade')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            PoliticasModal.abrir('privacidade');
+        });
+        container.querySelector('#link-termos')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            PoliticasModal.abrir('termos');
+        });
+    }
 }

@@ -1,6 +1,6 @@
 // src/views/DashboardView.js
 import { Skeletons } from '../utils/skeletons.js';
-import { supabase } from '../supabase.js';
+import { supabase } from '../core/supabaseClient.js';
 import { PerfilService } from '../services/PerfilService.js';
 import { AssinaturaModal } from '../utils/AssinaturaModal.js';
 
