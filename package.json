@@ -9,6 +9,13 @@
   "background_color": "#f8fafc",
   "theme_color": "#4338ca",
   "lang": "pt-BR",
+  "scripts": {
+    "dev:css": "tailwindcss -i ./src/styles/tailwind-input.css -o ./styles/tailwind.css --watch",
+    "build": "tailwindcss -i ./src/styles/tailwind-input.css -o ./styles/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  },
   "categories": [
     "education",
     "productivity"
