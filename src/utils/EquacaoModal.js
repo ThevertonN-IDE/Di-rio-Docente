@@ -277,7 +277,7 @@ export class EquacaoModal {
     const novaPosicao = start + conteudoInserir.length;
     this.cursorInicio = novaPosicao;
     this.cursorFim = novaPosicao;
-    try {
+    try { 
       el.selectionStart = novaPosicao;
       el.selectionEnd = novaPosicao;
     } catch (_) {}
