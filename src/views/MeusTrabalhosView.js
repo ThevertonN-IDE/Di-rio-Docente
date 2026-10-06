@@ -5,6 +5,7 @@ import { Toast, customConfirm } from '../utils/ui.js';
 import { LatexModal } from '../utils/LatexModal.js';
 import { LatexService } from '../services/LatexService.js';
 import { CriarMaterialSheet } from '../utils/CriarMaterialSheet.js';
+import { Skeletons } from '../utils/skeletons.js';
 
 export class MeusTrabalhosView {
   constructor(containerId) {
@@ -103,7 +104,7 @@ export class MeusTrabalhosView {
 
         <!-- 4. GRID DOS DOCUMENTOS -->
         <div id="grid-meus-documentos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-          <div class="col-span-full text-center py-12 text-slate-400 text-xs">Carregando os seus trabalhos...</div>
+          ${Skeletons.gridCards(6)}
         </div>
 
       </div>
@@ -115,7 +116,7 @@ export class MeusTrabalhosView {
 
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Anexar Documento Digital</h3>
-            <button id="btn-fechar-modal-doc" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-doc" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
 
           <form id="form-upload-documento" class="space-y-3 text-xs">
@@ -304,7 +305,7 @@ export class MeusTrabalhosView {
 
               <!-- Menu flutuante com Duplicar e Excluir -->
               <div class="relative dropdown-container">
-                <button type="button" class="touch-action btn-menu-dots w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center font-bold text-sm transition">
+                <button type="button" class="touch-action touch-target-44 btn-menu-dots rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-600 flex items-center justify-center font-bold transition">
                   ⋮
                 </button>
                 <div class="dropdown-menu hidden absolute right-0 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-20 text-xs text-slate-700 animate-in fade-in zoom-in-95 duration-100">

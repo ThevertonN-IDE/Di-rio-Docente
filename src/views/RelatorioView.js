@@ -1,6 +1,8 @@
 // src/views/RelatorioView.js
 import { TurmaService } from '../services/TurmaService.js';
 import { PedagogicoService } from '../services/PedagogicoService.js';
+import { renderizarMatematica } from '../utils/katexRenderer.js';
+import { Skeletons } from '../utils/skeletons.js';
 
 export class RelatorioView {
   constructor(containerId, turmaId) {
@@ -20,7 +22,12 @@ export class RelatorioView {
   }
 
   async carregarERenderizar() {
-    this.container.innerHTML = '<div class="p-12 text-center text-slate-500 font-semibold">Carregando relatório pedagógico...</div>';
+    this.container.innerHTML = `
+      <div class="p-6 max-w-7xl mx-auto space-y-6">
+        <div class="h-20 bg-white border border-slate-200 rounded-2xl p-5 animate-pulse"></div>
+        ${Skeletons.tabelaLinhas(10, 6)}
+      </div>
+    `;
     try {
       const [dadosTurma, avaliacoes, notas, freq] = await Promise.all([
         TurmaService.getTurmaComAlunos(this.turmaId),
