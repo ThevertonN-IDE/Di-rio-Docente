@@ -265,30 +265,17 @@ export class EquacaoModal {
     textarea.dataset.hasMathToolbar = 'true';
 
     const barra = document.createElement('div');
-    barra.className = 'flex items-center gap-1.5 overflow-x-auto pb-1.5 no-scrollbar text-xs select-none';
+    barra.className = 'flex items-center justify-end mb-1.5 select-none';
 
     barra.innerHTML = `
-      <button type="button" data-quick-math="x^{2}" class="touch-action px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono font-bold rounded-lg transition active:scale-95">x²</button>
-      <button type="button" data-quick-math="x_{1}" class="touch-action px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono font-bold rounded-lg transition active:scale-95">x₁</button>
-      <button type="button" data-quick-math="\\frac{a}{b}" class="touch-action px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono font-bold rounded-lg transition active:scale-95">a/b</button>
-      <button type="button" data-quick-math="\\sqrt{x}" class="touch-action px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono font-bold rounded-lg transition active:scale-95">√x</button>
-      <button type="button" data-quick-math="\\frac{df}{dx}" class="touch-action px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-mono font-bold rounded-lg border border-indigo-200 transition active:scale-95">df/dx</button>
-      <button type="button" data-quick-math="\\frac{d^{2}f}{dx^{2}}" class="touch-action px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-mono font-bold rounded-lg border border-indigo-200 transition active:scale-95">d²f/dx²</button>
-      <button type="button" data-quick-math="\\int f(x) \\, dx" class="touch-action px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono font-bold rounded-lg transition active:scale-95">∫dx</button>
-      <button type="button" data-quick-math="\\pi" class="touch-action px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono font-bold rounded-lg transition active:scale-95">π</button>
-      <button type="button" data-abrir-paleta-completa class="touch-action px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition active:scale-95 ml-auto shrink-0 flex items-center gap-1 shadow-2xs">
-        <span>➕</span> Fórmulas
+      <button type="button" data-abrir-paleta class="touch-action px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs border border-indigo-200 transition active:scale-95 flex items-center gap-1 shadow-2xs">
+        <span>📐</span>
+        <span>Inserir Fórmula / LaTeX</span>
       </button>
     `;
 
-    barra.querySelectorAll('[data-quick-math]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.alvoAtual = textarea;
-        this.inserirNoTextarea(btn.dataset.quickMath);
-      });
-    });
-
-    barra.querySelector('[data-abrir-paleta-completa]')?.addEventListener('click', () => {
+    barra.querySelector('[data-abrir-paleta]')?.addEventListener('click', (e) => {
+      e.preventDefault();
       this.abrir(textarea);
     });
 

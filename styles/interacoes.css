@@ -119,3 +119,61 @@
     background: white !important;
   }
 }
+/* ==========================================================================
+   ISOLAMENTO TOTAL DE IMPRESSÃO (PÁGINA A4 LIMPA & SEM ELEMENTOS FIXOS)
+   ========================================================================== */
+@media print {
+  /* 1. Oculta tudo na tela (menus, navbars, sidebars, botões e cabeçalhos) */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* 2. Força a visibilidade EXCLUSIVAMENTE da folha A4 ativa e dos seus filhos */
+  #folha-apostila-a4,
+  #folha-apostila-a4 *,
+  #folha-preview-a4,
+  #folha-preview-a4 *,
+  #folha-plano-modelo-a4,
+  #folha-plano-modelo-a4 *,
+  #folha-relatorio-a4,
+  #folha-relatorio-a4 * {
+    visibility: visible !important;
+  }
+
+  /* 3. Posiciona a folha no topo absoluto da página física sem escalas */
+  #folha-apostila-a4,
+  #folha-preview-a4,
+  #folha-plano-modelo-a4,
+  #folha-relatorio-a4 {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    transform: none !important; /* Anula o zoom inline que gerava a tela em branco */
+  }
+
+  /* 4. Suprime tags de navegação para evitar sobreposição */
+  nav,
+  aside,
+  footer,
+  header,
+  .no-print,
+  [data-bottom-nav],
+  [id*="bottom-nav"],
+  [class*="bottom-nav"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 5. Destrava o limite de altura da janela */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+}

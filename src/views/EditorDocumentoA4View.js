@@ -310,6 +310,9 @@ export class EditorDocumentoA4View {
         ` : ''}
       </div>
     `).join('');
+    container.querySelectorAll('textarea[data-q-texto]').forEach(txt => {
+      EquacaoModal.criarBarraRapida(txt);
+    });
   }
 
   atualizarPreviewA4() {
@@ -427,10 +430,6 @@ export class EditorDocumentoA4View {
     if (this.tipo === 'prova') {
       this.dadosCabecalho.valor = this.container.querySelector('#cfg-valor')?.value || this.dadosCabecalho.valor;
     }
-    // Ativa a barra de equações rápidas em cada textarea de enunciado
-    this.container.querySelectorAll('textarea[data-q-texto]').forEach(txt => {
-      EquacaoModal.criarBarraRapida(txt);
-    });
   }
 
   bindEvents() {
