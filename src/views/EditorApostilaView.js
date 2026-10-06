@@ -168,7 +168,7 @@ export class EditorApostilaView {
                   <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Brasão ou Logo</label>
                   <input type="file" id="inp-logo-apostila-file" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
                 </div>
-                ${this.apostila.logoUrl ? `<button id="btn-remover-logo-apostila" class="touch-action text-xs text-rose-500 hover:underline font-bold">Remover</button>` : ''}
+                ${this.apostila.logoUrl ? `<button id="btn-remover-logo-apostila" class="touch-action touch-target-44 text-xs text-rose-500 hover:underline font-bold">Remover</button>` : ''}
               </div>
 
               <!-- Opções de Impressão e Tamanho -->
@@ -235,7 +235,7 @@ export class EditorApostilaView {
         <div class="sheet-smooth bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-extrabold text-slate-800">📈 Traçado de Função Cartesiana</h3>
-            <button id="btn-fechar-modal-grafico" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-grafico" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           
           <div class="space-y-4 text-xs">
@@ -264,8 +264,8 @@ export class EditorApostilaView {
             </div>
 
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-grafico" class="touch-action px-4 py-2 border rounded-lg text-slate-600 font-semibold text-xs">Cancelar</button>
-              <button type="button" id="btn-aplicar-grafico-secao" class="touch-action px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs shadow-sm">Inserir na Apostila</button>
+              <button type="button" id="btn-cancelar-modal-grafico" class="touch-action min-h-[44px] px-4 py-2 border rounded-lg text-slate-600 font-semibold text-xs">Cancelar</button>
+              <button type="button" id="btn-aplicar-grafico-secao" class="touch-action min-h-[44px] px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs shadow-sm">Inserir na Apostila</button>
             </div>
           </div>
         </div>
@@ -288,7 +288,7 @@ export class EditorApostilaView {
       <div class="border border-slate-300 rounded-xl p-5 bg-slate-50 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-200 pb-3">
           <input type="text" data-cap-idx="${cIdx}" value="${cap.titulo}" placeholder="Título do Capítulo" class="font-bold text-base bg-transparent border-0 border-b border-dashed border-slate-400 focus:border-indigo-600 w-3/4 outline-none text-slate-900">
-          <button data-remove-cap="${cIdx}" class="touch-action text-rose-600 hover:text-rose-800 font-bold text-xs">Excluir Capítulo</button>
+          <button data-remove-cap="${cIdx}" class="touch-action touch-target-44 text-rose-600 hover:text-rose-800 font-bold text-xs">Excluir Capítulo</button>
         </div>
 
         <div class="space-y-5 pl-2 sm:pl-3 border-l-2 border-indigo-200">
@@ -296,7 +296,7 @@ export class EditorApostilaView {
             <div class="border border-slate-200 rounded-xl p-4 bg-white space-y-4 shadow-sm">
               <div class="flex items-center justify-between border-b pb-2">
                 <input type="text" data-sec-subtitulo="${cIdx}_${sIdx}" value="${sec.subtitulo}" placeholder="Ex: 1.1 Introdução Teórica" class="font-bold text-sm border border-slate-300 rounded-lg p-2 w-3/4 text-slate-800">
-                <button data-remove-sec="${cIdx}_${sIdx}" class="touch-action text-rose-500 hover:text-rose-700 text-xs font-bold">Remover Tópico</button>
+                <button data-remove-sec="${cIdx}_${sIdx}" class="touch-action touch-target-44 text-rose-500 hover:text-rose-700 text-xs font-bold">Remover Tópico</button>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -324,10 +324,10 @@ export class EditorApostilaView {
                 <div class="flex items-center justify-between text-xs">
                   <span class="font-bold text-slate-700">Gráfico ou Figura Cartesiana:</span>
                   <div class="flex items-center gap-2">
-                    <button data-abrir-gerador-grafico="${cIdx}_${sIdx}" class="touch-action px-3 py-1.5 bg-indigo-50 border border-indigo-300 text-indigo-700 rounded-lg font-bold hover:bg-indigo-100 transition">
+                    <button data-abrir-gerador-grafico="${cIdx}_${sIdx}" class="touch-action min-h-[44px] px-3 py-1.5 bg-indigo-50 border border-indigo-300 text-indigo-700 rounded-lg font-bold hover:bg-indigo-100 transition">
                       📈 Gerar no App
                     </button>
-                    <label class="touch-action px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-bold hover:bg-slate-100 cursor-pointer transition">
+                    <label class="touch-action min-h-[44px] inline-flex items-center px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-bold hover:bg-slate-100 cursor-pointer transition">
                       📁 Anexar Imagem
                       <input type="file" accept="image/*" data-upload-grafico="${cIdx}_${sIdx}" class="hidden">
                     </label>
@@ -337,7 +337,7 @@ export class EditorApostilaView {
                 ${sec.imagemGraficoUrl ? `
                   <div class="flex items-center justify-between bg-white border border-slate-200 p-2.5 rounded-lg">
                     <span class="text-xs text-emerald-700 font-bold">✓ Gráfico inserido na seção</span>
-                    <button data-remove-grafico="${cIdx}_${sIdx}" class="touch-action text-rose-500 hover:underline font-bold text-xs">Remover Gráfico</button>
+                    <button data-remove-grafico="${cIdx}_${sIdx}" class="touch-action touch-target-44 text-rose-500 hover:underline font-bold text-xs">Remover Gráfico</button>
                   </div>
                 ` : ''}
               </div>
@@ -345,13 +345,13 @@ export class EditorApostilaView {
               <div class="border-t pt-3 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-xs text-slate-700 uppercase">Exemplos Resolvidos Passo a Passo</span>
-                  <button data-add-exemplo="${cIdx}_${sIdx}" class="touch-action text-indigo-600 hover:underline font-bold text-xs">+ Novo Exemplo</button>
+                  <button data-add-exemplo="${cIdx}_${sIdx}" class="touch-action min-h-[44px] text-indigo-600 hover:underline font-bold text-xs">+ Novo Exemplo</button>
                 </div>
                 ${sec.exemplosResolvidos.map((ex, eIdx) => `
                   <div class="border border-slate-200 bg-slate-50/80 p-3 rounded-lg space-y-2">
                     <div class="flex justify-between items-center text-xs font-bold text-slate-600">
                       <span>Exemplo ${eIdx + 1}</span>
-                      <button data-remove-exemplo="${cIdx}_${sIdx}_${eIdx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold text-sm">&times;</button>
+                      <button data-remove-exemplo="${cIdx}_${sIdx}_${eIdx}" class="touch-action touch-target-44 text-rose-500 hover:text-rose-700 font-bold text-sm">&times;</button>
                     </div>
                     <input type="text" data-ex-enunciado="${cIdx}_${sIdx}_${eIdx}" value="${ex.enunciado}" placeholder="Enunciado do exemplo..." class="w-full border border-slate-300 rounded p-2 bg-white text-xs">
                     <textarea data-ex-resolucao="${cIdx}_${sIdx}_${eIdx}" rows="3" placeholder="Resolução detalhada passo a passo..." class="w-full border border-slate-300 rounded p-2 bg-white font-mono text-xs leading-relaxed">${ex.resolucaoPassoAPasso}</textarea>
@@ -362,7 +362,7 @@ export class EditorApostilaView {
               <div class="border-t pt-3 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-xs text-slate-700 uppercase">Exercícios Propostos com Espaço</span>
-                  <button data-add-exercicio="${cIdx}_${sIdx}" class="touch-action text-indigo-600 hover:underline font-bold text-xs">+ Novo Exercício</button>
+                  <button data-add-exercicio="${cIdx}_${sIdx}" class="touch-action min-h-[44px] text-indigo-600 hover:underline font-bold text-xs">+ Novo Exercício</button>
                 </div>
                 ${sec.exercicios.map((q, qIdx) => `
                   <div class="border border-slate-200 bg-slate-50/80 p-3 rounded-lg space-y-2">
@@ -371,7 +371,7 @@ export class EditorApostilaView {
                       <div class="flex items-center gap-1.5">
                         <span class="text-slate-500">Linhas no A4:</span>
                         <input type="number" min="1" max="20" data-q-linhas="${cIdx}_${sIdx}_${qIdx}" value="${q.linhasResolucao || 5}" class="w-14 border border-slate-300 rounded text-center p-1 font-bold bg-white text-xs">
-                        <button data-remove-exercicio="${cIdx}_${sIdx}_${qIdx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold text-sm ml-2">&times;</button>
+                        <button data-remove-exercicio="${cIdx}_${sIdx}_${qIdx}" class="touch-action touch-target-44 text-rose-500 hover:text-rose-700 font-bold text-sm ml-2">&times;</button>
                       </div>
                     </div>
                     <textarea data-q-enunciado="${cIdx}_${sIdx}_${qIdx}" rows="2" placeholder="Enunciado da questão..." class="w-full border border-slate-300 rounded p-2 bg-white font-mono text-xs leading-relaxed">${q.enunciado}</textarea>
@@ -382,7 +382,7 @@ export class EditorApostilaView {
             </div>
           `).join('')}
 
-          <button data-add-secao="${cIdx}" class="touch-action text-xs text-indigo-700 font-bold hover:underline py-1 block">
+          <button data-add-secao="${cIdx}" class="touch-action min-h-[44px] text-xs text-indigo-700 font-bold hover:underline py-1 block">
             + Adicionar Tópico a este Capítulo
           </button>
         </div>
@@ -578,22 +578,22 @@ export class EditorApostilaView {
                 📝 Exercícios Propostos
               </h4>
               ${sec.exercicios.map((q) => {
-            gabaritoGeral.push({ numero: q.numero, resposta: q.respostaGabarito });
+                gabaritoGeral.push({ numero: q.numero, resposta: q.respostaGabarito });
 
-            let linhasHtml = '';
-            for (let i = 0; i < (q.linhasResolucao || 5); i++) {
-              linhasHtml += `<div class="w-full border-b border-dotted border-slate-400 h-8"></div>`;
-            }
+                let linhasHtml = '';
+                for (let i = 0; i < (q.linhasResolucao || 5); i++) {
+                  linhasHtml += `<div class="w-full border-b border-dotted border-slate-400 h-8"></div>`;
+                }
 
-            return `
-              <div class="quest-block break-inside-avoid mb-6">
-                <p class="leading-relaxed text-sm text-slate-950 font-normal">
-                  <strong class="font-bold">${q.numero}.</strong>${renderizarMatematica(q.enunciado)}
-                </p>
-                <div class="mt-2 space-y-1">${linhasHtml}</div>
-              </div>
-            `;
-          }).join('')}
+                return `
+                  <div class="quest-block break-inside-avoid mb-6">
+                    <p class="leading-relaxed text-sm text-slate-950 font-normal">
+                      <strong class="font-bold">${q.numero}.</strong>${renderizarMatematica(q.enunciado)}
+                    </p>
+                    <div class="mt-2 space-y-1">${linhasHtml}</div>
+                  </div>
+                `;
+              }).join('')}
             </div>
           `;
         }

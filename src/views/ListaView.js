@@ -53,10 +53,10 @@ export class ListaView {
           </div>
 
           <div class="flex items-center gap-2">
-            <button id="btn-salvar-trabalho-lista" class="touch-action flex-1 sm:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5">
+            <button id="btn-salvar-trabalho-lista" class="touch-action min-h-[44px] flex-1 sm:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5">
               💾 Salvar
             </button>
-            <button id="btn-imprimir-lista" class="touch-action flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5">
+            <button id="btn-imprimir-lista" class="touch-action min-h-[44px] flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5">
               🖨️ Imprimir / PDF
             </button>
           </div>
@@ -64,10 +64,10 @@ export class ListaView {
 
         <!-- SELETOR DE ABAS APENAS PARA MOBILE (lg:hidden) -->
         <div class="no-print flex lg:hidden bg-slate-200/80 p-1 rounded-xl text-xs font-bold select-none">
-          <button id="tab-btn-editor" class="touch-action flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'editor' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'}">
+          <button id="tab-btn-editor" class="touch-action min-h-[44px] flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'editor' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'}">
             <span>✏</span> Editor & Questões
           </button>
-          <button id="tab-btn-preview" class="touch-action flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'preview' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'}">
+          <button id="tab-btn-preview" class="touch-action min-h-[44px] flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 ${this.abaAtivaMobile === 'preview' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'}">
             <span>📄</span> Ver Folha A4
           </button>
         </div>
@@ -93,7 +93,7 @@ export class ListaView {
                   <label class="block text-xs font-bold text-slate-700 mb-1">Logotipo Escolar</label>
                   <input type="file" id="inp-logo-escola" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                 </div>
-                ${this.vm.dadosCabecalho.logoUrl ? `<button id="btn-remove-logo" class="touch-action text-xs text-rose-500 hover:underline shrink-0">Remover</button>` : ''}
+                ${this.vm.dadosCabecalho.logoUrl ? `<button id="btn-remove-logo" class="touch-action touch-target-44 text-xs text-rose-500 hover:underline shrink-0">Remover</button>` : ''}
               </div>
 
               <div class="grid grid-cols-2 gap-2 text-xs">
@@ -110,8 +110,8 @@ export class ListaView {
               <div class="flex items-center justify-between gap-2">
                 <span class="font-bold text-slate-700">Colunas da Folha:</span>
                 <div class="flex gap-1.5 shrink-0">
-                  <button id="btn-col-1" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${!this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">1 Coluna</button>
-                  <button id="btn-col-2" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">2 Colunas</button>
+                  <button id="btn-col-1" class="touch-action min-h-[44px] px-3 py-1.5 rounded-lg font-bold transition ${!this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">1 Coluna</button>
+                  <button id="btn-col-2" class="touch-action min-h-[44px] px-3 py-1.5 rounded-lg font-bold transition ${this.vm.duasColunas ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">2 Colunas</button>
                 </div>
               </div>
 
@@ -119,7 +119,7 @@ export class ListaView {
                 <span class="font-bold text-slate-700 whitespace-nowrap">Espaço Padrão:</span>
                 <div class="flex items-center gap-1.5 shrink-0">
                   <input type="number" id="inp-espaco-global" min="0" max="25" value="${this.vm.espacoGlobal}" class="w-12 border border-slate-300 rounded-lg p-1 text-center text-xs bg-white font-bold outline-none focus:border-indigo-500">
-                  <button id="btn-aplicar-espaco" class="touch-action px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-bold transition active:scale-95 whitespace-nowrap">Aplicar</button>
+                  <button id="btn-aplicar-espaco" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-bold transition active:scale-95 whitespace-nowrap">Aplicar</button>
                 </div>
               </div>
             </div>
@@ -129,8 +129,8 @@ export class ListaView {
               <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Questões (${this.vm.questoes.length})</h3>
                 <div class="flex items-center gap-2">
-                  <button id="btn-abrir-banco" class="touch-action text-xs text-indigo-600 hover:underline font-bold">📚 Banco</button>
-                  <button id="btn-add-q" class="touch-action text-xs bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg font-bold hover:bg-indigo-100 transition">+ Adicionar</button>
+                  <button id="btn-abrir-banco" class="touch-action min-h-[44px] text-xs text-indigo-600 hover:underline font-bold">📚 Banco</button>
+                  <button id="btn-add-q" class="touch-action min-h-[44px] text-xs bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg font-bold hover:bg-indigo-100 transition">+ Adicionar</button>
                 </div>
               </div>
 
@@ -160,7 +160,7 @@ export class ListaView {
         <div class="sheet-smooth bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Inserir do Banco de Questões</h3>
-            <button id="btn-fechar-banco-lista" class="touch-action text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <button id="btn-fechar-banco-lista" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-lg">&times;</button>
           </div>
           <input type="text" id="inp-filtro-banco-lista" placeholder="Filtrar por assunto..." class="w-full border rounded-xl p-2.5 text-xs outline-none">
           <div id="lista-banco-questoes-content" class="space-y-2 overflow-y-auto flex-1 pr-1"></div>
@@ -186,7 +186,7 @@ export class ListaView {
               <input type="number" min="0" max="30" data-q-espaco="${idx}" value="${q.linhasEspaco}" class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold">
               linhas
             </label>
-            <button data-remove-q="${idx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
+            <button data-remove-q="${idx}" class="touch-action touch-target-44 text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
           </div>
         </div>
 
@@ -198,7 +198,7 @@ export class ListaView {
             <input type="file" accept="image/*" data-upload-img="${idx}" class="text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
           </div>
           ${q.imagemUrl ? `
-            <button data-remove-img="${idx}" class="touch-action text-rose-600 hover:underline text-[11px] font-bold">Remover</button>
+            <button data-remove-img="${idx}" class="touch-action touch-target-44 text-rose-600 hover:underline text-[11px] font-bold">Remover</button>
           ` : ''}
         </div>
 
@@ -210,7 +210,6 @@ export class ListaView {
       </div>
     `).join('');
 
-    // Ativa a fita de equações e o botão de fórmulas em todos os enunciados:
     container.querySelectorAll('textarea[data-q-texto]').forEach(txt => {
       EquacaoModal.criarBarraRapida(txt);
     });
@@ -302,7 +301,7 @@ export class ListaView {
           <span class="font-bold text-indigo-700 uppercase text-[10px]">[${q.assunto}]</span>
           <p class="truncate text-slate-600 font-mono">${q.enunciado}</p>
         </div>
-        <button data-importar-q="${q.id}" class="touch-action px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 shrink-0">
+        <button data-importar-q="${q.id}" class="touch-action min-h-[44px] px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 shrink-0">
           + Inserir
         </button>
       </div>
@@ -333,13 +332,13 @@ export class ListaView {
       if (aba === 'editor') {
         painelEditor.classList.remove('hidden');
         painelPreview.classList.add('hidden');
-        btnTabEditor.className = 'touch-action flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-indigo-700 shadow-xs';
-        btnTabPreview.className = 'touch-action flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600';
+        btnTabEditor.className = 'touch-action min-h-[44px] flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-indigo-700 shadow-xs';
+        btnTabPreview.className = 'touch-action min-h-[44px] flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600';
       } else {
         painelEditor.classList.add('hidden');
         painelPreview.classList.remove('hidden');
-        btnTabPreview.className = 'touch-action flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-indigo-700 shadow-xs';
-        btnTabEditor.className = 'touch-action flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600';
+        btnTabPreview.className = 'touch-action min-h-[44px] flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 bg-white text-indigo-700 shadow-xs';
+        btnTabEditor.className = 'touch-action min-h-[44px] flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1.5 text-slate-600';
       }
     };
 
@@ -428,7 +427,7 @@ export class ListaView {
     this.container.addEventListener('input', (e) => {
       if (e.target.dataset.qTexto !== undefined) {
         const idx = parseInt(e.target.dataset.qTexto);
-        this.vm.atualizarQuestao(idx, { enunciado: e.target.value });
+        this.vm.atualizarQuestao(idx, {エンunciado: e.target.value });
       } else if (e.target.dataset.qEspaco !== undefined) {
         const idx = parseInt(e.target.dataset.qEspaco);
         this.vm.atualizarQuestao(idx, { linhasEspaco: e.target.value });

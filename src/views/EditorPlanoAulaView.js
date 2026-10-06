@@ -177,7 +177,7 @@ export class EditorPlanoAulaView {
                   <label class="block text-[11px] font-bold text-slate-600 uppercase mb-0.5">Logótipo da Escola</label>
                   <input type="file" id="inp-logo-plano-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
                 </div>
-                ${this.plano.logoUrl ? `<button id="btn-remover-logo-plano" class="touch-action text-xs text-rose-500 hover:underline font-bold shrink-0">Remover</button>` : ''}
+                ${this.plano.logoUrl ? `<button id="btn-remover-logo-plano" class="touch-action touch-target-44 text-xs text-rose-500 hover:underline font-bold shrink-0">Remover</button>` : ''}
               </div>
 
               <div class="grid grid-cols-2 gap-2 pt-1">

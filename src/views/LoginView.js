@@ -32,13 +32,13 @@ export class LoginView {
 
             <div id="login-msg-erro" class="hidden text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 p-3 rounded-xl"></div>
 
-            <button type="submit" id="btn-submit-login" class="touch-action w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-100 transition duration-150">
+            <button type="submit" id="btn-submit-login" class="touch-action min-h-[44px] w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-100 transition duration-150">
               Acessar Diário
             </button>
           </form>
 
           <div class="pt-2 text-center">
-            <button id="btn-toggle-cadastro" class="touch-action text-xs font-semibold text-indigo-600 hover:underline">
+            <button id="btn-toggle-cadastro" class="touch-action min-h-[44px] inline-flex items-center justify-center text-xs font-semibold text-indigo-600 hover:underline">
               Primeiro acesso? Crie sua conta
             </button>
           </div>

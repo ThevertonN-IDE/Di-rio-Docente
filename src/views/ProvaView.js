@@ -53,10 +53,10 @@ export class ProvaView {
               <p class="text-xs text-slate-500">Diagramação com fórmulas, imagens e logotipo</p>
             </div>
             <div class="flex items-center gap-2">
-              <button id="btn-salvar-trabalho-prova" class="touch-action px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+              <button id="btn-salvar-trabalho-prova" class="touch-action min-h-[44px] px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
                 💾 Salvar Trabalho
               </button>
-              <button id="btn-imprimir" class="touch-action px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
+              <button id="btn-imprimir" class="touch-action min-h-[44px] px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow-sm transition flex items-center gap-1.5">
                 🖨️ Imprimir / PDF
               </button>
             </div>
@@ -78,7 +78,7 @@ export class ProvaView {
                 <label class="block text-xs font-bold text-slate-700 mb-1">Logotipo da Escola</label>
                 <input type="file" id="inp-logo-prova" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
               </div>
-              ${this.vm.dadosCabecalho.logoUrl ? `<button id="btn-remove-logo-prova" class="touch-action text-xs text-rose-500 hover:underline">Remover</button>` : ''}
+              ${this.vm.dadosCabecalho.logoUrl ? `<button id="btn-remove-logo-prova" class="touch-action touch-target-44 text-xs text-rose-500 hover:underline">Remover</button>` : ''}
             </div>
 
             <div class="grid grid-cols-2 gap-3 text-sm">
@@ -95,8 +95,8 @@ export class ProvaView {
           <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
             <span class="text-sm font-semibold text-slate-700">Formato de Impressão:</span>
             <div class="flex gap-2">
-              <button id="btn-col-1" class="touch-action px-3 py-1.5 rounded-lg text-xs font-bold ${!this.vm.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border text-slate-600'}">1 Coluna</button>
-              <button id="btn-col-2" class="touch-action px-3 py-1.5 rounded-lg text-xs font-bold ${this.vm.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border text-slate-600'}">2 Colunas</button>
+              <button id="btn-col-1" class="touch-action min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold ${!this.vm.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border text-slate-600'}">1 Coluna</button>
+              <button id="btn-col-2" class="touch-action min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold ${this.vm.duasColunas ? 'bg-indigo-600 text-white' : 'bg-white border text-slate-600'}">2 Colunas</button>
             </div>
           </div>
 
@@ -105,8 +105,8 @@ export class ProvaView {
             <div class="flex items-center justify-between">
               <h3 class="text-xs font-bold text-slate-500 uppercase">Questões (${this.vm.questoes.length})</h3>
               <div class="flex items-center gap-2">
-                <button id="btn-abrir-banco-prova" class="touch-action text-xs text-indigo-600 hover:underline font-bold">📚 Banco de Questões</button>
-                <button id="btn-add-q" class="touch-action text-xs bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-md font-bold hover:bg-indigo-100">+ Nova Questão</button>
+                <button id="btn-abrir-banco-prova" class="touch-action min-h-[44px] text-xs text-indigo-600 hover:underline font-bold">📚 Banco de Questões</button>
+                <button id="btn-add-q" class="touch-action min-h-[44px] text-xs bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-md font-bold hover:bg-indigo-100">+ Nova Questão</button>
               </div>
             </div>
 
@@ -126,7 +126,7 @@ export class ProvaView {
         <div class="sheet-smooth bg-white border border-slate-200 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Repositório de Questões</h3>
-            <button id="btn-fechar-banco-prova" class="touch-action text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <button id="btn-fechar-banco-prova" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-lg">&times;</button>
           </div>
           <input type="text" id="inp-filtro-banco-prova" placeholder="Buscar por assunto ou enunciado..." class="w-full border rounded-lg p-2 text-xs">
           <div id="lista-banco-prova-content" class="space-y-2 overflow-y-auto flex-1 pr-1"></div>
@@ -152,7 +152,7 @@ export class ProvaView {
               <input type="number" min="0" max="30" data-q-espaco="${idx}" value="${q.linhasEspaco}" class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold">
               linhas
             </label>
-            <button data-remove-q="${idx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
+            <button data-remove-q="${idx}" class="touch-action touch-target-44 text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export class ProvaView {
             <input type="file" accept="image/*" data-upload-img="${idx}" class="text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
           </div>
           ${q.imagemUrl ? `
-            <button data-remove-img="${idx}" class="touch-action text-rose-600 hover:underline text-[11px] font-bold">Remover</button>
+            <button data-remove-img="${idx}" class="touch-action touch-target-44 text-rose-600 hover:underline text-[11px] font-bold">Remover</button>
           ` : ''}
         </div>
 
@@ -261,7 +261,7 @@ export class ProvaView {
           <span class="font-bold text-indigo-700 uppercase text-[10px]">[${q.assunto}]</span>
           <p class="truncate text-slate-600 font-mono">${q.enunciado}</p>
         </div>
-        <button data-importar-q="${q.id}" class="touch-action px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 shrink-0">
+        <button data-importar-q="${q.id}" class="touch-action min-h-[44px] px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 shrink-0">
           + Inserir
         </button>
       </div>

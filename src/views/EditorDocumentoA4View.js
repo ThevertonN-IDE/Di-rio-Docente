@@ -157,15 +157,15 @@ export class EditorDocumentoA4View {
             <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <div id="preview-logo-box" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                 ${this.dadosCabecalho.logoUrl
-        ? `<img src="${this.dadosCabecalho.logoUrl}" class="w-full h-full object-contain">`
-        : `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Sem Logo</span>`
-      }
+                  ? `<img src="${this.dadosCabecalho.logoUrl}" class="w-full h-full object-contain">`
+                  : `<span class="text-[9px] text-slate-400 font-bold uppercase text-center">Sem Logo</span>`
+                }
               </div>
               <div class="flex-1 min-w-0">
                 <label class="block text-xs font-bold text-slate-700 mb-1">Logótipo Escolar</label>
                 <input type="file" id="inp-upload-logo" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
               </div>
-              ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="touch-action text-xs text-rose-500 hover:underline font-bold shrink-0">Remover</button>` : ''}
+              ${this.dadosCabecalho.logoUrl ? `<button id="btn-remover-logo" class="touch-action touch-target-44 text-xs text-rose-500 hover:underline font-bold shrink-0">Remover</button>` : ''}
             </div>
 
             <!-- CAMPOS DO CABEÇALHO -->
@@ -187,8 +187,8 @@ export class EditorDocumentoA4View {
               <div class="flex items-center justify-between gap-2">
                 <span class="font-bold text-slate-700">Colunas da Folha:</span>
                 <div class="flex gap-1.5 shrink-0">
-                  <button id="btn-col-1" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">1 Coluna</button>
-                  <button id="btn-col-2" class="touch-action px-3 py-1.5 rounded-lg font-bold transition ${this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">2 Colunas</button>
+                  <button id="btn-col-1" class="touch-action min-h-[44px] px-3 py-1.5 rounded-lg font-bold transition ${!this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">1 Coluna</button>
+                  <button id="btn-col-2" class="touch-action min-h-[44px] px-3 py-1.5 rounded-lg font-bold transition ${this.estilo.duasColunas ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}">2 Colunas</button>
                 </div>
               </div>
 
@@ -204,7 +204,7 @@ export class EditorDocumentoA4View {
                     value="${this.estilo.espacoPadraoLinhas !== undefined ? this.estilo.espacoPadraoLinhas : 4}" 
                     class="w-12 border border-slate-300 rounded-lg p-1 text-center font-bold bg-white text-xs outline-none focus:border-indigo-500"
                   >
-                  <button id="btn-aplicar-espaco-todas" class="touch-action px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition active:scale-95 whitespace-nowrap" title="Aplicar esta quantidade a todas as questões existentes">
+                  <button id="btn-aplicar-espaco-todas" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition active:scale-95 whitespace-nowrap" title="Aplicar esta quantidade a todas as questões existentes">
                     Aplicar
                   </button>
                 </div>
@@ -216,10 +216,10 @@ export class EditorDocumentoA4View {
               <div class="flex items-center justify-between border-b pb-2">
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Questões (${this.questoes.length})</h3>
                 <div class="flex items-center gap-1.5">
-                  <button id="btn-importar-latex-estudio" class="touch-action text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-lg hover:bg-indigo-100 flex items-center gap-1 transition">
+                  <button id="btn-importar-latex-estudio" class="touch-action min-h-[44px] text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg hover:bg-indigo-100 flex items-center gap-1 transition">
                     ✨ IA / LaTeX
                   </button>
-                  <button id="btn-add-questao" class="touch-action text-xs font-bold bg-slate-800 text-white px-2.5 py-1 rounded-lg hover:bg-slate-900 transition">
+                  <button id="btn-add-questao" class="touch-action min-h-[44px] text-xs font-bold bg-slate-800 text-white px-3 py-1 rounded-lg hover:bg-slate-900 transition">
                     + Questão
                   </button>
                 </div>
@@ -289,7 +289,7 @@ export class EditorDocumentoA4View {
               class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold outline-none"
             >
 
-            <button data-remove-q="${idx}" class="touch-action text-rose-500 hover:text-rose-700 font-bold ml-1 text-xs">Excluir</button>
+            <button data-remove-q="${idx}" class="touch-action touch-target-44 text-rose-500 hover:text-rose-700 font-bold ml-1 text-xs">Excluir</button>
           </div>
         </div>
 
@@ -300,7 +300,7 @@ export class EditorDocumentoA4View {
             <span class="font-bold text-slate-600">🖼️ Imagem:</span>
             <input type="file" accept="image/*" data-upload-q-img="${idx}" class="text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
           </div>
-          ${q.imagemUrl ? `<button data-remove-q-img="${idx}" class="touch-action text-rose-600 hover:underline text-[11px] font-bold">Remover</button>` : ''}
+          ${q.imagemUrl ? `<button data-remove-q-img="${idx}" class="touch-action touch-target-44 text-rose-600 hover:underline text-[11px] font-bold">Remover</button>` : ''}
         </div>
 
         ${q.imagemUrl ? `
@@ -310,6 +310,7 @@ export class EditorDocumentoA4View {
         ` : ''}
       </div>
     `).join('');
+
     container.querySelectorAll('textarea[data-q-texto]').forEach(txt => {
       EquacaoModal.criarBarraRapida(txt);
     });

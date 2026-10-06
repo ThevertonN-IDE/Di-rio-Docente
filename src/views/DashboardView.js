@@ -1,9 +1,29 @@
 // src/views/DashboardView.js
+import { Skeletons } from '../utils/skeletons.js';
+
 export class DashboardView {
   constructor(containerId, viewModel, onNavegar) {
     this.container = document.getElementById(containerId);
     this.vm = viewModel;
     this.onNavegar = onNavegar; // Callback para navegar via router
+
+    // Estado inicial com Skeleton Loading enquanto os dados do Supabase carregam
+    if (this.container && !this.container.innerHTML.trim()) {
+      this.container.innerHTML = `
+        <div class="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <div class="h-24 bg-white border border-slate-200 rounded-2xl animate-pulse"></div>
+          <div class="grid grid-cols-3 gap-2 sm:gap-4">
+            <div class="h-20 bg-white border border-slate-200 rounded-2xl animate-pulse"></div>
+            <div class="h-20 bg-white border border-slate-200 rounded-2xl animate-pulse"></div>
+            <div class="h-20 bg-white border border-slate-200 rounded-2xl animate-pulse"></div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            ${Skeletons.gridCards(6)}
+          </div>
+        </div>
+      `;
+    }
+
     this.setupListeners();
   }
 
@@ -36,11 +56,11 @@ export class DashboardView {
           </div>
 
           <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <button id="btn-abrir-modal-turma" class="touch-action flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95">
+            <button id="btn-abrir-modal-turma" class="touch-action min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95">
               <span class="text-base leading-none">➕</span>
               <span>Nova Turma</span>
             </button>
-            <button id="btn-ir-provas" class="touch-action flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition active:scale-95">
+            <button id="btn-ir-provas" class="touch-action min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition active:scale-95">
               <span>📝</span>
               <span>Banco de Provas A4</span>
             </button>
@@ -102,11 +122,11 @@ export class DashboardView {
 
         <!-- 4. NAVEGAÇÃO DE ABAS: ATIVAS VS ARQUIVADAS -->
         <div class="flex items-center gap-1.5 border-b border-slate-200 pb-2 select-none">
-          <button id="tab-ativas" class="touch-action px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${abaAtual === 'ativas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
+          <button id="tab-ativas" class="touch-action min-h-[44px] px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${abaAtual === 'ativas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
             <span>Turmas Ativas</span>
             <span class="text-[10px] px-1.5 py-0.2 rounded-full ${abaAtual === 'ativas' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}">${abaAtual === 'ativas' ? turmas.length : '•'}</span>
           </button>
-          <button id="tab-arquivadas" class="touch-action px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${abaAtual === 'arquivadas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
+          <button id="tab-arquivadas" class="touch-action min-h-[44px] px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${abaAtual === 'arquivadas' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
             <span>Arquivadas</span>
             <span class="text-[10px] px-1.5 py-0.2 rounded-full ${abaAtual === 'arquivadas' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}">${abaAtual === 'arquivadas' ? turmas.length : '•'}</span>
           </button>
@@ -133,12 +153,12 @@ export class DashboardView {
                       <p class="text-[11px] text-indigo-100/80 mt-0.5 font-medium">${t.periodo || 'Anual'} • Ano Letivo: ${t.anoLetivo || '2026'}</p>
                     </div>
                     
-                    <!-- Botão de Arquivar / Restaurar -->
+                    <!-- Botão de Arquivar / Restaurar com Touch Target 44px -->
                     <button 
                       data-btn-arquivar="${t.id}" 
                       data-status="${t.arquivada}" 
                       title="${t.arquivada ? 'Restaurar Turma' : 'Arquivar Turma'}"
-                      class="touch-action text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-xl transition shrink-0 active:scale-95"
+                      class="touch-action touch-target-44 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition shrink-0 active:scale-95"
                     >
                       ${t.arquivada ? '📂' : '📦'}
                     </button>
@@ -170,14 +190,14 @@ export class DashboardView {
                 <div class="p-3 sm:p-4 bg-white border-t border-slate-100 flex items-center justify-between gap-2">
                   <button 
                     data-nav-turma="${t.id}"
-                    class="touch-action flex-1 min-h-[42px] py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+                    class="touch-action flex-1 min-h-[44px] py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
                   >
                     <span>📊</span>
                     <span>Notas & Alunos</span>
                   </button>
                   <button 
                     data-nav-diario="${t.id}"
-                    class="touch-action flex-1 min-h-[42px] py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95"
+                    class="touch-action flex-1 min-h-[44px] py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95"
                   >
                     <span>📅</span>
                     <span>Chamada / Diário</span>
@@ -199,7 +219,7 @@ export class DashboardView {
 
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-bold text-slate-800">Criar Nova Turma</h3>
-            <button id="btn-fechar-modal" class="touch-action text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
           </div>
           
           <form id="form-criar-turma" class="space-y-3.5 text-xs">
@@ -225,8 +245,8 @@ export class DashboardView {
               </div>
             </div>
             <div class="pt-2 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal" class="touch-action px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs hover:bg-slate-50 transition">Cancelar</button>
-              <button type="submit" class="touch-action px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition shadow-sm">Salvar Turma</button>
+              <button type="button" id="btn-cancelar-modal" class="touch-action min-h-[44px] px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold text-xs hover:bg-slate-50 transition">Cancelar</button>
+              <button type="submit" class="touch-action min-h-[44px] px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition shadow-sm">Salvar Turma</button>
             </div>
           </form>
         </div>
