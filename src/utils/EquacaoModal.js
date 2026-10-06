@@ -126,8 +126,12 @@ export class EquacaoModal {
    */
   static abrir(textareaElement) {
     this.alvoAtual = textareaElement;
-    this.cursorInicio = textareaElement.selectionStart ?? textareaElement.value.length;
-    this.cursorFim = textareaElement.selectionEnd ?? textareaElement.value.length;
+    this.cursorInicio = typeof textareaElement.selectionStart === 'number' 
+      ? textareaElement.selectionStart 
+      : textareaElement.value.length;
+    this.cursorFim = typeof textareaElement.selectionEnd === 'number' 
+      ? textareaElement.selectionEnd 
+      : textareaElement.value.length;
 
     if (!this.containerModal) {
       this.construirDOM();
@@ -176,9 +180,11 @@ export class EquacaoModal {
         <!-- Grelha de Fórmulas -->
         <div id="grid-formulas-eq" class="grid grid-cols-2 sm:grid-cols-4 gap-2 overflow-y-auto max-h-[48vh] pr-1 py-1"></div>
 
-        <!-- Rodapé explicativo -->
-        <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
-          <span>Clique para inserir no cursor. Pode inserir várias seguidas.</span>
+        <!-- Rodapé explicativo e de feedback em tempo real -->
+        <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+          <div id="feedback-insercao-eq" class="truncate max-w-[70%]">
+            <span>Clique para inserir no cursor. Pode inserir várias seguidas.</span>
+          </div>
           <button id="btn-concluir-eq" class="touch-action touch-target-44 px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition">Concluir</button>
         </div>
       </div>
@@ -229,16 +235,22 @@ export class EquacaoModal {
     // Listener de clique com delegação robusta (closest)
     grid.querySelectorAll('[data-insert-latex]').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const elementoBotao = e.target.closest('[data-insert-latex]');
         if (!elementoBotao) return;
         const latex = decodeURIComponent(elementoBotao.dataset.insertLatex);
+        
+        // Executa a inserção
         this.inserirNoTextarea(latex);
 
-        // Feedback visual rápido de inserção
-        elementoBotao.classList.add('bg-indigo-600', 'text-white');
+        // Feedback visual imediato no botão clicado (pulso esmeralda)
+        elementoBotao.classList.remove('bg-slate-50', 'text-slate-800');
+        elementoBotao.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
         setTimeout(() => {
-          elementoBotao.classList.remove('bg-indigo-600', 'text-white');
-        }, 150);
+          elementoBotao.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+          elementoBotao.classList.add('bg-slate-50', 'text-slate-800');
+        }, 220);
       });
     });
   }
@@ -250,8 +262,9 @@ export class EquacaoModal {
     if (!this.alvoAtual) return;
 
     const el = this.alvoAtual;
-    const start = this.cursorInicio ?? (el.selectionStart || 0);
-    const end = this.cursorFim ?? (el.selectionEnd || 0);
+    const start = (typeof this.cursorInicio === 'number') ? this.cursorInicio : (el.selectionStart || 0);
+    const end = (typeof this.cursorFim === 'number') ? this.cursorFim : (el.selectionEnd || 0);
+
     const textoAntes = el.value.substring(0, start);
     const textoDepois = el.value.substring(end);
 
@@ -264,12 +277,20 @@ export class EquacaoModal {
     const novaPosicao = start + conteudoInserir.length;
     this.cursorInicio = novaPosicao;
     this.cursorFim = novaPosicao;
-    el.selectionStart = novaPosicao;
-    el.selectionEnd = novaPosicao;
+    try {
+      el.selectionStart = novaPosicao;
+      el.selectionEnd = novaPosicao;
+    } catch (_) {}
 
     // Dispara eventos 'input' e 'change' para atualizar o KaTeX e salvar o rascunho em tempo real
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Atualiza aviso de confirmação no rodapé do próprio modal
+    const feedbackEl = document.getElementById('feedback-insercao-eq');
+    if (feedbackEl) {
+      feedbackEl.innerHTML = `<span class="text-emerald-600 font-bold">✓ Inserido:</span> <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-mono">${conteudoInserir}</code>`;
+    }
 
     Toast.show('Fórmula inserida!', 'info');
   }
