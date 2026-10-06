@@ -1,27 +1,133 @@
 /* styles/print-a4.css */
+
 @page {
   size: A4 portrait;
-  margin: 12mm 15mm;
+  margin: 10mm 12mm;
 }
 
 @media print {
-  body {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    font-size: 11pt;
-    line-height: 1.4;
+  /* 1. ANIQUILA TUDO O QUE FOR INTERFACE, MENUS, BOTÕES E A BOTTOM NAVBAR */
+  nav,
+  aside,
+  header,
+  footer,
+  button,
+  .no-print,
+  .bottom-navbar,
+  #bottom-navbar,
+  #bottom-nav,
+  [data-bottom-nav],
+  [class*="bottom-nav"],
+  .fixed,
+  [class*="fixed"],
+  .lg\:hidden,
+  .md\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
   }
 
-  /* Suporte a layout em duas colunas de provas */
+  /* 2. OCULTA TODOS OS PAINÉIS LATERAIS DE EDIÇÃO / FORMULÁRIOS */
+  #painel-editor-estudio,
+  #coluna-editor-painel,
+  #painel-editor-lista,
+  #painel-editor-plano,
+  #painel-historico,
+  .dropdown-menu,
+  [id^="modal-"] {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* 3. FORÇA A EXIBIÇÃO DA COLUNA DO PREVIEW (Ignora o 'hidden' do Tailwind) */
+  #painel-preview-estudio,
+  #coluna-preview-painel,
+  #painel-preview-lista,
+  #painel-preview-plano {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* 4. ANULA ZOOM E ESCALAS (Elimina a folha em branco) */
+  #wrapper-escala-a4 {
+    display: block !important;
+    visibility: visible !important;
+    transform: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* 5. A FOLHA A4 FÍSICA OCUPA 100% DA PÁGINA IMPRESSA */
+  .sheet-a4,
+  #folha-preview-a4,
+  #folha-apostila-a4,
+  #folha-plano-modelo-a4,
+  #folha-relatorio-a4,
+  #folha-a4-preview {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+  }
+
+  /* Garante que o texto, imagens e KaTeX da folha sejam visíveis */
+  .sheet-a4 *,
+  #folha-preview-a4 *,
+  #folha-apostila-a4 *,
+  #folha-plano-modelo-a4 *,
+  #folha-relatorio-a4 *,
+  #folha-a4-preview * {
+    visibility: visible !important;
+  }
+
+  /* 6. DESTRAVA A ROLAGEM GERAL DO NAVEGADOR */
+  html, body, #app, main {
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 7. PREVINE CORTE DE QUESTÕES AO MEIO */
+  .quest-block,
+  .secao-didatica,
+  tr,
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 8. COLUNAS DE PROVA */
   .columns-print-2 {
     column-count: 2 !important;
     column-gap: 1.2cm !important;
     column-rule: 0.5pt solid #cbd5e1 !important;
-  }
-
-  .cabecalho-avaliacao {
-    border: 1.5pt solid #000 !important;
-    padding: 4mm !important;
-    margin-bottom: 5mm !important;
   }
 }
