@@ -2,7 +2,6 @@
 
 /* ==============================================================
    PEÇA 1: Feedback Tátil para Botões e Ações (.touch-action)
-   Encaixe em qualquer <button>, <a> ou card interativo.
    ============================================================== */
 .touch-action {
   -webkit-tap-highlight-color: transparent;
@@ -17,7 +16,6 @@
   transform: scale(0.96);
 }
 
-/* Variante mais suave para cards grandes ou listas inteiras */
 .touch-card {
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -31,7 +29,6 @@
 
 /* ==============================================================
    PEÇA 2: Fundo Desfocado Progressivo (.backdrop-smooth)
-   Encaixe no contêiner escuro externo de qualquer modal.
    ============================================================== */
 .backdrop-smooth:not(.hidden) {
   animation: animarBackdrop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -50,7 +47,6 @@
 
 /* ==============================================================
    PEÇA 3: Janela / Gaveta Deslizante (.sheet-smooth)
-   Encaixe na caixa branca interna do modal.
    ============================================================== */
 .sheet-smooth {
   animation: deslizarSubida 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -67,113 +63,101 @@
     transform: translateY(0) scale(1);
   }
 }
+
 /* ==========================================================================
-   REGRAS DE IMPRESSÃO LIMPA (FOLHA A4 REAL & OCULTAÇÃO DE INTERFACE)
+   REGRAS DEFINITIVAS DE IMPRESSÃO (SEM BLANK PAGE & SEM BOTTOM NAV)
    ========================================================================== */
 @media print {
-  /* 1. Desaparece com a Bottom Navbar, Sidebars, Menus e Botões de Ação */
+  /* 1. Extermina com 100% de certeza a Bottom Navbar, menus fixos e barras laterais */
   nav,
   aside,
+  header,
   footer,
-  .bottom-navbar,
+  button,
+  .no-print,
   #bottom-navbar,
   #bottom-nav,
-  .no-print,
-  [data-bottom-nav] {
+  .bottom-navbar,
+  [data-bottom-nav],
+  [class*="bottom-nav"],
+  [id*="bottom-nav"],
+  .fixed,
+  [class*="fixed"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
   }
 
-  /* 2. Força a exibição dos contentores da Folha A4 (mesmo se o telemóvel estiver na aba "Editor") */
+  /* 2. Destrava a rolagem do HTML e do App para não cortar páginas */
+  html, body, #app, main {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 3. Desativa flexbox lateral e transbordo horizontal (evita o corte em 0px) */
+  .p-3, .sm\:p-6, .p-6,
+  .flex-col, .lg\:flex-row,
+  [class*="overflow-"],
   #painel-preview-estudio,
   #coluna-preview-painel,
   #painel-preview-lista,
-  #folha-relatorio-a4,
-  #folha-plano-modelo-a4,
-  #folha-a4-preview,
-  #folha-apostila-a4 {
+  #painel-preview-plano {
     display: block !important;
     width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
-  /* 3. Cancela qualquer zoom/scale inline e margens decorativas */
-  #wrapper-escala-a4,
-  #folha-apostila-a4,
-  #folha-preview-a4,
-  .sheet-a4 {
+  /* 4. Anula a escala/zoom de tela do wrapper (mata o transform que gerava a folha em branco) */
+  #wrapper-escala-a4 {
+    display: block !important;
     transform: none !important;
-    box-shadow: none !important;
-    border: none !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* 5. A Folha A4 em fluxo natural (permite que quebre em 1, 2, 3 ou mais páginas se necessário) */
+  .sheet-a4,
+  #folha-preview-a4,
+  #folha-apostila-a4,
+  #folha-plano-modelo-a4,
+  #folha-relatorio-a4,
+  #folha-a4-preview {
+    display: block !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
     width: 100% !important;
     max-width: 100% !important;
+    min-height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
-  }
-
-  /* 4. Garante que os limites de altura de ecrã não cortem as páginas */
-  body, html, #app, main {
-    overflow: visible !important;
-    height: auto !important;
-    background: white !important;
-  }
-}
-/* ==========================================================================
-   ISOLAMENTO TOTAL DE IMPRESSÃO (PÁGINA A4 LIMPA & SEM ELEMENTOS FIXOS)
-   ========================================================================== */
-@media print {
-  /* 1. Oculta tudo na tela (menus, navbars, sidebars, botões e cabeçalhos) */
-  body * {
-    visibility: hidden !important;
-  }
-
-  /* 2. Força a visibilidade EXCLUSIVAMENTE da folha A4 ativa e dos seus filhos */
-  #folha-apostila-a4,
-  #folha-apostila-a4 *,
-  #folha-preview-a4,
-  #folha-preview-a4 *,
-  #folha-plano-modelo-a4,
-  #folha-plano-modelo-a4 *,
-  #folha-relatorio-a4,
-  #folha-relatorio-a4 * {
-    visibility: visible !important;
-  }
-
-  /* 3. Posiciona a folha no topo absoluto da página física sem escalas */
-  #folha-apostila-a4,
-  #folha-preview-a4,
-  #folha-plano-modelo-a4,
-  #folha-relatorio-a4 {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
     box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
     background: #ffffff !important;
-    transform: none !important; /* Anula o zoom inline que gerava a tela em branco */
+    color: #000000 !important;
   }
 
-  /* 4. Suprime tags de navegação para evitar sobreposição */
-  nav,
-  aside,
-  footer,
-  header,
-  .no-print,
-  [data-bottom-nav],
-  [id*="bottom-nav"],
-  [class*="bottom-nav"] {
-    display: none !important;
-    visibility: hidden !important;
-  }
-
-  /* 5. Destrava o limite de altura da janela */
-  html, body {
-    height: auto !important;
-    overflow: visible !important;
-    background: #ffffff !important;
+  /* 6. Impede que questões e tabelas sejam cortadas no meio entre duas páginas */
+  .quest-block,
+  .secao-didatica,
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }
