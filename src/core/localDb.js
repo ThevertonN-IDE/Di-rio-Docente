@@ -14,6 +14,10 @@ localDb.version(1).stores({
   sync_queue: '++id, action, timestamp' // Fila de sincronização offline
 });
 
+localDb.version(2).stores({
+  avaliacoes: 'id, turma_id'
+});
+
 // Gestor de Sincronização Offline -> Supabase
 export const SyncManager = {
   isOnline: navigator.onLine,
@@ -91,3 +95,17 @@ export const SyncManager = {
     }
   }
 };
+export async function limparCacheLocal() {
+  try {
+    await Promise.all([
+      localDb.turmas.clear(),
+      localDb.alunos.clear(),
+      localDb.notas.clear(),
+      localDb.frequencias.clear(),
+      localDb.avaliacoes?.clear(),
+      localDb.sync_queue.clear()
+    ]);
+  } catch (err) {
+    console.warn('Falha ao limpar o cache local do Dexie:', err);
+  }
+}

@@ -5,6 +5,7 @@ import { PedagogicoService } from '../services/PedagogicoService.js';
 import { renderizarGraficoDiagnostico } from '../utils/charts.js';
 import { debounce, Toast, customConfirm, SyncIndicator } from '../utils/ui.js';
 import { Skeletons } from '../utils/skeletons.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export class TurmaView {
   constructor(containerId, viewModel) {
@@ -94,9 +95,9 @@ export class TurmaView {
                 <span class="text-slate-300">•</span>
                 <div id="sync-status-container" class="inline-block"></div>
               </div>
-              <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">${this.vm.turma?.nome || ''}</h1>
+              <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">${escapeHtml(this.vm.turma?.nome || '')}</h1>
               <p class="text-xs sm:text-sm text-slate-500 font-medium">
-                ${this.vm.turma?.disciplina || 'Sem disciplina'} • Ano: ${this.vm.turma?.ano_letivo || ''} • Total de aulas dadas: <strong>${totalAulas}</strong>
+                ${escapeHtml(this.vm.turma?.disciplina || 'Sem disciplina')} • Ano: ${escapeHtml(this.vm.turma?.ano_letivo || '')} • Total de aulas dadas: <strong>${totalAulas}</strong>
               </p>
             </div>
 
@@ -174,8 +175,8 @@ export class TurmaView {
                   ${avaliacoes.map(av => `
                     <th class="py-3 px-3 min-w-[110px] text-center border-l border-slate-100">
                       <div class="flex items-center justify-center gap-1">
-                        <span data-edit-av="${av.id}" title="Clique para editar avaliação" class="cursor-pointer hover:text-indigo-600 hover:underline transition font-bold">${av.titulo}</span>
-                        <button data-delete-av="${av.id}" data-titulo-av="${av.titulo}" title="Excluir" class="touch-action touch-target-44 text-slate-400 hover:text-rose-600 font-bold text-base leading-none">&times;</button>
+                        <span data-edit-av="${escapeHtml(av.id)}" title="Clique para editar avaliação" class="cursor-pointer hover:text-indigo-600 hover:underline transition font-bold">${escapeHtml(av.titulo)}</span>
+                        <button data-delete-av="${escapeHtml(av.id)}" data-titulo-av="${escapeHtml(av.titulo)}" title="Excluir" class="touch-action touch-target-44 text-slate-400 hover:text-rose-600 font-bold text-base leading-none">&times;</button>
                       </div>
                       <span class="block text-[10px] text-slate-400 font-normal">p.${av.peso || 1} • ${av.bimestre ? av.bimestre + 'º Bim' : '1º Bim'}</span>
                     </th>
@@ -200,24 +201,24 @@ export class TurmaView {
                     <tr class="hover:bg-slate-50/80 transition group">
                       <!-- Coluna 1 Fixa no Corpo -->
                       <td class="py-3 px-3 text-center text-slate-400 font-mono text-xs sticky left-0 z-10 bg-white group-hover:bg-slate-50 border-r border-slate-100 shadow-2xs">
-                        ${aluno.numero_chamada || '-'}
+                        ${escapeHtml(aluno.numero_chamada || '-')}
                       </td>
 
                       <!-- Coluna 2 Fixa no Corpo -->
-                      <td class="py-3 px-4 cursor-pointer sticky left-12 z-10 bg-white group-hover:bg-slate-50 border-r border-slate-200 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]" data-abrir-aluno="${aluno.id}">
+                      <td class="py-3 px-4 cursor-pointer sticky left-12 z-10 bg-white group-hover:bg-slate-50 border-r border-slate-200 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]" data-abrir-aluno="${escapeHtml(aluno.id)}">
                         <div class="flex items-center gap-2.5">
                           <div class="relative w-8 h-8 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 flex items-center justify-center font-bold text-slate-500 text-xs">
                             ${aluno.foto_url
-                              ? `<img src="${aluno.foto_url}" class="w-full h-full object-cover">`
-                              : aluno.nome.charAt(0)
+                              ? `<img src="${escapeHtml(aluno.foto_url)}" class="w-full h-full object-cover">`
+                              : escapeHtml((aluno.nome || '').charAt(0))
                             }
                           </div>
                           <div class="truncate min-w-0">
                             <div class="font-bold text-xs text-slate-800 group-hover:text-indigo-600 transition flex items-center gap-1 truncate">
-                              <span class="truncate">${aluno.nome}</span>
+                              <span class="truncate">${escapeHtml(aluno.nome)}</span>
                               <span class="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100">✏</span>
                             </div>
-                            <div class="text-[11px] text-slate-400 truncate">${aluno.email || 'Sem e-mail'}</div>
+                            <div class="text-[11px] text-slate-400 truncate">${escapeHtml(aluno.email || 'Sem e-mail')}</div>
                           </div>
                         </div>
                       </td>
@@ -227,17 +228,17 @@ export class TurmaView {
                         <td class="py-2 px-2 text-center border-l border-slate-100">
                           <input 
                             type="number" step="0.1" min="0" max="10" inputmode="decimal"
-                            value="${n.valor}"
+                            value="${escapeHtml(n.valor)}"
                             data-row="${rIndex}" data-col="${cIndex}"
-                            data-aluno="${aluno.id}" data-avaliacao="${n.avaliacaoId}"
+                            data-aluno="${escapeHtml(aluno.id)}" data-avaliacao="${escapeHtml(n.avaliacaoId)}"
                             class="cell-nota w-16 text-center py-1.5 border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-xs font-mono font-bold text-slate-800 outline-none transition"
                           />
                         </td>
                       `).join('')}
 
                       <!-- Média Final -->
-                      <td id="media-${aluno.id}" class="py-3 px-4 text-center border-l border-slate-200 font-bold font-mono text-xs text-slate-800 bg-slate-50/50 ${abaixoDaMedia ? 'text-rose-600 font-black' : ''}">
-                        ${aluno.mediaFinal}
+                      <td id="media-${escapeHtml(aluno.id)}" class="py-3 px-4 text-center border-l border-slate-200 font-bold font-mono text-xs text-slate-800 bg-slate-50/50 ${abaixoDaMedia ? 'text-rose-600 font-black' : ''}">
+                        ${escapeHtml(aluno.mediaFinal)}
                       </td>
 
                       <!-- % Frequência -->
@@ -589,9 +590,9 @@ export class TurmaView {
 
         const previewEdit = this.container.querySelector('#edit-preview-avatar-box');
         if (aluno.foto_url) {
-          previewEdit.innerHTML = `<img src="${aluno.foto_url}" class="w-full h-full object-cover">`;
+          previewEdit.innerHTML = `<img src="${escapeHtml(aluno.foto_url)}" class="w-full h-full object-cover">`;
         } else {
-          previewEdit.innerHTML = `<span class="text-xl font-bold uppercase text-slate-400">${aluno.nome.charAt(0)}</span>`;
+          previewEdit.innerHTML = `<span class="text-xl font-bold uppercase text-slate-400">${escapeHtml((aluno.nome || '').charAt(0))}</span>`;
         }
 
         modalEditar.classList.remove('hidden');

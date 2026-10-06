@@ -12,23 +12,27 @@ export class TurmaViewModel extends Observable {
     this.alunos = [];
     this.avaliacoes = [];
     this.mapaNotas = {}; // Formato: { `${alunoId}_${avaliacaoId}`: valor }
-    this.bimestreSelecionado = 0;
+    this.bimestreSelecionado = 0; // 0 = Todos os bimestres
   }
+
   setBimestre(bimestre) {
-    this.bimestreSelecionado = parseInt(bimestre) || 0;
+    this.bimestreSelecionado = parseInt(bimestre, 10) || 0;
     this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
   }
+
   get mediaCorte() {
     return parseFloat(this.turma?.media_aprovacao) || 6.0;
   }
+
   getAvaliacoesFiltradas() {
     if (this.bimestreSelecionado === 0) return this.avaliacoes;
-    return this.avaliacoes.filter(av => (av.bimestre === 1) === this.bimestreSelecionado);
-  }
-  getMatrizNotas() {
-    const avaliacoesFiltradas = this.avaliacoes.filter(
+    return this.avaliacoes.filter(
       av => Number(av.bimestre) === Number(this.bimestreSelecionado)
     );
+  }
+
+  getMatrizNotas() {
+    const avaliacoesFiltradas = this.getAvaliacoesFiltradas();
 
     return this.alunos.map(aluno => {
       const notasAluno = avaliacoesFiltradas.map(av => {
@@ -89,6 +93,7 @@ export class TurmaViewModel extends Observable {
     this.turma.tipo_media = tipoMedia;
     this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
   }
+
   async editarAluno(alunoId, dados) {
     await AlunoService.atualizarDadosAluno(this.turmaId, alunoId, dados);
     await this.carregarDados();
@@ -98,6 +103,7 @@ export class TurmaViewModel extends Observable {
     await AlunoService.removerAlunoDaTurma(this.turmaId, alunoId);
     await this.carregarDados();
   }
+
   async carregarDados() {
     this.notify('CARREGANDO', true);
     try {
@@ -119,17 +125,19 @@ export class TurmaViewModel extends Observable {
 
       this.avaliacoes = avaliacoes;
 
-      // Indexa notas por chave composta para lookup O(1)
       this.mapaNotas = {};
       notas.forEach(n => {
         this.mapaNotas[`${n.aluno_id}_${n.avaliacao_id}`] = n.valor;
       });
 
-      // Salva snapshot local em cache para consultas offline
+      // Grava snapshot completo no Dexie para consultas offline
       try {
         await localDb.turmas.put(dadosTurma);
         for (const aluno of this.alunos) {
           await localDb.alunos.put(aluno);
+        }
+        for (const av of avaliacoes) {
+          await localDb.avaliacoes.put(av);
         }
         for (const n of notas) {
           await localDb.notas.put({
@@ -144,20 +152,46 @@ export class TurmaViewModel extends Observable {
 
       this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
     } catch (err) {
-      // Fallback: tenta recuperar do IndexedDB caso esteja sem internet logo ao abrir
+      // Fallback: recupera turma, alunos, avaliações e notas do IndexedDB
       try {
         const cachedTurma = await localDb.turmas.get(this.turmaId);
         if (cachedTurma) {
           this.turma = cachedTurma;
+
+          // 1. Restaura os alunos a partir das matrículas cacheadas ou da tabela alunos
+          if (cachedTurma.matriculas && cachedTurma.matriculas.length > 0) {
+            this.alunos = cachedTurma.matriculas
+              .filter(m => m.status === 'ativo')
+              .map(m => ({
+                ...m.alunos,
+                numero_chamada: m.numero_chamada,
+                observacao_turma: m.observacao_turma
+              }))
+              .sort((a, b) => (a.numero_chamada || 999) - (b.numero_chamada || 999));
+          } else {
+            this.alunos = await localDb.alunos.toArray();
+          }
+
+          // 2. Restaura as avaliações cadastradas para esta turma
+          const cachedAvaliacoes = await localDb.avaliacoes
+            ?.where('turma_id')
+            .equals(this.turmaId)
+            .toArray();
+          this.avaliacoes = cachedAvaliacoes || [];
+
+          // 3. Restaura as notas da planilha
           const cachedNotas = await localDb.notas.toArray();
           this.mapaNotas = {};
           cachedNotas.forEach(n => {
             this.mapaNotas[`${n.aluno_id}_${n.avaliacao_id}`] = n.valor;
           });
+
           this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
           return;
         }
-      } catch (_) { }
+      } catch (fallbackErr) {
+        console.warn('Erro ao restaurar dados do cache local:', fallbackErr);
+      }
 
       this.notify('ERRO', err.message);
     } finally {
@@ -165,72 +199,21 @@ export class TurmaViewModel extends Observable {
     }
   }
 
-  // Gera o conjunto estruturado para a View renderizar a tabela
-  getMatrizNotas() {
-    return this.alunos.map(aluno => {
-      const notasAluno = this.avaliacoes.map(av => {
-        const val = this.mapaNotas[`${aluno.id}_${av.id}`];
-        return {
-          avaliacaoId: av.id,
-          valor: val !== undefined && val !== null ? val : ''
-        };
-      });
-
-      const media = this.calcularMedia(aluno.id);
-
-      return {
-        ...aluno,
-        notas: notasAluno,
-        mediaFinal: media
-      };
-    });
-  }
-
-  calcularMedia(alunoId) {
-    const notasValidas = [];
-    let soma = 0;
-    let pesoTotal = 0;
-
-    for (const av of this.avaliacoes) {
-      const val = this.mapaNotas[`${alunoId}_${av.id}`];
-      if (val !== undefined && val !== null && val !== '' && !isNaN(val)) {
-        const num = parseFloat(val);
-        const peso = av.peso || 1;
-        soma += num * peso;
-        pesoTotal += peso;
-        notasValidas.push(num);
-      }
-    }
-
-    if (notasValidas.length === 0) return '-';
-
-    // Suporta cálculo ponderado ou simples dependendo da configuração da turma
-    if (this.turma?.tipo_media === 'ponderada' && pesoTotal > 0) {
-      return (soma / pesoTotal).toFixed(1);
-    }
-
-    const mediaSimples = notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
-    return mediaSimples.toFixed(1);
-  }
-
   async atualizarNota(avaliacaoId, alunoId, novoValor) {
     const chave = `${alunoId}_${avaliacaoId}`;
     const valorNumerico = novoValor === '' || novoValor === null ? null : parseFloat(novoValor);
 
-    // 1. Atualização imediata em memória (UI responsiva)
     if (valorNumerico === null) {
       delete this.mapaNotas[chave];
     } else {
       this.mapaNotas[chave] = valorNumerico;
     }
 
-    // 2. Notifica a View imediatamente para recalcular médias e gráficos
     this.notify('MEDIA_ATUALIZADA', {
       alunoId,
       novaMedia: this.calcularMedia(alunoId)
     });
 
-    // 3. Grava no cache IndexedDB instantaneamente
     try {
       await localDb.notas.put({
         avaliacao_id: avaliacaoId,
@@ -241,12 +224,10 @@ export class TurmaViewModel extends Observable {
       console.warn('Erro ao salvar no IndexedDB:', dbErr);
     }
 
-    // 4. Estratégia de Sincronização: Nuvem ou Fila Offline
     if (navigator.onLine) {
       try {
         await TurmaService.salvarNota(avaliacaoId, alunoId, valorNumerico);
       } catch (err) {
-        // Se a requisição cair por instabilidade de rede, joga para a fila
         await SyncManager.enfileirarAcao('SALVAR_NOTA', {
           avaliacao_id: avaliacaoId,
           aluno_id: alunoId,
@@ -254,7 +235,6 @@ export class TurmaViewModel extends Observable {
         });
       }
     } else {
-      // Sem internet: enfileira para sincronizar assim que reconectar
       await SyncManager.enfileirarAcao('SALVAR_NOTA', {
         avaliacao_id: avaliacaoId,
         aluno_id: alunoId,
@@ -268,16 +248,16 @@ export class TurmaViewModel extends Observable {
       await TurmaService.excluirAvaliacao(avaliacaoId);
       this.avaliacoes = this.avaliacoes.filter(a => a.id !== avaliacaoId);
 
-      // Limpa do mapa em memória
       Object.keys(this.mapaNotas).forEach(key => {
         if (key.endsWith(`_${avaliacaoId}`)) delete this.mapaNotas[key];
       });
 
-      // Limpa registros correspondentes no IndexedDB
+      // Limpa a avaliação e as notas correspondentes no cache local
       try {
         await localDb.notas.where('avaliacao_id').equals(avaliacaoId).delete();
+        await localDb.avaliacoes?.delete(avaliacaoId);
       } catch (dbErr) {
-        console.warn('Erro ao remover notas do cache local:', dbErr);
+        console.warn('Erro ao remover avaliação/notas do cache local:', dbErr);
       }
 
       this.notify('AVALIACAO_REMOVIDA', {

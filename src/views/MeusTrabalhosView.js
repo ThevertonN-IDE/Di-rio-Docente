@@ -6,6 +6,7 @@ import { LatexModal } from '../utils/LatexModal.js';
 import { LatexService } from '../services/LatexService.js';
 import { CriarMaterialSheet } from '../utils/CriarMaterialSheet.js';
 import { Skeletons } from '../utils/skeletons.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export class MeusTrabalhosView {
   constructor(containerId) {
@@ -195,7 +196,7 @@ export class MeusTrabalhosView {
 
       const selFiltroTurma = this.container.querySelector('#sel-filtro-turma');
       const inpDocTurma = this.container.querySelector('#inp-doc-turma');
-      const optionsHtml = this.turmas.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+      const optionsHtml = this.turmas.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.nome)}</option>`).join('');
 
       if (selFiltroTurma) selFiltroTurma.innerHTML = `<option value="">Todas as Turmas</option>${optionsHtml}`;
       if (inpDocTurma) inpDocTurma.innerHTML = `<option value="">Geral / Sem Turma</option>${optionsHtml}`;
@@ -258,26 +259,26 @@ export class MeusTrabalhosView {
       if (doc.tipo === 'prova') {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-[10px]">📝 Prova A4</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-estudio="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-estudio="${escapeHtml(doc.id)}" class="touch-action flex-1 py-1.5 px-3 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${escapeHtml(doc.id)}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'lista') {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-teal-50 text-teal-700 font-bold border border-teal-200 text-[10px]">📋 Lista A4</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-estudio="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-slate-900 hover:bg-teal-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-estudio="${escapeHtml(doc.id)}" class="touch-action flex-1 py-1.5 px-3 bg-slate-900 hover:bg-teal-600 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${escapeHtml(doc.id)}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'apostila') {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[10px]">📘 Apostila</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-apostila="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-apostila="${escapeHtml(doc.id)}" class="touch-action flex-1 py-1.5 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${escapeHtml(doc.id)}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else if (doc.tipo === 'plano_aula') {
-        badge = `<span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200 text-[10px]">📅 Plano (${doc.subtipo || 'BNCC'})</span>`;
+        badge = `<span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200 text-[10px]">📅 Plano (${escapeHtml(doc.subtipo || 'BNCC')})</span>`;
         botoesAcoesPrincipais = `
-          <button data-editar-plano="${doc.id}" class="touch-action flex-1 py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
-          <button data-exportar-latex="${doc.id}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
+          <button data-editar-plano="${escapeHtml(doc.id)}" class="touch-action flex-1 py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition active:scale-95 text-center">✏️ Editar</button>
+          <button data-exportar-latex="${escapeHtml(doc.id)}" title="Exportar para Overleaf" class="touch-action py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1">📄 .tex</button>
         `;
       } else {
         badge = `<span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold border border-slate-200 text-[10px]">📁 Arquivo Digital</span>`;
@@ -285,11 +286,11 @@ export class MeusTrabalhosView {
 
         if (ehPdfOuImg) {
           botoesAcoesPrincipais = `
-            <a href="${doc.arquivo_url}" target="_blank" download class="touch-action flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar</a>
-            <button data-converter-ia="${doc.id}" title="Extrair questões em LaTeX via IA" class="touch-action py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-2xs">✨ IA</button>
+            <a href="${escapeHtml(doc.arquivo_url)}" target="_blank" download class="touch-action flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar</a>
+            <button data-converter-ia="${escapeHtml(doc.id)}" title="Extrair questões em LaTeX via IA" class="touch-action py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-2xs">✨ IA</button>
           `;
         } else {
-          botoesAcoesPrincipais = `<a href="${doc.arquivo_url}" target="_blank" download class="touch-action w-full py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar / Abrir</a>`;
+          botoesAcoesPrincipais = `<a href="${escapeHtml(doc.arquivo_url)}" target="_blank" download class="touch-action w-full py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition text-center">📥 Baixar / Abrir</a>`;
         }
       }
 
@@ -300,7 +301,7 @@ export class MeusTrabalhosView {
             <div class="flex items-start justify-between gap-2 mb-2">
               <div class="flex flex-wrap items-center gap-1">
                 ${badge}
-                ${doc.turmas?.nome ? `<span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-medium truncate max-w-[130px]">👥 ${doc.turmas.nome}</span>` : ''}
+                ${doc.turmas?.nome ? `<span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-medium truncate max-w-[130px]">👥 ${escapeHtml(doc.turmas.nome)}</span>` : ''}
               </div>
 
               <!-- Menu flutuante com Duplicar e Excluir -->
@@ -309,11 +310,11 @@ export class MeusTrabalhosView {
                   ⋮
                 </button>
                 <div class="dropdown-menu hidden absolute right-0 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-20 text-xs text-slate-700 animate-in fade-in zoom-in-95 duration-100">
-                  <button data-duplicar-doc="${doc.id}" class="touch-action w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700">
+                  <button data-duplicar-doc="${escapeHtml(doc.id)}" class="touch-action w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700">
                     <span>📄</span> Duplicar Material
                   </button>
                   <div class="my-1 border-t border-slate-100"></div>
-                  <button data-excluir-doc="${doc.id}" class="touch-action w-full text-left px-3 py-1.5 hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2">
+                  <button data-excluir-doc="${escapeHtml(doc.id)}" class="touch-action w-full text-left px-3 py-1.5 hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2">
                     <span>🗑️</span> Excluir Documento
                   </button>
                 </div>
@@ -321,16 +322,16 @@ export class MeusTrabalhosView {
             </div>
 
             <!-- Título do Documento -->
-            <h3 class="font-bold text-slate-800 text-sm line-clamp-2 leading-snug" title="${doc.titulo || 'Sem título'}">
-              ${doc.titulo || 'Sem título'}
+            <h3 class="font-bold text-slate-800 text-sm line-clamp-2 leading-snug" title="${escapeHtml(doc.titulo || 'Sem título')}">
+              ${escapeHtml(doc.titulo || 'Sem título')}
             </h3>
 
             <!-- Metadados -->
             <div class="text-[11px] text-slate-500 space-y-0.5 mt-2.5 pt-2 border-t border-slate-100">
-              <p>📂 <strong>Categoria:</strong> ${doc.categoria || 'Geral'}</p>
-              ${doc.alunos?.nome ? `<p>👤 <strong>Aluno:</strong> ${doc.alunos.nome}</p>` : ''}
-              ${doc.avaliacoes?.titulo ? `<p>📝 <strong>Atividade:</strong> ${doc.avaliacoes.titulo}</p>` : ''}
-              ${doc.arquivo_tamanho ? `<p>💾 <strong>Tamanho:</strong> ${doc.arquivo_tamanho}</p>` : ''}
+              <p>📂 <strong>Categoria:</strong> ${escapeHtml(doc.categoria || 'Geral')}</p>
+              ${doc.alunos?.nome ? `<p>👤 <strong>Aluno:</strong> ${escapeHtml(doc.alunos.nome)}</p>` : ''}
+              ${doc.avaliacoes?.titulo ? `<p>📝 <strong>Atividade:</strong> ${escapeHtml(doc.avaliacoes.titulo)}</p>` : ''}
+              ${doc.arquivo_tamanho ? `<p>💾 <strong>Tamanho:</strong> ${escapeHtml(doc.arquivo_tamanho)}</p>` : ''}
             </div>
           </div>
 
@@ -601,10 +602,10 @@ export class MeusTrabalhosView {
           .sort((a, b) => a.nome.localeCompare(b.nome));
 
         selAluno.innerHTML = '<option value="">Toda a Turma / Nenhum</option>' +
-          alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+          alunos.map(a => `<option value="${escapeHtml(a.id)}">${escapeHtml(a.nome)}</option>`).join('');
 
         selAv.innerHTML = '<option value="">Nenhuma Avaliação</option>' +
-          (avaliacoes || []).map(av => `<option value="${av.id}">${av.titulo}</option>`).join('');
+          (avaliacoes || []).map(av => `<option value="${escapeHtml(av.id)}">${escapeHtml(av.titulo)}</option>`).join('');
 
         boxExtras.classList.remove('hidden');
       } catch (err) {

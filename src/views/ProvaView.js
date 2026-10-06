@@ -3,6 +3,7 @@ import { PedagogicoService } from '../services/PedagogicoService.js';
 import { DocumentoService } from '../services/DocumentoService.js';
 import { Toast } from '../utils/ui.js';
 import { EquacaoModal } from '../utils/EquacaoModal.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export class ProvaView {
   constructor(containerId, viewModel) {
@@ -70,7 +71,7 @@ export class ProvaView {
             <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <div id="box-preview-logo-prova" class="w-14 h-14 bg-white border border-slate-300 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                 ${this.vm.dadosCabecalho.logoUrl 
-                  ? `<img src="${this.vm.dadosCabecalho.logoUrl}" class="w-full h-full object-contain">`
+                  ? `<img src="${escapeHtml(this.vm.dadosCabecalho.logoUrl)}" class="w-full h-full object-contain">`
                   : `<span class="text-[10px] text-slate-400 font-bold uppercase text-center leading-tight">Sem Logo</span>`
                 }
               </div>
@@ -82,12 +83,12 @@ export class ProvaView {
             </div>
 
             <div class="grid grid-cols-2 gap-3 text-sm">
-              <input type="text" id="cfg-escola" value="${this.vm.dadosCabecalho.escola}" placeholder="Nome da Escola" class="border p-2 rounded-lg col-span-2 text-xs">
-              <input type="text" id="cfg-disciplina" value="${this.vm.dadosCabecalho.disciplina}" placeholder="Disciplina" class="border p-2 rounded-lg text-xs">
-              <input type="text" id="cfg-professor" value="${this.vm.dadosCabecalho.professor}" placeholder="Professor(a)" class="border p-2 rounded-lg text-xs">
-              <input type="text" id="cfg-turma" value="${this.vm.dadosCabecalho.turma}" placeholder="Turma" class="border p-2 rounded-lg text-xs">
-              <input type="text" id="cfg-tipo" value="${this.vm.dadosCabecalho.tipoDocumento}" placeholder="Tipo de Documento" class="border p-2 rounded-lg text-xs">
-              <input type="text" id="cfg-valor" value="${this.vm.dadosCabecalho.valor}" placeholder="Nota Total" class="border p-2 rounded-lg text-xs">
+              <input type="text" id="cfg-escola" value="${escapeHtml(this.vm.dadosCabecalho.escola)}" placeholder="Nome da Escola" class="border p-2 rounded-lg col-span-2 text-xs">
+              <input type="text" id="cfg-disciplina" value="${escapeHtml(this.vm.dadosCabecalho.disciplina)}" placeholder="Disciplina" class="border p-2 rounded-lg text-xs">
+              <input type="text" id="cfg-professor" value="${escapeHtml(this.vm.dadosCabecalho.professor)}" placeholder="Professor(a)" class="border p-2 rounded-lg text-xs">
+              <input type="text" id="cfg-turma" value="${escapeHtml(this.vm.dadosCabecalho.turma)}" placeholder="Turma" class="border p-2 rounded-lg text-xs">
+              <input type="text" id="cfg-tipo" value="${escapeHtml(this.vm.dadosCabecalho.tipoDocumento)}" placeholder="Tipo de Documento" class="border p-2 rounded-lg text-xs">
+              <input type="text" id="cfg-valor" value="${escapeHtml(this.vm.dadosCabecalho.valor)}" placeholder="Nota Total" class="border p-2 rounded-lg text-xs">
             </div>
           </div>
 
@@ -149,14 +150,14 @@ export class ProvaView {
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1 font-normal text-slate-600">
               Espaço:
-              <input type="number" min="0" max="30" data-q-espaco="${idx}" value="${q.linhasEspaco}" class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold">
+              <input type="number" min="0" max="30" data-q-espaco="${idx}" value="${escapeHtml(q.linhasEspaco)}" class="w-12 text-center border rounded-lg p-1 text-xs bg-white font-bold">
               linhas
             </label>
             <button data-remove-q="${idx}" class="touch-action touch-target-44 text-rose-500 hover:text-rose-700 font-bold text-xs">Excluir</button>
           </div>
         </div>
 
-        <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-xl p-2.5 text-xs bg-white font-mono outline-none focus:border-indigo-400" placeholder="Enunciado da questão (use $formula$ para LaTeX)...">${q.enunciado}</textarea>
+        <textarea data-q-texto="${idx}" rows="3" class="w-full border rounded-xl p-2.5 text-xs bg-white font-mono outline-none focus:border-indigo-400" placeholder="Enunciado da questão (use $formula$ para LaTeX)...">${escapeHtml(q.enunciado)}</textarea>
 
         <div class="flex items-center justify-between pt-1 border-t border-slate-200 text-xs">
           <div class="flex items-center gap-2">
@@ -170,7 +171,7 @@ export class ProvaView {
 
         ${q.imagemUrl ? `
           <div class="mt-2 w-28 h-24 border rounded-xl overflow-hidden bg-white">
-            <img src="${q.imagemUrl}" class="w-full h-full object-contain">
+            <img src="${escapeHtml(q.imagemUrl)}" class="w-full h-full object-contain">
           </div>
         ` : ''}
       </div>
@@ -191,27 +192,27 @@ export class ProvaView {
     preview.innerHTML = `
       <div class="cabecalho-avaliacao border-2 border-black p-4 mb-6 text-sm" style="font-family: Arial, sans-serif;">
         <div class="flex items-center justify-between gap-4 pb-2 border-b border-black">
-          ${cab.logoUrl ? `<img src="${cab.logoUrl}" class="max-h-14 max-w-[90px] object-contain shrink-0">` : ''}
+          ${cab.logoUrl ? `<img src="${escapeHtml(cab.logoUrl)}" class="max-h-14 max-w-[90px] object-contain shrink-0">` : ''}
           <div class="flex-1 text-center font-bold text-base uppercase">
-            ${cab.escola}
+            ${escapeHtml(cab.escola)}
           </div>
           ${cab.logoUrl ? `<div class="w-[90px] shrink-0"></div>` : ''}
         </div>
         
         <div class="grid grid-cols-2 gap-y-1.5 pt-2 text-xs">
-          <div><strong>Disciplina:</strong> ${cab.disciplina}</div>
-          <div><strong>Professor(a):</strong> ${cab.professor}</div>
-          <div><strong>Turma:</strong> ${cab.turma}</div>
+          <div><strong>Disciplina:</strong> ${escapeHtml(cab.disciplina)}</div>
+          <div><strong>Professor(a):</strong> ${escapeHtml(cab.professor)}</div>
+          <div><strong>Turma:</strong> ${escapeHtml(cab.turma)}</div>
           <div><strong>Data:</strong> ____/____/________</div>
           <div class="col-span-2 flex items-center justify-between pt-1">
             <span><strong>Aluno(a):</strong> ___________________________________________________________</span>
-            <span><strong>Nota:</strong> [ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / ${cab.valor} ]</span>
+            <span><strong>Nota:</strong> [ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / ${escapeHtml(cab.valor)} ]</span>
           </div>
         </div>
       </div>
 
       <div class="text-center font-bold uppercase tracking-wider text-sm mb-6 underline">
-        ${cab.tipoDocumento}
+        ${escapeHtml(cab.tipoDocumento)}
       </div>
 
       <div class="${duasColunas ? 'columns-print-2' : 'space-y-6'}" style="font-size: 11pt; text-align: justify;">
@@ -219,12 +220,12 @@ export class ProvaView {
           <div class="quest-block mb-6 break-inside-avoid" style="page-break-inside: avoid;">
             <p class="leading-relaxed">
               <strong>${q.numero}.</strong> 
-              <span class="text-xs font-sans text-slate-600">[${q.pontuacao} pts]</span>${q.enunciadoHtml}
+              <span class="text-xs font-sans text-slate-600">[${escapeHtml(q.pontuacao)} pts]</span>${q.enunciadoHtml}
             </p>
 
             ${q.imagemUrl ? `
               <div class="my-3 flex justify-center">
-                <img src="${q.imagemUrl}" style="max-height: 5cm; max-width: 90%; object-fit: contain;" class="rounded border border-slate-300">
+                <img src="${escapeHtml(q.imagemUrl)}" style="max-height: 5cm; max-width: 90%; object-fit: contain;" class="rounded border border-slate-300">
               </div>
             ` : ''}
 
@@ -258,10 +259,10 @@ export class ProvaView {
     container.innerHTML = filtradas.map(q => `
       <div class="p-2.5 border rounded-lg hover:bg-slate-50 flex items-center justify-between gap-3 text-xs">
         <div class="flex-1 truncate">
-          <span class="font-bold text-indigo-700 uppercase text-[10px]">[${q.assunto}]</span>
-          <p class="truncate text-slate-600 font-mono">${q.enunciado}</p>
+          <span class="font-bold text-indigo-700 uppercase text-[10px]">[${escapeHtml(q.assunto)}]</span>
+          <p class="truncate text-slate-600 font-mono">${escapeHtml(q.enunciado)}</p>
         </div>
-        <button data-importar-q="${q.id}" class="touch-action min-h-[44px] px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 shrink-0">
+        <button data-importar-q="${escapeHtml(q.id)}" class="touch-action min-h-[44px] px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 shrink-0">
           + Inserir
         </button>
       </div>

@@ -22,12 +22,25 @@ import { BottomNavBar } from './components/BottomNavBar.js';
 import { Sidebar } from './components/Sidebar.js';
 import { checarNovaVersao } from './utils/versionCheck.js';
 
-// 1. Registo nativo do Service Worker PWA (Offline & Cache)
+// 1. Registo nativo do Service Worker PWA (Offline & Cache com detecção de ciclo de vida)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+
+      registration.addEventListener('updatefound', () => {
+        const novoWorker = registration.installing;
+        if (novoWorker) {
+          novoWorker.addEventListener('statechange', () => {
+            if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('Nova versão do Diário Docente disponível em cache.');
+            }
+          });
+        }
+      });
+    } catch (err) {
       console.log('SW em desenvolvimento/preview:', err);
-    });
+    }
   });
 }
 
@@ -110,6 +123,64 @@ async function iniciarApp() {
     const btnBackupMobile = document.getElementById('btn-gerar-backup-mobile');
     btnBackupDesktop?.addEventListener('click', () => dispararBackup(btnBackupDesktop));
     btnBackupMobile?.addEventListener('click', () => dispararBackup(btnBackupMobile));
+
+    // Input invisível para carregar arquivo de restauração de backup (JSON)
+    let inputRestore = document.getElementById('input-file-restore-backup');
+    if (!inputRestore) {
+      inputRestore = document.createElement('input');
+      inputRestore.id = 'input-file-restore-backup';
+      inputRestore.type = 'file';
+      inputRestore.accept = '.json,application/json';
+      inputRestore.className = 'hidden';
+      document.body.appendChild(inputRestore);
+
+      inputRestore.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const confirmado = confirm('Atenção: A restauração irá importar todas as turmas, alunos, notas e documentos contidos no arquivo JSON. Deseja prosseguir?');
+        if (!confirmado) {
+          inputRestore.value = '';
+          return;
+        }
+
+        Toast.show('Restaurando dados do backup...', 'info');
+        try {
+          const texto = await file.text();
+          const resultado = await BackupService.restaurarBackup(texto);
+          Toast.show(`Backup restaurado com sucesso! (${resultado.totalTurmas} turmas, ${resultado.totalAlunos} alunos).`, 'success');
+          setTimeout(() => window.location.reload(), 1500);
+        } catch (err) {
+          Toast.show('Erro ao restaurar backup: ' + err.message, 'error');
+        } finally {
+          inputRestore.value = '';
+        }
+      });
+    }
+
+    // Botão Restaurar Backup Desktop (insere ao lado do botão de backup se não existir)
+    if (btnBackupDesktop && !document.getElementById('btn-restaurar-backup')) {
+      const btnRestoreDesktop = document.createElement('button');
+      btnRestoreDesktop.id = 'btn-restaurar-backup';
+      btnRestoreDesktop.className = 'touch-action px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition ml-1.5 cursor-pointer flex items-center gap-1';
+      btnRestoreDesktop.innerHTML = '📥 Restaurar';
+      btnRestoreDesktop.addEventListener('click', () => inputRestore.click());
+      btnBackupDesktop.parentNode?.insertBefore(btnRestoreDesktop, btnBackupDesktop.nextSibling);
+    } else {
+      document.getElementById('btn-restaurar-backup')?.addEventListener('click', () => inputRestore.click());
+    }
+
+    // Botão Restaurar Backup Mobile (insere no menu mobile se não existir)
+    if (btnBackupMobile && !document.getElementById('btn-restaurar-backup-mobile')) {
+      const btnRestoreMobile = document.createElement('button');
+      btnRestoreMobile.id = 'btn-restaurar-backup-mobile';
+      btnRestoreMobile.className = 'touch-action w-full text-left px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-bold text-xs transition flex items-center gap-2 cursor-pointer';
+      btnRestoreMobile.innerHTML = '📥 Restaurar Backup';
+      btnRestoreMobile.addEventListener('click', () => inputRestore.click());
+      btnBackupMobile.parentNode?.insertBefore(btnRestoreMobile, btnBackupMobile.nextSibling);
+    } else {
+      document.getElementById('btn-restaurar-backup-mobile')?.addEventListener('click', () => inputRestore.click());
+    }
 
     // Botão Terminar Sessão Desktop
     if (!document.getElementById('btn-logout')) {
@@ -209,7 +280,10 @@ async function iniciarApp() {
 
   BottomNavBar.render();
   Sidebar.render();
-  checarNovaVersao();
+
+  // checarNovaVersao() foi desativado aqui pois desregistrava os Service Workers a cada reload
+  // checarNovaVersao();
+
   const appRouter = new Router(rotas, 'app');
   appRouter.iniciar();
 }

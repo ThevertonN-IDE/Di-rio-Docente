@@ -1,4 +1,6 @@
 // supabase/functions/converter-latex/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,164 +8,145 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Modelos ativos oficiais baseados no seu terminal e na recomendação da API
-const MODELOS_ATIVOS = [
-  "gemini-flash-latest",
-  "gemini-3.1-pro-preview",
-  "gemini-3.5-flash",
-  "gemini-3.8-flash"
-];
-
-function esperar(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-Deno.serve(async (req) => {
+serve(async (req: Request) => {
+  // 1. Tratamento do preflight CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { base64Data, mimeType } = await req.json();
-
-    if (!base64Data) {
-      return new Response(JSON.stringify({ error: "Nenhum arquivo enviado para conversão." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // 2. Validação obrigatória do Token JWT (Apenas utilizadores com sessão ativa)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Acesso não autorizado: Cabeçalho Authorization em falta." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada no Supabase." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Sessão inválida ou expirada. Inicie sessão novamente." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const promptInstrucao = `
-Você é um especialista em transcrição e diagramação matemática em LaTeX.
-Analise detalhadamente o documento fornecido (PDF ou imagem de avaliação, simulado ou lista de exercícios) e extraia todas as questões com máxima precisão.
+    // 3. Limite de tamanho de carga útil (Máximo de 15 MB)
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > 15 * 1024 * 1024) {
+      return new Response(
+        JSON.stringify({ error: "O ficheiro enviado excede o limite máximo permitido de 15 MB." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-Regras estritas:
-1. Retorne EXCLUSIVAMENTE um objeto JSON válido.
-2. Todas as fórmulas, equações e notações matemáticas DEVEM usar sintaxe LaTeX estrita ($...$ para inline e $$...$$ para destaque).
-3. Preserve a numeração e o enunciado integral de cada questão.
-4. Formato JSON obrigatório:
+    // 4. Extração do payload (compatível com base64Data do LatexService.js)
+    const body = await req.json();
+    const dadosBase64Brutos = body.base64Data || body.imagemBase64;
+    const mimeType = body.mimeType || "application/pdf";
+    const promptAdicional = body.promptAdicional || "";
+
+    if (!dadosBase64Brutos) {
+      return new Response(
+        JSON.stringify({ error: "Nenhum ficheiro em Base64 foi fornecido para conversão." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 5. Verificação da chave Gemini
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiApiKey) {
+      return new Response(
+        JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada nos segredos da Edge Function." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Remove eventuais prefixos data URI caso existam
+    const base64Limpo = dadosBase64Brutos.replace(/^data:(.*,)?/, "");
+
+    const promptSistema = `És um assistente pedagógico especializado em transcrever avaliações escolares para diagramação limpa em folha A4 com LaTeX e KaTeX.
+Analisa o documento ou imagem fornecido e extrai todas as questões pedagógicas legíveis.
+Gera OBRIGATORIAMENTE um objeto JSON puro, sem blocos de formatação markdown (\`\`\`json ou \`\`\`), no seguinte formato exato:
 {
-  "tituloSugestionado": "string com o título deduzido do documento",
+  "tituloSugestionado": "LISTA DE EXERCÍCIOS / AVALIAÇÃO",
   "questoes": [
     {
-      "enunciado": "string contendo o texto completo da questão com LaTeX",
-      "pontuacao": "string com a pontuação da questão (ex: 1.5, 2.0). Se não constar, use '1.0'",
-      "linhasEspaco": 5,
-      "gabarito": "resposta ou gabarito caso conste no documento, senão string vazia"
+      "enunciado": "Texto do enunciado. Todas as fórmulas matemáticas e expressões DEVEM estar delimitadas com $ para fórmulas em linha ou $$ para equações em bloco.",
+      "pontuacao": "1.0",
+      "linhasEspaco": 4,
+      "imagemUrl": ""
     }
   ]
-}
-`;
+}`;
 
-    const payload = {
-      contents: [
-        {
-          parts: [
-            { text: promptInstrucao },
-            {
-              inlineData: {
-                mimeType: mimeType || "application/pdf",
-                data: base64Data,
-              },
-            },
-          ],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.2,
+    const MODEL_NAME = "gemini-1.5-flash";
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
+
+    const geminiResponse = await fetch(geminiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": geminiApiKey,
       },
-    };
-
-    let respostaGemini: Response | null = null;
-    let historicoErros: string[] = [];
-
-    for (const modelo of MODELOS_ATIVOS) {
-      console.log(`[TENTATIVA] Chamando modelo: ${modelo}...`);
-
-      for (let tentativa = 1; tentativa <= 2; tentativa++) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`;
-
-        try {
-          respostaGemini = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-
-          if (respostaGemini.ok) {
-            console.log(`[SUCESSO] Modelo ${modelo} respondeu com sucesso!`);
-            break;
-          }
-
-          const erroTexto = await respostaGemini.text();
-          const logErro = `[${modelo} | Tentativa ${tentativa} | Status ${respostaGemini.status}]: ${erroTexto}`;
-          console.warn(logErro);
-          historicoErros.push(logErro);
-
-          // Se for pico passageiro (503) ou rate limit (429), pausa antes de tentar novamente
-          if (respostaGemini.status === 503 || respostaGemini.status === 429) {
-            await esperar(2000);
-          } else {
-            // Erro 404 ou 400: não adianta repetir o mesmo modelo, pula para o próximo
-            break;
-          }
-        } catch (fetchErr: any) {
-          const logFetch = `[${modelo} | Falha de rede]: ${fetchErr.message}`;
-          console.warn(logFetch);
-          historicoErros.push(logFetch);
-          await esperar(1000);
-        }
-      }
-
-      if (respostaGemini && respostaGemini.ok) {
-        break;
-      }
-    }
-
-    if (!respostaGemini || !respostaGemini.ok) {
-      console.error("Todos os modelos falharam:", historicoErros.join("\n"));
-      return new Response(JSON.stringify({ 
-        error: "Não foi possível processar o documento com os modelos disponíveis.", 
-        detalhes: historicoErros 
-      }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const dadosGemini = await respostaGemini.json();
-    const textoGerado = dadosGemini.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!textoGerado) {
-      throw new Error("A IA respondeu sem texto processável.");
-    }
-
-    const jsonLimpo = textoGerado
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/i, "")
-      .replace(/```\s*$/i, "")
-      .trim();
-
-    const resultadoJson = JSON.parse(jsonLimpo);
-
-    return new Response(JSON.stringify(resultadoJson), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: promptSistema + (promptAdicional ? `\nInstrução adicional: ${promptAdicional}` : "") },
+              {
+                inline_data: {
+                  mime_type: mimeType,
+                  data: base64Limpo,
+                },
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: "application/json",
+        },
+      }),
     });
+
+    if (!geminiResponse.ok) {
+      const erroTexto = await geminiResponse.text();
+      console.error("Erro da API Gemini:", erroTexto);
+      return new Response(
+        JSON.stringify({ error: "Falha no processamento do documento pelo modelo Gemini. Verifique a nitidez." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const geminiData = await geminiResponse.json();
+    const textoGerado = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+
+    // Higienização de eventuais blocos de código
+    const jsonLimpo = textoGerado.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const dadosParsed = JSON.parse(jsonLimpo);
+
+    // Retorna as chaves 'questoes' e 'tituloSugestionado' diretamente na raiz do objeto
+    return new Response(
+      JSON.stringify({
+        tituloSugestionado: dadosParsed.tituloSugestionado || "Avaliação Extraída",
+        questoes: dadosParsed.questoes || []
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
   } catch (err: any) {
-    console.error("Exceção não tratada na Edge Function:", err.message);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("Erro interno na Edge Function:", err);
+    return new Response(
+      JSON.stringify({ error: err.message || "Erro inesperado ao processar o ficheiro." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
