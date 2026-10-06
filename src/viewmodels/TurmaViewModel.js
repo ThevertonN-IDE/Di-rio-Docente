@@ -18,7 +18,7 @@ export class TurmaViewModel extends Observable {
     this.bimestreSelecionado = parseInt(bimestre) || 0;
     this.notify('DADOS_CARREGADOS', this.getMatrizNotas());
   }
-  get mediaCorte(){
+  get mediaCorte() {
     return parseFloat(this.turma?.media_aprovacao) || 6.0;
   }
   getAvaliacoesFiltradas() {
@@ -26,7 +26,9 @@ export class TurmaViewModel extends Observable {
     return this.avaliacoes.filter(av => (av.bimestre === 1) === this.bimestreSelecionado);
   }
   getMatrizNotas() {
-    const avaliacoesFiltradas = this.getAvaliacoesFiltradas();
+    const avaliacoesFiltradas = this.avaliacoes.filter(
+      av => Number(av.bimestre) === Number(this.bimestreSelecionado)
+    );
 
     return this.alunos.map(aluno => {
       const notasAluno = avaliacoesFiltradas.map(av => {
@@ -67,11 +69,11 @@ export class TurmaViewModel extends Observable {
     }
 
     if (notasValidas.length === 0) return '-';
-    
+
     if (this.turma?.tipo_media === 'ponderada' && pesoTotal > 0) {
       return (soma / pesoTotal).toFixed(1);
     }
-    
+
     const mediaSimples = notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
     return mediaSimples.toFixed(1);
   }
