@@ -98,6 +98,7 @@ export const BackupService = {
       .select(`
         id,
         data,
+        bimestre,
         conteudo_ministrado,
         proximo_conteudo,
         observacoes,

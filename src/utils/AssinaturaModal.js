@@ -1,12 +1,13 @@
 // src/utils/AssinaturaModal.js
 import { Toast } from './ui.js';
+import { supabase } from '../core/supabaseClient.js';
 
 export class AssinaturaModal {
   // Ajuste com a sua chave Pix e o número do WhatsApp da TG Tech (com DDD)
   static CHAVE_PIX = "thevertongutemberg15@gmail.com";
   static WHATSAPP_NUMERO = "5584986743960"; 
 
-  static abrir(usuarioEmail = '') {
+  static async abrir(usuarioEmail = '') {
     let modal = document.getElementById('modal-assinatura-pro');
     if (!modal) {
       modal = document.createElement('div');
@@ -14,8 +15,30 @@ export class AssinaturaModal {
       document.body.appendChild(modal);
     }
 
+    // Identifica se é primeiro mês promocional (R$ 19,99) ou renovação de ex-assinante (R$ 29,99)
+    let valorCobrado = "19,99";
+    let ehRenovacao = false;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: perfil } = await supabase
+          .from('perfis')
+          .select('pro_expira_em')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (perfil?.pro_expira_em) {
+          valorCobrado = "29,99";
+          ehRenovacao = true;
+        }
+      }
+    } catch (e) {
+      console.warn('[AssinaturaModal] Usando valor padrão inicial:', e);
+    }
+
     const mensagemWhatsapp = encodeURIComponent(
-      `Olá! Fiz o pagamento do Plano Pro do Diário Docente.\n\n` +
+      `Olá! Fiz o pagamento do Plano Pro do Diário Docente (${ehRenovacao ? 'Renovação por R$ 29,99' : '1º Mês Promocional por R$ 19,99'}).\n\n` +
       `📧 E-mail da conta: ${usuarioEmail || 'informe seu e-mail aqui'}\n` +
       `Seguem os dados do comprovante em anexo:`
     );
@@ -35,12 +58,19 @@ export class AssinaturaModal {
             </h3>
             <p class="text-xs text-slate-500">Turmas ilimitadas, IA e exportações completas</p>
           </div>
-          <button id="btn-fechar-modal-pix" class="touch-target-44 text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+          <button id="btn-fechar-modal-pix" class="touch-target-44 text-slate-400 hover:text-slate-600 text-2xl font-bold cursor-pointer">&times;</button>
         </div>
 
         <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl text-center space-y-1">
-          <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Assinatura Mensal</span>
-          <div class="text-3xl font-black text-indigo-950">R$ 19,90 <span class="text-xs font-medium text-slate-500">/ 30 dias</span></div>
+          <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">
+            ${ehRenovacao ? 'Renovação Mensal' : 'Oferta de 1º Mês'}
+          </span>
+          <div class="text-3xl font-black text-indigo-950 flex items-center justify-center gap-2">
+            ${!ehRenovacao ? '<span class="text-sm font-bold text-slate-400 line-through">R$ 29,99</span>' : ''}
+            <span>R$ ${valorCobrado}</span>
+            <span class="text-xs font-medium text-slate-500">/ 30 dias</span>
+          </div>
+          ${!ehRenovacao ? '<p class="text-[10px] text-indigo-600 font-medium">Próximas renovações por R$ 29,99 / mês</p>' : ''}
         </div>
 
         <!-- Copiar Chave Pix -->
@@ -54,7 +84,7 @@ export class AssinaturaModal {
               id="inp-chave-pix-copiar"
               class="w-full bg-slate-50 border border-slate-200 text-slate-800 font-mono text-xs px-3 py-2.5 rounded-xl outline-none select-all"
             >
-            <button id="btn-copiar-pix" class="touch-action min-h-[44px] px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center gap-1 shrink-0">
+            <button id="btn-copiar-pix" class="touch-action min-h-[44px] px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center gap-1 shrink-0 cursor-pointer">
               <span>📋</span> Copiar
             </button>
           </div>
@@ -63,7 +93,7 @@ export class AssinaturaModal {
         <!-- Instruções e WhatsApp -->
         <div class="space-y-3 pt-2 border-t border-slate-100">
           <ol class="text-xs text-slate-600 space-y-1 list-decimal list-inside">
-            <li>Faça o Pix de <strong>R$ 19,90</strong> no seu banco.</li>
+            <li>Faça o Pix de <strong>R$ ${valorCobrado}</strong> no seu banco.</li>
             <li>Envie o comprovante para nosso WhatsApp.</li>
             <li>Seu acesso Pro é ativado em até 30 minutos.</li>
           </ol>

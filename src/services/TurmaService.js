@@ -28,6 +28,7 @@ export const TurmaService = {
     if (error) throw error;
     return data;
   },
+
   async getTurmas() {
     const { data, error } = await supabase
       .from('turmas')
@@ -37,16 +38,17 @@ export const TurmaService = {
     if (error) throw error;
     return data || [];
   },
-  // Busca as avaliações (que definem as colunas da planilha)
+
+  // Busca as avaliações da turma
   async getAvaliacoes(turmaId) {
     const { data, error } = await supabase
       .from('avaliacoes')
       .select('*')
       .eq('turma_id', turmaId)
-      .order('data_prevista', { ascending: true });
+      .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   // Busca todas as notas lançadas para as avaliações da turma
@@ -63,15 +65,16 @@ export const TurmaService = {
       .eq('avaliacoes.turma_id', turmaId);
 
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   // Salva ou atualiza uma nota individual (upsert)
   async salvarNota(avaliacaoId, alunoId, valor) {
+    const valorNumerico = valor !== null && valor !== '' && !isNaN(parseFloat(valor)) ? parseFloat(valor) : null;
     const { data, error } = await supabase
       .from('notas')
       .upsert(
-        { avaliacao_id: avaliacaoId, aluno_id: alunoId, valor: parseFloat(valor) },
+        { avaliacao_id: avaliacaoId, aluno_id: alunoId, valor: valorNumerico },
         { onConflict: 'avaliacao_id,aluno_id' }
       )
       .select();
@@ -106,7 +109,6 @@ export const TurmaService = {
       .from('fotos-alunos')
       .getPublicUrl(filePath);
 
-    // Atualiza o registro do aluno com o link público gerado
     await supabase
       .from('alunos')
       .update({ foto_url: publicUrl })
@@ -115,25 +117,32 @@ export const TurmaService = {
     return publicUrl;
   },
 
-  // Adicionar dentro do objeto TurmaService em src/services/TurmaService.js:
-  async salvarAvaliacao({ turma_id, titulo, data_prevista, peso }) {
+  // CORRIGIDO: Agora grava o bimestre recebido no banco de dados!
+  async salvarAvaliacao({ turma_id, titulo, data_prevista, peso, bimestre }) {
     const { data, error } = await supabase
       .from('avaliacoes')
-      .insert([{ turma_id, titulo, data_prevista, peso }])
+      .insert([{ 
+        turma_id, 
+        titulo: titulo.trim(), 
+        data_prevista: data_prevista || null, 
+        peso: parseFloat(peso) || 1.0,
+        bimestre: parseInt(bimestre, 10) || 1
+      }])
       .select()
       .single();
 
     if (error) throw error;
     return data;
   },
+
   async atualizarAvaliacao(avaliacaoId, { titulo, data_prevista, peso, bimestre }) {
     const { error } = await supabase
       .from('avaliacoes')
       .update({
-        titulo,
-        data_prevista,
+        titulo: titulo.trim(),
+        data_prevista: data_prevista || null,
         peso: parseFloat(peso) || 1.0,
-        bimestre: parseInt(bimestre) || 1
+        bimestre: parseInt(bimestre, 10) || 1
       })
       .eq('id', avaliacaoId);
 
@@ -141,8 +150,6 @@ export const TurmaService = {
   },
 
   async excluirTurma(turmaId) {
-    // A remoção em cascata (ON DELETE CASCADE) no Supabase tratará das matrículas,
-    // avaliações, aulas e frequências vinculadas
     const { error } = await supabase
       .from('turmas')
       .delete()
@@ -150,6 +157,11 @@ export const TurmaService = {
 
     if (error) throw error;
     return true;
+  },
+
+  // Alias para garantir compatibilidade com DashboardViewModel
+  async excluirTurmaCompletamente(turmaId) {
+    return this.excluirTurma(turmaId);
   },
 
   async atualizarDadosGeraisTurma(turmaId, { nome, disciplina, anoLetivo }) {

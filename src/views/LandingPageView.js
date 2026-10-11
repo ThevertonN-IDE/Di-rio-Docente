@@ -118,7 +118,17 @@ export class LandingPageView {
               </div>
               <div class="space-y-4">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600">Professor Pro</span>
-                <div class="text-3xl font-black text-slate-800">R$ 19,90 <span class="text-xs font-normal text-slate-400">/30 dias</span></div>
+                
+                <!-- Preço com Oferta de 1º Mês -->
+                <div>
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-bold text-slate-400 line-through">R$ 29,99</span>
+                    <span class="text-3xl font-black text-slate-800">R$ 19,99</span>
+                    <span class="text-xs font-bold text-indigo-600">no 1º mês</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-0.5">Renovação seguinte por R$ 29,99 / 30 dias</p>
+                </div>
+
                 <ul class="text-xs text-slate-600 space-y-2.5">
                   <li class="flex items-center gap-2"><span>✓</span> <strong>Turmas ilimitadas</strong></li>
                   <li class="flex items-center gap-2"><span>✓</span> <strong>Digitalização de provas com IA</strong></li>

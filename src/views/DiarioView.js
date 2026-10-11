@@ -506,6 +506,7 @@ export class DiarioView {
         }
 
         Toast.show('Aula, chamada e bimestre salvos com sucesso!', 'success');
+        await this.vm.carregarDiario(this.vm.dataSelecionada);
         await this.carregarHistorico();
       } catch (err) {
         Toast.show('Erro ao salvar aula: ' + err.message, 'error');

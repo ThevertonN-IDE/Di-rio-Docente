@@ -4,7 +4,6 @@ import { obterDataLocalBrasil } from '../utils/date.js';
 import { SyncManager, localDb } from '../core/localDb.js';
 
 export const PedagogicoService = {
-  // 1. GESTÃO DO BANCO DE QUESTÕES
   async listarQuestoes(assunto = '') {
     let query = supabase.from('questoes_banco').select('*').order('created_at', { ascending: false });
     if (assunto.trim()) {
@@ -13,6 +12,22 @@ export const PedagogicoService = {
     const { data, error } = await query;
     if (error) throw error;
     return data || [];
+  },
+
+  // NOVO: Busca uma aula por data trazendo o bimestre registrado
+  async buscarAulaPorData(turmaId, data) {
+    const { data: aula, error } = await supabase
+      .from('aulas')
+      .select('id, turma_id, data, bimestre, conteudo_ministrado, proximo_conteudo, observacoes')
+      .eq('turma_id', turmaId)
+      .eq('data', data)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Aviso ao buscar aula:', error.message);
+      return null;
+    }
+    return aula;
   },
 
   async atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre }) {
@@ -38,7 +53,6 @@ export const PedagogicoService = {
   async carregarFrequenciasAula(aulaId) {
     if (!aulaId) return {};
 
-    // 1. Se estiver offline, lê direto do Dexie
     if (!navigator.onLine) {
       try {
         const registrosLocais = await localDb.frequencias.where('aula_id').equals(aulaId).toArray();
@@ -51,12 +65,10 @@ export const PedagogicoService = {
         });
         return mapa;
       } catch (e) {
-        console.warn('Erro ao ler frequências locais:', e);
         return {};
       }
     }
 
-    // 2. Se estiver online, consulta no Supabase
     try {
       const { data, error } = await supabase
         .from('frequencias')
@@ -75,7 +87,6 @@ export const PedagogicoService = {
       });
       return mapa;
     } catch (err) {
-      console.warn('Erro ao carregar presencas da nuvem, tentando cache local:', err);
       try {
         const registrosLocais = await localDb.frequencias.where('aula_id').equals(aulaId).toArray();
         const mapa = {};
@@ -92,7 +103,6 @@ export const PedagogicoService = {
     }
   },
 
-  // Método UNIFICADO: gerencia cadastro/atualização da aula e salva presenças com observações individuais
   async registrarAulaComChamada(turmaId, dadosAula, listaPresencas = []) {
     const data = dadosAula.data || obterDataLocalBrasil();
     const conteudo = dadosAula.conteudo || dadosAula.conteudo_ministrado || '';
@@ -100,7 +110,6 @@ export const PedagogicoService = {
     const observacoes = dadosAula.observacoes || null;
     const bimestre = parseInt(dadosAula.bimestre, 10) || 1;
 
-    // Se estiver sem internet, grava no Dexie e enfileira na sync_queue imediatamente
     if (!navigator.onLine) {
       return await SyncManager.salvarChamadaOffline(turmaId, {
         data,
@@ -112,7 +121,6 @@ export const PedagogicoService = {
     }
 
     try {
-      // 1. Tenta salvar na nuvem
       let { data: aulaExistente } = await supabase
         .from('aulas')
         .select('id')
@@ -148,7 +156,6 @@ export const PedagogicoService = {
         });
       }
 
-      // 2. Salva lista de frequências com observações individuais
       if (listaPresencas && listaPresencas.length > 0) {
         const payloadFreq = listaPresencas.map(p => ({
           aula_id: aulaId,
@@ -164,7 +171,6 @@ export const PedagogicoService = {
         if (errFreq) throw errFreq;
       }
 
-      // Também mantém cópia local em cache no Dexie
       try {
         await localDb.aulas.put({
           id: aulaId,
@@ -176,13 +182,10 @@ export const PedagogicoService = {
           bimestre,
           offline: false
         });
-      } catch (e) {
-        // Ignora falhas menores de cache local
-      }
+      } catch (e) {}
 
       return { id: aulaId, offline: false };
     } catch (errRede) {
-      // Se falhou por queda súbita de conexão durante o envio, cai suavemente para o modo offline
       console.warn('Conexão falhou ao salvar chamada. Salvando localmente:', errRede.message);
       return await SyncManager.salvarChamadaOffline(turmaId, {
         data,
@@ -273,7 +276,6 @@ export const PedagogicoService = {
     if (error) throw error;
   },
 
-  // 2. CONSOLIDAÇÃO DE FREQUÊNCIA PERCENTUAL
   async calcularFrequenciasTurma(turmaId, bimestre = 0, dataInicio = null, dataFim = null) {
     try {
       let queryAulas = supabase
@@ -325,14 +327,11 @@ export const PedagogicoService = {
     }
   },
 
-  // 3. EXPORTAÇÃO PARA EXCEL (.XLSX) COM MÉDIA PERSONALIZADA DA TURMA E DATA BRASIL
   exportarPlanilhaExcel(nomeTurma, disciplina, matrizAlunos, avaliacoes, totalAulas, mapaPresencas, mediaAprovacao = 6.0) {
     const notaCorte = parseFloat(mediaAprovacao) || 6.0;
     const cabecalho = ['Nº Chamada', 'Nome do Aluno', 'E-mail'];
 
-    // Adiciona colunas de avaliações
     avaliacoes.forEach(av => cabecalho.push(`${av.titulo} (P${av.peso || 1})`));
-
     cabecalho.push('Média Final');
     cabecalho.push('Aulas Ministradas');
     cabecalho.push('Presenças');
@@ -344,8 +343,6 @@ export const PedagogicoService = {
       const pct = totalAulas > 0 ? ((presencas / totalAulas) * 100).toFixed(1) : '100.0';
       const mediaCalculada = parseFloat(aluno.mediaFinal) || 0;
       const frequenciaCalculada = parseFloat(pct) || 0;
-
-      // Validação dinâmica com a nota de corte da turma
       const situacao = (mediaCalculada >= notaCorte && frequenciaCalculada >= 75) ? 'Aprovado' : 'Atenção / Reprovado';
 
       const linha = [
@@ -354,7 +351,6 @@ export const PedagogicoService = {
         aluno.email || 'Sem e-mail'
       ];
 
-      // Notas das avaliações
       aluno.notas.forEach(n => linha.push(n.valor !== '' ? parseFloat(n.valor) : '-'));
 
       linha.push(mediaCalculada);
@@ -366,12 +362,10 @@ export const PedagogicoService = {
       return linha;
     });
 
-    // Criação da planilha com SheetJS
     const ws = XLSX.utils.aoa_to_sheet([cabecalho, ...linhas]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Rendimento Escolar');
 
-    // Data local sem risco de UTC deslocado
     const dataFormatada = obterDataLocalBrasil();
     const nomeArquivo = `Planilha_${nomeTurma.replace(/\s+/g, '_')}_${dataFormatada}.xlsx`;
     XLSX.writeFile(wb, nomeArquivo);

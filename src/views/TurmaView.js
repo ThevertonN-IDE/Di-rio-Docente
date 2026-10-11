@@ -18,7 +18,6 @@ export class TurmaView {
     this.avaliacaoEmEdicao = null;
     this.salvarNotaDebounced = debounce((avId, alunoId, valor) => this.persistirNota(avId, alunoId, valor), 350);
 
-    // Estado pulsante inicial antes dos dados terminarem de carregar
     if (this.container && !this.container.innerHTML.trim()) {
       this.container.innerHTML = `
         <div class="p-3 sm:p-6 max-w-7xl mx-auto space-y-6">
@@ -37,7 +36,7 @@ export class TurmaView {
       this.render();
     });
     this.vm.subscribe('AVALIACAO_REMOVIDA', () => {
-      Toast.show('Avaliação eliminada com sucesso.', 'info');
+      Toast.show('Avaliação removida com sucesso.', 'info');
       this.render();
     });
     this.vm.subscribe('MEDIA_ATUALIZADA', ({ alunoId, novaMedia }) => {
@@ -80,6 +79,7 @@ export class TurmaView {
     const avaliacoes = this.vm.getAvaliacoesFiltradas ? this.vm.getAvaliacoesFiltradas() : this.vm.avaliacoes;
     const { totalAulas, mapaPresencas } = this.dadosFreq;
     const mediaCorte = this.vm.mediaCorte || 6.0;
+    const bimSelecionado = this.vm.bimestreSelecionado || 0;
 
     this.container.innerHTML = `
       <div class="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
@@ -101,31 +101,29 @@ export class TurmaView {
               </p>
             </div>
 
-            <!-- Ações Prioritárias Rápidas -->
             <div class="flex items-center gap-2 flex-wrap">
-              <button id="btn-diario" class="touch-action min-h-[44px] px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5">
+              <button id="btn-diario" class="touch-action min-h-[44px] px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
                 <span>📅</span>
                 <span>Diário & Chamada</span>
               </button>
-              <button id="btn-nova-avaliacao" class="touch-action min-h-[44px] px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1">
+              <button id="btn-nova-avaliacao" class="touch-action min-h-[44px] px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1 cursor-pointer">
                 <span>➕</span>
                 <span>Nova Avaliação</span>
               </button>
             </div>
           </div>
 
-          <!-- Ações Secundárias em Linha Deslizável -->
           <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-semibold">
-            <button id="btn-exportar-excel" class="touch-action min-h-[44px] px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap active:scale-95">
+            <button id="btn-exportar-excel" class="touch-action min-h-[44px] px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap active:scale-95 cursor-pointer">
               <span>📊</span> Exportar Excel
             </button>
-            <button id="btn-modal-add-aluno" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+            <button id="btn-modal-add-aluno" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
               <span>👤</span> + Aluno
             </button>
-            <button id="btn-modal-importar-lote" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+            <button id="btn-modal-importar-lote" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
               <span>📋</span> Colar Lista
             </button>
-            <button id="btn-relatorio" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+            <button id="btn-relatorio" class="touch-action min-h-[44px] px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
               <span>🖨️</span> Ata / Relatório
             </button>
           </div>
@@ -135,19 +133,74 @@ export class TurmaView {
         <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs">
           <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs font-bold select-none">
             <span class="text-slate-400 text-[11px] uppercase tracking-wider mr-1 shrink-0">Bimestre:</span>
-            <button data-bimestre-btn="0" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 0 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Todos</button>
-            <button data-bimestre-btn="1" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 1 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">1º Bim</button>
-            <button data-bimestre-btn="2" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 2 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">2º Bim</button>
-            <button data-bimestre-btn="3" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 3 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">3º Bim</button>
-            <button data-bimestre-btn="4" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap ${this.vm.bimestreSelecionado === 4 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">4º Bim</button>
+            <button data-bimestre-btn="0" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap cursor-pointer ${bimSelecionado === 0 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Todos</button>
+            <button data-bimestre-btn="1" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap cursor-pointer ${bimSelecionado === 1 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">1º Bim</button>
+            <button data-bimestre-btn="2" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap cursor-pointer ${bimSelecionado === 2 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">2º Bim</button>
+            <button data-bimestre-btn="3" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap cursor-pointer ${bimSelecionado === 3 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">3º Bim</button>
+            <button data-bimestre-btn="4" class="touch-action min-h-[44px] px-3 py-1.5 rounded-full transition whitespace-nowrap cursor-pointer ${bimSelecionado === 4 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">4º Bim</button>
           </div>
 
-          <button id="btn-cfg-media" class="touch-action min-h-[44px] text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl hover:bg-indigo-100 transition flex items-center gap-1 shadow-2xs">
+          <button id="btn-cfg-media" class="touch-action min-h-[44px] text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl hover:bg-indigo-100 transition flex items-center gap-1 shadow-2xs cursor-pointer">
             ⚙️ Média Mínima: <strong class="ml-0.5">${mediaCorte}</strong>
           </button>
         </div>
 
-        <!-- 3. GRÁFICO DE DIAGNÓSTICO (RETINOL / COLAPSÁVEL VISUALMENTE) -->
+        <!-- 3. PAINEL DE GESTÃO DE AVALIAÇÕES (OTIMIZADO PARA TOUCH MOBILE E PC) -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div>
+              <h3 class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                Atividades & Avaliações ${bimSelecionado > 0 ? `(${bimSelecionado}º Bimestre)` : '(Todas)'}
+              </h3>
+              <p class="text-[11px] text-slate-400">Edite pesos ou remova colunas facilmente no celular</p>
+            </div>
+            <span class="text-xs font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-100">
+              ${avaliacoes.length} no total
+            </span>
+          </div>
+
+          ${avaliacoes.length === 0 ? `
+            <div class="text-center py-4 text-slate-400 text-xs italic">
+              Nenhuma avaliação cadastrada ${bimSelecionado > 0 ? `para o ${bimSelecionado}º bimestre.` : 'nesta turma.'}
+            </div>
+          ` : `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              ${avaliacoes.map(av => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2 shadow-2xs">
+                  <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-bold text-indigo-600 bg-indigo-100/60 px-1.5 py-0.5 rounded">
+                      ${av.bimestre || 1}º Bimestre
+                    </span>
+                    <h4 class="text-xs font-bold text-slate-800 mt-1 truncate" title="${escapeHtml(av.titulo)}">
+                      ${escapeHtml(av.titulo)}
+                    </h4>
+                    <span class="text-[11px] text-slate-400 font-medium">Peso: <strong>${av.peso || 1}</strong></span>
+                  </div>
+
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button 
+                      data-edit-av="${escapeHtml(av.id)}"
+                      title="Editar Avaliação"
+                      class="touch-action touch-target-44 w-9 h-9 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition flex items-center justify-center active:scale-95 cursor-pointer shadow-2xs"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      data-delete-av="${escapeHtml(av.id)}"
+                      data-titulo-av="${escapeHtml(av.titulo)}"
+                      title="Excluir Avaliação"
+                      class="touch-action touch-target-44 w-9 h-9 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 transition flex items-center justify-center active:scale-95 cursor-pointer shadow-2xs"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+
+        <!-- 4. GRÁFICO DE DIAGNÓSTICO -->
         <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-2">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Distribuição de Desempenho da Turma</h3>
@@ -158,31 +211,27 @@ export class TurmaView {
           </div>
         </div>
 
-        <!-- 4. PLANILHA DE NOTAS E FREQUÊNCIA (COLUNAS DE ALUNOS FIXAS NO SCROLL) -->
+        <!-- 5. PLANILHA DE NOTAS E FREQUÊNCIA -->
         <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
           <div class="overflow-x-auto relative">
             <table id="planilha-notas" class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  <!-- Coluna 1 Fixa: Nº de Chamada -->
                   <th class="py-3 px-3 w-12 text-center sticky left-0 z-20 bg-slate-50 border-r border-slate-200/60 shadow-2xs">Nº</th>
-                  <!-- Coluna 2 Fixa: Nome do Aluno -->
                   <th class="py-3 px-4 min-w-[200px] sm:min-w-[240px] sticky left-12 z-20 bg-slate-50 border-r border-slate-200 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]">
                     Aluno (toque para gerir)
                   </th>
                   
-                  <!-- Colunas Dinâmicas de Avaliações -->
                   ${avaliacoes.map(av => `
                     <th class="py-3 px-3 min-w-[110px] text-center border-l border-slate-100">
                       <div class="flex items-center justify-center gap-1">
                         <span data-edit-av="${escapeHtml(av.id)}" title="Clique para editar avaliação" class="cursor-pointer hover:text-indigo-600 hover:underline transition font-bold">${escapeHtml(av.titulo)}</span>
                         <button data-delete-av="${escapeHtml(av.id)}" data-titulo-av="${escapeHtml(av.titulo)}" title="Excluir" class="touch-action touch-target-44 text-slate-400 hover:text-rose-600 font-bold text-base leading-none">&times;</button>
                       </div>
-                      <span class="block text-[10px] text-slate-400 font-normal">p.${av.peso || 1} • ${av.bimestre ? av.bimestre + 'º Bim' : '1º Bim'}</span>
+                      <span class="block text-[10px] text-slate-400 font-normal">p.${av.peso || 1} •${av.bimestre ? av.bimestre + 'º Bim' : '1º Bim'}</span>
                     </th>
                   `).join('')}
 
-                  <!-- Médias e Frequência -->
                   <th class="py-3 px-4 w-24 text-center border-l border-slate-200 bg-slate-100 font-bold">Média</th>
                   <th class="py-3 px-3 w-28 text-center border-l border-slate-200 bg-slate-50 font-bold">Frequência</th>
                 </tr>
@@ -199,12 +248,10 @@ export class TurmaView {
 
                   return `
                     <tr class="hover:bg-slate-50/80 transition group">
-                      <!-- Coluna 1 Fixa no Corpo -->
                       <td class="py-3 px-3 text-center text-slate-400 font-mono text-xs sticky left-0 z-10 bg-white group-hover:bg-slate-50 border-r border-slate-100 shadow-2xs">
                         ${escapeHtml(aluno.numero_chamada || '-')}
                       </td>
 
-                      <!-- Coluna 2 Fixa no Corpo -->
                       <td class="py-3 px-4 cursor-pointer sticky left-12 z-10 bg-white group-hover:bg-slate-50 border-r border-slate-200 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]" data-abrir-aluno="${escapeHtml(aluno.id)}">
                         <div class="flex items-center gap-2.5">
                           <div class="relative w-8 h-8 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 flex items-center justify-center font-bold text-slate-500 text-xs">
@@ -223,7 +270,6 @@ export class TurmaView {
                         </div>
                       </td>
 
-                      <!-- Células de Notas com inputmode decimal para telemóveis -->
                       ${aluno.notas.map((n, cIndex) => `
                         <td class="py-2 px-2 text-center border-l border-slate-100">
                           <input 
@@ -236,12 +282,10 @@ export class TurmaView {
                         </td>
                       `).join('')}
 
-                      <!-- Média Final -->
                       <td id="media-${escapeHtml(aluno.id)}" class="py-3 px-4 text-center border-l border-slate-200 font-bold font-mono text-xs text-slate-800 bg-slate-50/50 ${abaixoDaMedia ? 'text-rose-600 font-black' : ''}">
                         ${escapeHtml(aluno.mediaFinal)}
                       </td>
 
-                      <!-- % Frequência -->
                       <td class="py-3 px-3 text-center border-l border-slate-200 font-mono text-xs">
                         <span class="px-2 py-0.5 rounded-lg font-bold ${emAlerta
                           ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse'
@@ -259,13 +303,13 @@ export class TurmaView {
         </div>
       </div>
 
-      <!-- MODAL NOVO ALUNO (COM GAVETA BOTTOM-SHEET NO TELEMÓVEL) -->
+      <!-- MODAL NOVO ALUNO -->
       <div id="modal-novo-aluno" class="backdrop-smooth fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden p-0 md:p-4">
         <div class="sheet-smooth bg-white border-t md:border border-slate-200 rounded-t-3xl md:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Registar Novo Aluno</h3>
-            <button id="btn-fechar-modal-aluno" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-aluno" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
           </div>
           <form id="form-novo-aluno" class="space-y-3 text-xs">
             <div class="flex items-center gap-4 py-1">
@@ -290,8 +334,8 @@ export class TurmaView {
               <input type="email" id="campo-email-aluno" class="w-full border rounded-xl p-2 text-xs">
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-aluno" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-aluno-submit" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Aluno</button>
+              <button type="button" id="btn-cancelar-aluno" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold cursor-pointer">Cancelar</button>
+              <button type="submit" id="btn-salvar-aluno-submit" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm cursor-pointer">Salvar Aluno</button>
             </div>
           </form>
         </div>
@@ -303,7 +347,7 @@ export class TurmaView {
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Dados do Aluno</h3>
-            <button id="btn-fechar-modal-editar-aluno" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-editar-aluno" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
           </div>
           <form id="form-editar-aluno" class="space-y-3 text-xs">
             <div class="flex items-center gap-4 py-1">
@@ -328,12 +372,12 @@ export class TurmaView {
               <input type="email" id="edit-email-aluno" class="w-full border rounded-xl p-2 text-xs">
             </div>
             <div class="pt-3 border-t flex items-center justify-between">
-              <button type="button" id="btn-excluir-aluno" class="touch-action touch-target-44 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition">
+              <button type="button" id="btn-excluir-aluno" class="touch-action touch-target-44 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer">
                 🗑️ Remover da Turma
               </button>
               <div class="flex gap-2">
-                <button type="button" id="btn-cancelar-editar-aluno" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Fechar</button>
-                <button type="submit" id="btn-salvar-edicao-aluno" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar</button>
+                <button type="button" id="btn-cancelar-editar-aluno" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold cursor-pointer">Fechar</button>
+                <button type="submit" id="btn-salvar-edicao-aluno" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm cursor-pointer">Salvar</button>
               </div>
             </div>
           </form>
@@ -346,25 +390,25 @@ export class TurmaView {
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Editar Avaliação</h3>
-            <button id="btn-fechar-modal-editar-av" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-modal-editar-av" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
           </div>
           <form id="form-editar-avaliacao" class="space-y-3 text-xs">
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Título</label>
-              <input type="text" id="edit-titulo-av" required class="w-full border rounded-xl p-2 text-xs">
+              <input type="text" id="edit-titulo-av" required class="w-full border rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500">
             </div>
             <div class="grid grid-cols-3 gap-2">
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Data</label>
-                <input type="date" id="edit-data-av" required class="w-full border rounded-xl p-2 text-xs">
+                <input type="date" id="edit-data-av" class="w-full border rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500">
               </div>
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Peso</label>
-                <input type="number" step="0.1" id="edit-peso-av" required class="w-full border rounded-xl p-2 text-xs">
+                <input type="number" step="0.1" id="edit-peso-av" required class="w-full border rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500">
               </div>
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Bimestre</label>
-                <select id="edit-bimestre-av" class="w-full border rounded-xl p-2 text-xs bg-white font-semibold">
+                <select id="edit-bimestre-av" class="w-full border rounded-xl p-2.5 text-xs bg-white font-semibold outline-none focus:border-indigo-500 cursor-pointer">
                   <option value="1">1º Bimestre</option>
                   <option value="2">2º Bimestre</option>
                   <option value="3">3º Bimestre</option>
@@ -373,8 +417,8 @@ export class TurmaView {
               </div>
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-modal-editar-av" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-edicao-av" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Salvar Alterações</button>
+              <button type="button" id="btn-cancelar-modal-editar-av" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold cursor-pointer">Cancelar</button>
+              <button type="submit" id="btn-salvar-edicao-av" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm cursor-pointer">Salvar Alterações</button>
             </div>
           </form>
         </div>
@@ -386,13 +430,13 @@ export class TurmaView {
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Importação em Lote</h3>
-            <button id="btn-fechar-lote" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-lote" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
           </div>
           <p class="text-xs text-slate-500">Cole a lista com um nome por linha.</p>
           <textarea id="txt-area-lote" rows="7" class="w-full border border-slate-200 rounded-xl p-3 text-xs font-mono outline-none focus:border-indigo-500"></textarea>
           <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" id="btn-cancelar-lote" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-            <button type="button" id="btn-confirmar-lote" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Importar Todos</button>
+            <button type="button" id="btn-cancelar-lote" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold cursor-pointer">Cancelar</button>
+            <button type="button" id="btn-confirmar-lote" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm cursor-pointer">Importar Todos</button>
           </div>
         </div>
       </div>
@@ -403,35 +447,35 @@ export class TurmaView {
           <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto md:hidden -mt-1 mb-2"></div>
           <div class="flex items-center justify-between border-b pb-3">
             <h3 class="text-base font-bold text-slate-800">Criar Nova Avaliação</h3>
-            <button id="btn-fechar-av" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            <button id="btn-fechar-av" class="touch-action touch-target-44 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
           </div>
           <form id="form-nova-avaliacao" class="space-y-3 text-xs">
             <div>
               <label class="block font-bold text-slate-600 uppercase mb-1">Título</label>
-              <input type="text" id="campo-titulo-av" required class="w-full border rounded-xl p-2.5 text-xs">
+              <input type="text" id="campo-titulo-av" required class="w-full border rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500" placeholder="Ex: Prova Bimestral, Trabalho 01...">
             </div>
             <div class="grid grid-cols-3 gap-2">
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Data</label>
-                <input type="date" id="campo-data-av" required class="w-full border rounded-xl p-2 text-xs">
+                <input type="date" id="campo-data-av" class="w-full border rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500">
               </div>
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Peso</label>
-                <input type="number" step="0.1" id="campo-peso-av" value="1.0" required class="w-full border rounded-xl p-2 text-xs">
+                <input type="number" step="0.1" id="campo-peso-av" value="1.0" required class="w-full border rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500">
               </div>
               <div>
                 <label class="block font-bold text-slate-600 uppercase mb-1">Bimestre</label>
-                <select id="campo-bimestre-av" class="w-full border rounded-xl p-2 text-xs bg-white font-semibold">
-                  <option value="1">1º Bim</option>
-                  <option value="2">2º Bim</option>
-                  <option value="3">3º Bim</option>
-                  <option value="4">4º Bim</option>
+                <select id="campo-bimestre-av" class="w-full border rounded-xl p-2.5 text-xs bg-white font-semibold outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="1" ${bimSelecionado === 1 ? 'selected' : ''}>1º Bim</option>
+                  <option value="2" ${bimSelecionado === 2 ? 'selected' : ''}>2º Bim</option>
+                  <option value="3" ${bimSelecionado === 3 ? 'selected' : ''}>3º Bim</option>
+                  <option value="4" ${bimSelecionado === 4 ? 'selected' : ''}>4º Bim</option>
                 </select>
               </div>
             </div>
             <div class="pt-3 border-t flex justify-end gap-2">
-              <button type="button" id="btn-cancelar-av" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold">Cancelar</button>
-              <button type="submit" id="btn-salvar-av-submit" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Criar Coluna</button>
+              <button type="button" id="btn-cancelar-av" class="touch-action min-h-[44px] px-3.5 py-1.5 border rounded-xl text-slate-600 font-semibold cursor-pointer">Cancelar</button>
+              <button type="submit" id="btn-salvar-av-submit" class="touch-action min-h-[44px] px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm cursor-pointer">Criar Coluna</button>
             </div>
           </form>
         </div>
@@ -480,13 +524,8 @@ export class TurmaView {
     // Filtros de Bimestre
     this.container.querySelectorAll('[data-bimestre-btn]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const bim = parseInt(e.currentTarget.dataset.bimestreBtn);
-        if (this.vm.setBimestre) {
-          this.vm.setBimestre(bim);
-        } else {
-          this.vm.bimestreSelecionado = bim;
-          this.render();
-        }
+        const bim = parseInt(e.currentTarget.dataset.bimestreBtn, 10);
+        this.vm.setBimestre(bim);
       });
     });
 
@@ -495,13 +534,7 @@ export class TurmaView {
       const atual = this.vm.mediaCorte || 6.0;
       const novaMedia = prompt('Informe a média mínima para aprovação nesta turma (ex: 6.0 ou 7.0):', atual);
       if (novaMedia !== null && !isNaN(parseFloat(novaMedia))) {
-        if (this.vm.salvarConfiguracoesTurma) {
-          await this.vm.salvarConfiguracoesTurma(novaMedia, this.vm.turma.tipo_media || 'simples');
-        } else {
-          await TurmaService.atualizarConfiguracaoTurma(this.vm.turmaId, { mediaAprovacao: novaMedia, tipoMedia: this.vm.turma.tipo_media || 'simples' });
-          this.vm.turma.media_aprovacao = parseFloat(novaMedia);
-          this.render();
-        }
+        await this.vm.salvarConfiguracoesTurma(novaMedia, this.vm.turma.tipo_media || 'simples');
         Toast.show(`Média mínima atualizada para ${novaMedia}!`, 'success');
       }
     });
@@ -530,7 +563,7 @@ export class TurmaView {
     this.container.querySelector('#btn-fechar-modal-editar-av')?.addEventListener('click', () => modalEditAv.classList.add('hidden'));
     this.container.querySelector('#btn-cancelar-modal-editar-av')?.addEventListener('click', () => modalEditAv.classList.add('hidden'));
 
-    // ABRIR EDIÇÃO DA AVALIAÇÃO
+    // ABRIR EDIÇÃO DA AVALIAÇÃO (Tanto nos cards mobile quanto na tabela de cabeçalho)
     this.container.querySelectorAll('[data-edit-av]').forEach(el => {
       el.addEventListener('click', () => {
         const avId = el.dataset.editAv;
@@ -552,6 +585,10 @@ export class TurmaView {
       e.preventDefault();
       if (!this.avaliacaoEmEdicao) return;
 
+      const btnSalvar = this.container.querySelector('#btn-salvar-edicao-av');
+      btnSalvar.disabled = true;
+      btnSalvar.innerText = 'Salvando...';
+
       try {
         const payload = {
           titulo: this.container.querySelector('#edit-titulo-av').value,
@@ -560,17 +597,14 @@ export class TurmaView {
           bimestre: parseInt(this.container.querySelector('#edit-bimestre-av').value) || 1
         };
 
-        if (this.vm.editarAvaliacao) {
-          await this.vm.editarAvaliacao(this.avaliacaoEmEdicao.id, payload);
-        } else {
-          await TurmaService.atualizarAvaliacao(this.avaliacaoEmEdicao.id, payload);
-          await this.vm.carregarDados();
-        }
-
+        await this.vm.editarAvaliacao(this.avaliacaoEmEdicao.id, payload);
         modalEditAv.classList.add('hidden');
         Toast.show('Avaliação atualizada com sucesso!', 'success');
       } catch (err) {
         Toast.show('Erro ao salvar avaliação: ' + err.message, 'error');
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerText = 'Salvar Alterações';
       }
     });
 
@@ -627,22 +661,12 @@ export class TurmaView {
           fotoUrl = await AlunoService.uploadFoto(this.fotoEdicaoSelecionada);
         }
 
-        if (this.vm.editarAluno) {
-          await this.vm.editarAluno(this.alunoEmEdicao.id, {
-            nome: this.container.querySelector('#edit-nome-aluno').value,
-            email: this.container.querySelector('#edit-email-aluno').value,
-            numeroChamada: this.container.querySelector('#edit-num-chamada').value,
-            fotoUrl
-          });
-        } else {
-          await AlunoService.atualizarDadosAluno(this.vm.turmaId, this.alunoEmEdicao.id, {
-            nome: this.container.querySelector('#edit-nome-aluno').value,
-            email: this.container.querySelector('#edit-email-aluno').value,
-            numeroChamada: this.container.querySelector('#edit-num-chamada').value,
-            fotoUrl
-          });
-          await this.vm.carregarDados();
-        }
+        await this.vm.editarAluno(this.alunoEmEdicao.id, {
+          nome: this.container.querySelector('#edit-nome-aluno').value,
+          email: this.container.querySelector('#edit-email-aluno').value,
+          numeroChamada: this.container.querySelector('#edit-num-chamada').value,
+          fotoUrl
+        });
 
         modalEditar.classList.add('hidden');
         Toast.show('Dados do aluno atualizados com sucesso!', 'success');
@@ -665,12 +689,7 @@ export class TurmaView {
 
       if (confirmado) {
         try {
-          if (this.vm.excluirAluno) {
-            await this.vm.excluirAluno(this.alunoEmEdicao.id);
-          } else {
-            await AlunoService.removerAlunoDaTurma(this.vm.turmaId, this.alunoEmEdicao.id);
-            await this.vm.carregarDados();
-          }
+          await this.vm.excluirAluno(this.alunoEmEdicao.id);
           modalEditar.classList.add('hidden');
           Toast.show('Aluno removido da turma com sucesso.', 'info');
         } catch (err) {
@@ -759,22 +778,20 @@ export class TurmaView {
       }
     });
 
-    // Nova Avaliação
+    // Nova Avaliação (com Bimestre correto)
     this.container.querySelector('#form-nova-avaliacao')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
-        await TurmaService.salvarAvaliacao({
-          turma_id: this.vm.turmaId,
+        await this.vm.criarAvaliacao({
           titulo: this.container.querySelector('#campo-titulo-av').value,
           data_prevista: this.container.querySelector('#campo-data-av').value,
           peso: parseFloat(this.container.querySelector('#campo-peso-av').value) || 1.0,
-          bimestre: parseInt(this.container.querySelector('#campo-bimestre-av').value) || 1
+          bimestre: parseInt(this.container.querySelector('#campo-bimestre-av').value, 10) || 1
         });
         modalAv.classList.add('hidden');
-        Toast.show('Avaliação adicionada!', 'success');
-        await this.vm.carregarDados();
+        Toast.show('Avaliação cadastrada com sucesso!', 'success');
       } catch (err) {
-        Toast.show('Erro: ' + err.message, 'error');
+        Toast.show('Erro ao criar avaliação: ' + err.message, 'error');
       }
     });
 
@@ -802,15 +819,16 @@ export class TurmaView {
       });
     });
 
-    // Exclusão de Avaliação
+    // Exclusão de Avaliação (tanto nos cards mobile quanto na tabela)
     this.container.querySelectorAll('[data-delete-av]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
+        const titulo = e.currentTarget.dataset.tituloAv || 'esta avaliação';
         const confirmado = await customConfirm(
-          `Excluir "${e.currentTarget.dataset.tituloAv}"?`,
+          `Excluir "${titulo}"?`,
           'Todas as notas desta coluna serão apagadas.'
         );
         if (confirmado) {
-          this.vm.excluirAvaliacao(e.currentTarget.dataset.deleteAv);
+          await this.vm.excluirAvaliacao(e.currentTarget.dataset.deleteAv);
         }
       });
     });
