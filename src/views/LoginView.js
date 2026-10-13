@@ -128,7 +128,7 @@ export class LoginView {
       try {
         if (this.modoCriarConta) {
           await AuthService.cadastrar(email, senha);
-          alert('Conta criada com sucesso! Já pode iniciar sessão.');
+          alert('Conta criada com sucesso! Entre no seu email e confirme sua conta para continuar.');
           alternarModo(false);
         } else {
           await AuthService.entrar(email, senha);
