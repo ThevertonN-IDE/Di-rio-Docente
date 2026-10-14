@@ -14,24 +14,24 @@ export const PedagogicoService = {
     return data || [];
   },
 
-  // NOVO: Busca uma aula por data trazendo o bimestre registrado
-  async buscarAulaPorData(turmaId, data) {
-    const { data: aula, error } = await supabase
+  async buscarAulasPorData(turmaId, data) {
+    const { data: aulas, error } = await supabase
       .from('aulas')
-      .select('id, turma_id, data, bimestre, conteudo_ministrado, proximo_conteudo, observacoes')
+      .select('id, turma_id, data, bimestre, quantidade_aulas, conteudo_ministrado, proximo_conteudo, observacoes, created_at')
       .eq('turma_id', turmaId)
       .eq('data', data)
-      .maybeSingle();
+      .order('created_at', { ascending: true });
 
     if (error) {
-      console.warn('Aviso ao buscar aula:', error.message);
-      return null;
+      console.warn('Aviso ao buscar aulas por data:', error.message);
+      return [];
     }
-    return aula;
+    return aulas || [];
   },
 
-  async atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre }) {
+  async atualizarAula(aulaId, { data, conteudo, proximoConteudo, observacoes, bimestre, quantidade_aulas }) {
     const bimestreNum = parseInt(bimestre, 10) || 1;
+    const qtdAulasNum = Math.max(1, parseInt(quantidade_aulas, 10) || 1);
 
     const { data: aulaAtualizada, error } = await supabase
       .from('aulas')
@@ -40,7 +40,8 @@ export const PedagogicoService = {
         conteudo_ministrado: conteudo,
         proximo_conteudo: proximoConteudo,
         observacoes,
-        bimestre: bimestreNum
+        bimestre: bimestreNum,
+        quantidade_aulas: qtdAulasNum
       })
       .eq('id', aulaId)
       .select()
@@ -64,7 +65,7 @@ export const PedagogicoService = {
           };
         });
         return mapa;
-      } catch (e) {
+      } catch {
         return {};
       }
     }
@@ -86,7 +87,7 @@ export const PedagogicoService = {
         };
       });
       return mapa;
-    } catch (err) {
+    } catch {
       try {
         const registrosLocais = await localDb.frequencias.where('aula_id').equals(aulaId).toArray();
         const mapa = {};
@@ -103,34 +104,35 @@ export const PedagogicoService = {
     }
   },
 
+  /**
+   * Registra ou atualiza uma aula específica sem sobrescrever outras aulas do mesmo dia
+   */
   async registrarAulaComChamada(turmaId, dadosAula, listaPresencas = []) {
+    const aulaIdExistente = dadosAula.id || null;
     const data = dadosAula.data || obterDataLocalBrasil();
     const conteudo = dadosAula.conteudo || dadosAula.conteudo_ministrado || '';
     const proximoConteudo = dadosAula.proximoConteudo || dadosAula.proximo_conteudo || null;
     const observacoes = dadosAula.observacoes || null;
     const bimestre = parseInt(dadosAula.bimestre, 10) || 1;
+    const quantidade_aulas = Math.max(1, parseInt(dadosAula.quantidade_aulas, 10) || 1);
 
     if (!navigator.onLine) {
       return await SyncManager.salvarChamadaOffline(turmaId, {
+        id: aulaIdExistente,
         data,
         conteudo,
         proximoConteudo,
         observacoes,
-        bimestre
+        bimestre,
+        quantidade_aulas
       }, listaPresencas);
     }
 
     try {
-      let { data: aulaExistente } = await supabase
-        .from('aulas')
-        .select('id')
-        .eq('turma_id', turmaId)
-        .eq('data', data)
-        .maybeSingle();
-
-      let aulaId = aulaExistente?.id;
+      let aulaId = aulaIdExistente;
 
       if (!aulaId) {
+        // Cria um NOVO registro de aula (permite 2 ou mais chamadas no mesmo dia)
         const { data: novaAula, error: errAula } = await supabase
           .from('aulas')
           .insert({
@@ -139,7 +141,8 @@ export const PedagogicoService = {
             conteudo_ministrado: conteudo,
             proximo_conteudo: proximoConteudo,
             observacoes,
-            bimestre
+            bimestre,
+            quantidade_aulas
           })
           .select('id')
           .single();
@@ -147,12 +150,14 @@ export const PedagogicoService = {
         if (errAula) throw errAula;
         aulaId = novaAula.id;
       } else {
+        // Atualiza a aula aberta atualmente
         await this.atualizarAula(aulaId, {
           data,
           conteudo,
           proximoConteudo,
           observacoes,
-          bimestre
+          bimestre,
+          quantidade_aulas
         });
       }
 
@@ -180,19 +185,22 @@ export const PedagogicoService = {
           proximo_conteudo: proximoConteudo,
           observacoes,
           bimestre,
+          quantidade_aulas,
           offline: false
         });
-      } catch (e) {}
+      } catch {}
 
       return { id: aulaId, offline: false };
     } catch (errRede) {
       console.warn('Conexão falhou ao salvar chamada. Salvando localmente:', errRede.message);
       return await SyncManager.salvarChamadaOffline(turmaId, {
+        id: aulaIdExistente,
         data,
         conteudo,
         proximoConteudo,
         observacoes,
-        bimestre
+        bimestre,
+        quantidade_aulas
       }, listaPresencas);
     }
   },
@@ -200,7 +208,7 @@ export const PedagogicoService = {
   async listarObservacoesDiariasAluno(turmaId, alunoId, bimestre = 0, dataInicio = null, dataFim = null) {
     let queryAulas = supabase
       .from('aulas')
-      .select('id, data, bimestre, conteudo_ministrado')
+      .select('id, data, bimestre, quantidade_aulas, conteudo_ministrado')
       .eq('turma_id', turmaId);
 
     const bimNum = parseInt(bimestre, 10);
@@ -238,6 +246,7 @@ export const PedagogicoService = {
         return {
           data: aula.data,
           bimestre: aula.bimestre,
+          quantidade_aulas: aula.quantidade_aulas || 1,
           conteudo: aula.conteudo_ministrado,
           presente: reg ? reg.presente : true,
           observacao: reg?.observacao || ''
@@ -250,6 +259,10 @@ export const PedagogicoService = {
     await supabase.from('frequencias').delete().eq('aula_id', aulaId);
     const { error } = await supabase.from('aulas').delete().eq('id', aulaId);
     if (error) throw error;
+    try {
+      await localDb.frequencias.where('aula_id').equals(aulaId).delete();
+      await localDb.aulas.delete(aulaId);
+    } catch {}
   },
 
   async criarQuestao({ assunto, enunciado, nivel }) {
@@ -276,11 +289,14 @@ export const PedagogicoService = {
     if (error) throw error;
   },
 
+  /**
+   * Consolida a frequência somando o peso (quantidade_aulas) de cada registro
+   */
   async calcularFrequenciasTurma(turmaId, bimestre = 0, dataInicio = null, dataFim = null) {
     try {
       let queryAulas = supabase
         .from('aulas')
-        .select('id, data, bimestre')
+        .select('id, data, bimestre, quantidade_aulas')
         .eq('turma_id', turmaId);
 
       const bimNum = parseInt(bimestre, 10);
@@ -293,34 +309,45 @@ export const PedagogicoService = {
       const { data: aulas, error: errAulas } = await queryAulas;
       if (errAulas) throw errAulas;
 
-      const totalAulas = aulas?.length || 0;
+      const listaAulas = aulas || [];
       const mapaPresencas = {};
       const mapaFaltas = {};
 
-      if (totalAulas === 0) {
+      if (listaAulas.length === 0) {
         return { totalAulas: 0, mapaPresencas, mapaFaltas, aulas: [] };
       }
 
-      const aulaIds = aulas.map(a => a.id);
+      // Soma o total de tempos/horários ministrados (ex: aula geminada = 2 aulas)
+      const pesoPorAula = {};
+      let totalAulas = 0;
+
+      listaAulas.forEach(a => {
+        const qtd = Math.max(1, parseInt(a.quantidade_aulas, 10) || 1);
+        pesoPorAula[a.id] = qtd;
+        totalAulas += qtd;
+      });
+
+      const aulaIds = listaAulas.map(a => a.id);
 
       const { data: frequencias, error: errFreq } = await supabase
         .from('frequencias')
-        .select('aluno_id, presente')
+        .select('aula_id, aluno_id, presente')
         .in('aula_id', aulaIds);
 
       if (errFreq) throw errFreq;
 
       (frequencias || []).forEach(f => {
         const ehVerdadeiro = f.presente === true || f.presente === 'true' || f.presente === 1 || f.presente === 't';
+        const pesoAula = pesoPorAula[f.aula_id] || 1;
         
         if (ehVerdadeiro) {
-          mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + 1;
+          mapaPresencas[f.aluno_id] = (mapaPresencas[f.aluno_id] || 0) + pesoAula;
         } else {
-          mapaFaltas[f.aluno_id] = (mapaFaltas[f.aluno_id] || 0) + 1;
+          mapaFaltas[f.aluno_id] = (mapaFaltas[f.aluno_id] || 0) + pesoAula;
         }
       });
 
-      return { totalAulas, mapaPresencas, mapaFaltas, aulas };
+      return { totalAulas, mapaPresencas, mapaFaltas, aulas: listaAulas };
     } catch (err) {
       console.error('Erro ao calcular frequências:', err);
       return { totalAulas: 0, mapaPresencas, mapaFaltas, aulas: [] };

@@ -59,13 +59,10 @@ export const SyncManager = {
   async salvarChamadaOffline(turmaId, dadosAula, listaPresencas = []) {
     const dataAula = dadosAula.data;
     const bimestre = parseInt(dadosAula.bimestre, 10) || 1;
+    const quantidade_aulas = Math.max(1, parseInt(dadosAula.quantidade_aulas, 10) || 1);
 
-    const aulaExistente = await localDb.aulas
-      .where('[turma_id+data]')
-      .equals([turmaId, dataAula])
-      .first();
-
-    const aulaId = aulaExistente?.id || crypto.randomUUID();
+    // Se já veio com ID (edição de aula existente), mantém; se for nova chamada no dia, gera novo UUID
+    const aulaId = dadosAula.id || crypto.randomUUID();
 
     await localDb.aulas.put({
       id: aulaId,
@@ -75,6 +72,7 @@ export const SyncManager = {
       proximo_conteudo: dadosAula.proximoConteudo || dadosAula.proximo_conteudo || null,
       observacoes: dadosAula.observacoes || null,
       bimestre,
+      quantidade_aulas,
       offline: true,
       updated_at: new Date().toISOString()
     });
@@ -95,10 +93,13 @@ export const SyncManager = {
     await this.enfileirar('SALVAR_FREQUENCIA', {
       turmaId,
       aulaIdLocal: aulaId,
+      ehNovaAula: !dadosAula.id,
       dadosAula: {
         ...dadosAula,
+        id: aulaId,
         data: dataAula,
-        bimestre
+        bimestre,
+        quantidade_aulas
       },
       listaPresencas
     });
@@ -127,22 +128,25 @@ export const SyncManager = {
           if (error) throw error;
         } 
         else if (item.tipo === 'SALVAR_FREQUENCIA') {
-          const { turmaId, aulaIdLocal, dadosAula, listaPresencas } = item.payload;
+          const { turmaId, aulaIdLocal, ehNovaAula, dadosAula, listaPresencas } = item.payload;
           const data = dadosAula.data;
           const conteudo = dadosAula.conteudo || dadosAula.conteudo_ministrado || '';
           const proximo = dadosAula.proximoConteudo || dadosAula.proximo_conteudo || null;
           const observacoes = dadosAula.observacoes || null;
           const bimestre = parseInt(dadosAula.bimestre, 10) || 1;
+          const quantidade_aulas = Math.max(1, parseInt(dadosAula.quantidade_aulas, 10) || 1);
 
-          // 1. Sincroniza a aula no Supabase
-          let { data: aulaExistente } = await supabase
-            .from('aulas')
-            .select('id')
-            .eq('turma_id', turmaId)
-            .eq('data', data)
-            .maybeSingle();
+          let aulaIdOficial = !ehNovaAula ? aulaIdLocal : null;
 
-          let aulaIdOficial = aulaExistente?.id;
+          if (aulaIdOficial) {
+            const { data: existeNoBanco } = await supabase
+              .from('aulas')
+              .select('id')
+              .eq('id', aulaIdOficial)
+              .maybeSingle();
+
+            if (!existeNoBanco) aulaIdOficial = null;
+          }
 
           if (!aulaIdOficial) {
             const { data: novaAula, error: errAula } = await supabase
@@ -153,7 +157,8 @@ export const SyncManager = {
                 conteudo_ministrado: conteudo,
                 proximo_conteudo: proximo,
                 observacoes,
-                bimestre
+                bimestre,
+                quantidade_aulas
               })
               .select('id')
               .single();
@@ -164,17 +169,18 @@ export const SyncManager = {
             const { error: errUp } = await supabase
               .from('aulas')
               .update({
+                data,
                 conteudo_ministrado: conteudo,
                 proximo_conteudo: proximo,
                 observacoes,
-                bimestre
+                bimestre,
+                quantidade_aulas
               })
               .eq('id', aulaIdOficial);
 
             if (errUp) throw errUp;
           }
 
-          // 2. Sincroniza presenças e observações no Supabase
           if (listaPresencas && listaPresencas.length > 0) {
             const payloadFreq = listaPresencas.map(p => ({
               aula_id: aulaIdOficial,
@@ -190,22 +196,18 @@ export const SyncManager = {
             if (errFreq) throw errFreq;
           }
 
-          // 3. Atualiza o ID temporário no IndexedDB local para o ID oficial do Postgres
-          const regLocal = (aulaIdLocal && await localDb.aulas.get(aulaIdLocal)) ||
-            await localDb.aulas.where('[turma_id+data]').equals([turmaId, data]).first();
-
+          const regLocal = aulaIdLocal ? await localDb.aulas.get(aulaIdLocal) : null;
           if (regLocal && regLocal.id !== aulaIdOficial) {
-            const idAntigo = regLocal.id;
-            await localDb.aulas.delete(idAntigo);
+            await localDb.aulas.delete(aulaIdLocal);
             await localDb.aulas.put({
               ...regLocal,
               id: aulaIdOficial,
               offline: false
             });
 
-            const freqsLocais = await localDb.frequencias.where('aula_id').equals(idAntigo).toArray();
+            const freqsLocais = await localDb.frequencias.where('aula_id').equals(aulaIdLocal).toArray();
             if (freqsLocais.length > 0) {
-              await localDb.frequencias.where('aula_id').equals(idAntigo).delete();
+              await localDb.frequencias.where('aula_id').equals(aulaIdLocal).delete();
               await localDb.frequencias.bulkPut(
                 freqsLocais.map(f => ({
                   ...f,
@@ -222,7 +224,7 @@ export const SyncManager = {
 
         await localDb.sync_queue.delete(item.id);
       } catch (err) {
-        console.warn(`[SyncManager] Falha ao sincronizar item #${item.id} (${item.tipo}):`, err.message);
+        console.warn(`[SyncManager] Falha ao sincronizar item #${item.id}:`, err.message);
         await localDb.sync_queue.update(item.id, {
           tentativas: (item.tentativas || 0) + 1
         });

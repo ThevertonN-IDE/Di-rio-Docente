@@ -438,7 +438,13 @@ export class DashboardView {
       const podeCriar = typeof status === 'object' && status !== null ? status.permitido : Boolean(status);
 
       if (!podeCriar) {
-        AssinaturaModal.abrir(user.email);
+        const desejarVerPro = await customConfirm(
+          'Limite do Plano Gratuito (1 Turma Ativa)',
+          'No Plano Gratuito você pode manter 1 turma ativa gratuitamente. Para cadastrar múltiplas turmas simultâneas e usar IA, conheça o Plano Professor Pro. Deseja ver os detalhes?'
+        );
+        if (desejarVerPro) {
+          AssinaturaModal.abrir(user.email);
+        }
         return;
       }
 

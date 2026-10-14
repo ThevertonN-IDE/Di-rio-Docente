@@ -22,7 +22,7 @@ export const PerfilService = {
   async verificarStatusAssinatura() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { isPro: false, totalTurmas: 0, limiteAtingido: true, expirado: false };
+      return { isPro: false, totalTurmas: 0, limiteAtingido: false, expirado: false };
     }
 
     const perfil = await this.getPerfil();
@@ -31,7 +31,6 @@ export const PerfilService = {
     let isPro = planoNormalizado === 'pro';
     let expirado = false;
 
-    // Checagem estrita de expiração de assinatura
     if (isPro && perfil?.pro_expira_em) {
       const dataExpiracao = new Date(perfil.pro_expira_em);
       const agora = new Date();
@@ -41,11 +40,12 @@ export const PerfilService = {
       }
     }
 
-    // Total de turmas cadastradas pelo professor
+    // Conta apenas turmas ATIVAS (não arquivadas)
     const { count, error } = await supabase
       .from('turmas')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .eq('arquivada', false);
 
     const totalTurmas = error ? 0 : (count || 0);
     const limiteAtingido = !isPro && totalTurmas >= 1;

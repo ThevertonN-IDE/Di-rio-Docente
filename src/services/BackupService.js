@@ -99,13 +99,16 @@ export const BackupService = {
         id,
         data,
         bimestre,
+        quantidade_aulas,
         conteudo_ministrado,
         proximo_conteudo,
         observacoes,
+        created_at,
         frequencias (count)
       `)
       .eq('turma_id', turmaId)
-      .order('data', { ascending: false });
+      .order('data', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (termoBusca.trim()) {
       query = query.or(`conteudo_ministrado.ilike.%${termoBusca.trim()}%,observacoes.ilike.%${termoBusca.trim()}%`);

@@ -1,6 +1,5 @@
 // src/viewmodels/DiarioViewModel.js
 import { Observable } from '../core/Observable.js';
-import { supabase } from '../core/supabaseClient.js';
 import { TurmaService } from '../services/TurmaService.js';
 import { PedagogicoService } from '../services/PedagogicoService.js';
 import { obterDataLocalBrasil } from '../utils/date.js';
@@ -11,12 +10,16 @@ export class DiarioViewModel extends Observable {
     this.turmaId = turmaId;
     this.turma = null;
     this.alunos = [];
+    this.aulasDoDia = [];
     this.aulaAtual = null;
     this.mapaPresenca = {};
     this.dataSelecionada = obterDataLocalBrasil();
   }
 
-  async carregarDiario(data = this.dataSelecionada) {
+  /**
+   * Carrega o diário para uma data e, opcionalmente, para uma aula específica (ou 'NOVA' para abrir ficha limpa no mesmo dia)
+   */
+  async carregarDiario(data = this.dataSelecionada, aulaIdEspecifica = null) {
     this.notify('CARREGANDO', true);
     this.dataSelecionada = data;
 
@@ -31,26 +34,51 @@ export class DiarioViewModel extends Observable {
         }))
         .sort((a, b) => (a.numero_chamada || 999) - (b.numero_chamada || 999));
 
-      const { data: aulaDb, error: errAula } = await supabase
-        .from('aulas')
-        .select('*')
-        .eq('turma_id', this.turmaId)
-        .eq('data', data)
-        .maybeSingle();
+      // Busca todas as aulas registradas nesta data para esta turma
+      this.aulasDoDia = await PedagogicoService.buscarAulasPorData(this.turmaId, data);
 
-      if (errAula) throw errAula;
+      let aulaSelecionada = null;
 
-      this.aulaAtual = aulaDb || {
-        data,
-        bimestre: 1,
-        conteudo_ministrado: '',
-        proximo_conteudo: ''
-      };
+      if (aulaIdEspecifica === 'NOVA') {
+        // Permite criar uma 2ª ou 3ª chamada no mesmo dia sem apagar a anterior
+        const ultimoBimestre = this.aulasDoDia[this.aulasDoDia.length - 1]?.bimestre || 1;
+        aulaSelecionada = null;
+        this.aulaAtual = {
+          id: null,
+          data,
+          bimestre: ultimoBimestre,
+          quantidade_aulas: 1,
+          conteudo_ministrado: '',
+          proximo_conteudo: ''
+        };
+      } else if (aulaIdEspecifica) {
+        aulaSelecionada = this.aulasDoDia.find(a => a.id === aulaIdEspecifica) || this.aulasDoDia[0] || null;
+      } else if (this.aulasDoDia.length > 0) {
+        // Por padrão abre a última aula registrada naquela data
+        aulaSelecionada = this.aulasDoDia[this.aulasDoDia.length - 1];
+      }
+
+      if (aulaSelecionada) {
+        this.aulaAtual = {
+          ...aulaSelecionada,
+          bimestre: parseInt(aulaSelecionada.bimestre, 10) || 1,
+          quantidade_aulas: Math.max(1, parseInt(aulaSelecionada.quantidade_aulas, 10) || 1)
+        };
+      } else if (aulaIdEspecifica !== 'NOVA') {
+        this.aulaAtual = {
+          id: null,
+          data,
+          bimestre: 1,
+          quantidade_aulas: 1,
+          conteudo_ministrado: '',
+          proximo_conteudo: ''
+        };
+      }
 
       this.mapaPresenca = {};
 
-      if (aulaDb?.id) {
-        const mapaBanco = await PedagogicoService.carregarFrequenciasAula(aulaDb.id);
+      if (this.aulaAtual?.id) {
+        const mapaBanco = await PedagogicoService.carregarFrequenciasAula(this.aulaAtual.id);
         
         this.alunos.forEach(aluno => {
           if (mapaBanco[aluno.id] !== undefined) {
