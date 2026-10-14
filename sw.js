@@ -1,19 +1,28 @@
-// sw.js - Service Worker Nativo
-const CACHE_NAME = 'diario-docente-v1';
+// sw.js - Service Worker Nativo com Cache de Assets e CDNs Essenciais
+const CACHE_NAME = 'diario-docente-v2';
+
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/styles/tailwind.css',
+  '/styles/interacoes.css',
   '/styles/print-a4.css',
-  '/src/app.js'
+  '/src/app.js',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.mjs',
+  'https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.mjs',
+  'https://cdn.jsdelivr.net/npm/chart.js',
+  'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Falha ao pré-cachear alguns assets iniciais:', err);
-      });
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Cacheia individualmente para que a falha eventual de um CDN não aborte todo o lote
+      await Promise.allSettled(
+        ASSETS_TO_CACHE.map((url) => cache.add(url))
+      );
     })
   );
   self.skipWaiting();
@@ -35,7 +44,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Ignora requisições que não sejam GET ou que sejam para APIs do Supabase e Google AI
+  // Ignora métodos diferentes de GET e chamadas diretas de API
   if (
     event.request.method !== 'GET' ||
     url.hostname.includes('supabase.co') ||

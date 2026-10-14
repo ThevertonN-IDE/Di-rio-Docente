@@ -1,8 +1,8 @@
 // src/services/DashboardService.js
 import { supabase } from '../core/supabaseClient.js';
+import { obterDataLocalBrasil } from '../utils/date.js';
 
 export const DashboardService = {
-  // Busca turmas ativas ou arquivadas com contagem de alunos e última aula registrada
   async getTurmas(incluirArquivadas = false) {
     const { data, error } = await supabase
       .from('turmas')
@@ -29,12 +29,11 @@ export const DashboardService = {
     return data;
   },
 
-  // Busca avaliações marcadas para os próximos X dias
   async getProvasProximas(diasLimite = 7) {
-    const hoje = new Date().toISOString().split('T')[0];
+    const hoje = obterDataLocalBrasil();
     const dataFim = new Date();
     dataFim.setDate(dataFim.getDate() + diasLimite);
-    const dataFimIso = dataFim.toISOString().split('T')[0];
+    const dataFimIso = obterDataLocalBrasil(dataFim);
 
     const { data, error } = await supabase
       .from('avaliacoes')
@@ -57,7 +56,6 @@ export const DashboardService = {
     return data;
   },
 
-  // Alterna o estado de arquivamento da turma
   async alternarArquivamento(turmaId, arquivar) {
     const { error } = await supabase
       .from('turmas')
@@ -68,8 +66,6 @@ export const DashboardService = {
     return true;
   },
 
-  // Criação rápida de uma nova turma
-  // Em src/services/DashboardService.js
   async criarTurma(turmaData) {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) throw new Error('Usuário não autenticado.');
@@ -78,7 +74,7 @@ export const DashboardService = {
       .from('turmas')
       .insert([{
         ...turmaData,
-        user_id: user.id // <-- vincula a turma ao seu ID de professor
+        user_id: user.id
       }])
       .select()
       .single();

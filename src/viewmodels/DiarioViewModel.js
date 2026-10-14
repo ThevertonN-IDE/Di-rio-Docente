@@ -3,6 +3,7 @@ import { Observable } from '../core/Observable.js';
 import { supabase } from '../core/supabaseClient.js';
 import { TurmaService } from '../services/TurmaService.js';
 import { PedagogicoService } from '../services/PedagogicoService.js';
+import { obterDataLocalBrasil } from '../utils/date.js';
 
 export class DiarioViewModel extends Observable {
   constructor(turmaId) {
@@ -12,7 +13,7 @@ export class DiarioViewModel extends Observable {
     this.alunos = [];
     this.aulaAtual = null;
     this.mapaPresenca = {};
-    this.dataSelecionada = new Date().toISOString().split('T')[0];
+    this.dataSelecionada = obterDataLocalBrasil();
   }
 
   async carregarDiario(data = this.dataSelecionada) {
@@ -20,7 +21,6 @@ export class DiarioViewModel extends Observable {
     this.dataSelecionada = data;
 
     try {
-      // 1. Carrega alunos ativos da turma
       const dadosTurma = await TurmaService.getTurmaComAlunos(this.turmaId);
       this.turma = dadosTurma;
       this.alunos = (dadosTurma?.matriculas || [])
@@ -31,7 +31,6 @@ export class DiarioViewModel extends Observable {
         }))
         .sort((a, b) => (a.numero_chamada || 999) - (b.numero_chamada || 999));
 
-      // 2. Localiza se existe aula nesta data
       const { data: aulaDb, error: errAula } = await supabase
         .from('aulas')
         .select('*')
@@ -48,7 +47,6 @@ export class DiarioViewModel extends Observable {
         proximo_conteudo: ''
       };
 
-      // 3. Carrega as presenças exatas gravadas no banco
       this.mapaPresenca = {};
 
       if (aulaDb?.id) {
@@ -56,18 +54,15 @@ export class DiarioViewModel extends Observable {
         
         this.alunos.forEach(aluno => {
           if (mapaBanco[aluno.id] !== undefined) {
-            // Preserva estritamente o valor gravado (true ou false)
             this.mapaPresenca[aluno.id] = {
               presente: Boolean(mapaBanco[aluno.id].presente),
               observacao: mapaBanco[aluno.id].observacao || ''
             };
           } else {
-            // Aluno matriculado após a chamada daquele dia
             this.mapaPresenca[aluno.id] = { presente: true, observacao: '' };
           }
         });
       } else {
-        // Novo dia ainda não salvo: todos iniciam presentes por padrão
         this.alunos.forEach(aluno => {
           this.mapaPresenca[aluno.id] = { presente: true, observacao: '' };
         });

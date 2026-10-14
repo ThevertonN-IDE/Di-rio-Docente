@@ -1,8 +1,8 @@
 // src/services/TurmaService.js
 import { supabase } from '../core/supabaseClient.js';
+import { obterDataLocalBrasil } from '../utils/date.js';
 
 export const TurmaService = {
-  // Busca a turma com todos os alunos matriculados
   async getTurmaComAlunos(turmaId) {
     const { data, error } = await supabase
       .from('turmas')
@@ -39,7 +39,6 @@ export const TurmaService = {
     return data || [];
   },
 
-  // Busca as avaliações da turma
   async getAvaliacoes(turmaId) {
     const { data, error } = await supabase
       .from('avaliacoes')
@@ -51,7 +50,6 @@ export const TurmaService = {
     return data || [];
   },
 
-  // Busca todas as notas lançadas para as avaliações da turma
   async getNotas(turmaId) {
     const { data, error } = await supabase
       .from('notas')
@@ -68,7 +66,6 @@ export const TurmaService = {
     return data || [];
   },
 
-  // Salva ou atualiza uma nota individual (upsert)
   async salvarNota(avaliacaoId, alunoId, valor) {
     const valorNumerico = valor !== null && valor !== '' && !isNaN(parseFloat(valor)) ? parseFloat(valor) : null;
     const { data, error } = await supabase
@@ -83,7 +80,6 @@ export const TurmaService = {
     return data[0];
   },
 
-  // Remove uma avaliação (o CASCADE do PostgreSQL limpa as notas automaticamente)
   async excluirAvaliacao(avaliacaoId) {
     const { error } = await supabase
       .from('avaliacoes')
@@ -94,37 +90,35 @@ export const TurmaService = {
     return true;
   },
 
-  // Upload de foto do aluno para o Bucket do Supabase Storage
+  // CORRIGIDO (Item 3.6): Grava na pasta do professor autenticado (${user.id}/...)
   async uploadFotoAluno(alunoId, file) {
-    const fileExt = file.name.split('.').pop();
-    const filePath = `alunos/${alunoId}-${Date.now()}.${fileExt}`;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Usuário não autenticado.');
+
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const filePath = `${user.id}/${alunoId}-${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('fotos-alunos')
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('fotos-alunos')
-      .getPublicUrl(filePath);
-
     await supabase
       .from('alunos')
-      .update({ foto_url: publicUrl })
+      .update({ foto_url: filePath })
       .eq('id', alunoId);
 
-    return publicUrl;
+    return filePath;
   },
 
-  // CORRIGIDO: Agora grava o bimestre recebido no banco de dados!
   async salvarAvaliacao({ turma_id, titulo, data_prevista, peso, bimestre }) {
     const { data, error } = await supabase
       .from('avaliacoes')
       .insert([{ 
         turma_id, 
         titulo: titulo.trim(), 
-        data_prevista: data_prevista || null, 
+        data_prevista: data_prevista || obterDataLocalBrasil(), 
         peso: parseFloat(peso) || 1.0,
         bimestre: parseInt(bimestre, 10) || 1
       }])
@@ -136,14 +130,16 @@ export const TurmaService = {
   },
 
   async atualizarAvaliacao(avaliacaoId, { titulo, data_prevista, peso, bimestre }) {
+    const payload = {
+      titulo: titulo.trim(),
+      peso: parseFloat(peso) || 1.0,
+      bimestre: parseInt(bimestre, 10) || 1
+    };
+    if (data_prevista) payload.data_prevista = data_prevista;
+
     const { error } = await supabase
       .from('avaliacoes')
-      .update({
-        titulo: titulo.trim(),
-        data_prevista: data_prevista || null,
-        peso: parseFloat(peso) || 1.0,
-        bimestre: parseInt(bimestre, 10) || 1
-      })
+      .update(payload)
       .eq('id', avaliacaoId);
 
     if (error) throw error;
@@ -159,7 +155,6 @@ export const TurmaService = {
     return true;
   },
 
-  // Alias para garantir compatibilidade com DashboardViewModel
   async excluirTurmaCompletamente(turmaId) {
     return this.excluirTurma(turmaId);
   },

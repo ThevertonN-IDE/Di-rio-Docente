@@ -2,12 +2,10 @@
 import { supabase } from './supabaseClient.js';
 import Dexie from 'https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.mjs';
 
-// Recupera a classe Dexie via módulo ES ou via escopo global
 const ConstrutorDexie = Dexie || (typeof window !== 'undefined' && (window.Dexie?.default || window.Dexie));
 
 export const localDb = new ConstrutorDexie('DiarioDocenteDB');
 
-// Versionamento do banco local Dexie (v3 inclui suporte offline completo a aulas e frequências)
 localDb.version(1).stores({
   turmas: 'id, user_id',
   alunos: 'id, user_id',
@@ -36,25 +34,18 @@ localDb.version(3).stores({
 });
 
 export const SyncManager = {
-  /**
-   * Inicializa o gestor de sincronização e processa itens pendentes
-   */
   init() {
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
         this.processarFila();
       });
 
-      // Se já houver internet no arranque da aplicação, tenta sincronizar
       if (navigator.onLine) {
         this.processarFila();
       }
     }
   },
 
-  /**
-   * Adiciona uma tarefa à fila de sincronização
-   */
   async enfileirar(tipo, payload) {
     return await localDb.sync_queue.add({
       tipo,
@@ -65,14 +56,10 @@ export const SyncManager = {
     });
   },
 
-  /**
-   * Salva a aula e a chamada localmente no IndexedDB e enfileira para a nuvem
-   */
   async salvarChamadaOffline(turmaId, dadosAula, listaPresencas = []) {
     const dataAula = dadosAula.data;
     const bimestre = parseInt(dadosAula.bimestre, 10) || 1;
 
-    // 1. Verifica se já existe aula local nessa data para a turma
     const aulaExistente = await localDb.aulas
       .where('[turma_id+data]')
       .equals([turmaId, dataAula])
@@ -80,7 +67,6 @@ export const SyncManager = {
 
     const aulaId = aulaExistente?.id || crypto.randomUUID();
 
-    // 2. Grava ou atualiza a aula no IndexedDB
     await localDb.aulas.put({
       id: aulaId,
       turma_id: turmaId,
@@ -93,7 +79,6 @@ export const SyncManager = {
       updated_at: new Date().toISOString()
     });
 
-    // 3. Grava presenças e observações individuais no IndexedDB
     if (listaPresencas && listaPresencas.length > 0) {
       const registrosFreq = listaPresencas.map(p => ({
         id: `${aulaId}_${p.alunoId}`,
@@ -107,9 +92,9 @@ export const SyncManager = {
       await localDb.frequencias.bulkPut(registrosFreq);
     }
 
-    // 4. Enfileira na sync_queue para subir ao Supabase quando voltar a conexão
     await this.enfileirar('SALVAR_FREQUENCIA', {
       turmaId,
+      aulaIdLocal: aulaId,
       dadosAula: {
         ...dadosAula,
         data: dataAula,
@@ -121,9 +106,6 @@ export const SyncManager = {
     return { id: aulaId, offline: true };
   },
 
-  /**
-   * Processa todos os itens pendentes da fila enviando-os para o Supabase
-   */
   async processarFila() {
     if (!navigator.onLine) return;
 
@@ -145,14 +127,14 @@ export const SyncManager = {
           if (error) throw error;
         } 
         else if (item.tipo === 'SALVAR_FREQUENCIA') {
-          const { turmaId, dadosAula, listaPresencas } = item.payload;
+          const { turmaId, aulaIdLocal, dadosAula, listaPresencas } = item.payload;
           const data = dadosAula.data;
           const conteudo = dadosAula.conteudo || dadosAula.conteudo_ministrado || '';
           const proximo = dadosAula.proximoConteudo || dadosAula.proximo_conteudo || null;
           const observacoes = dadosAula.observacoes || null;
           const bimestre = parseInt(dadosAula.bimestre, 10) || 1;
 
-          // 1. Sincroniza a aula
+          // 1. Sincroniza a aula no Supabase
           let { data: aulaExistente } = await supabase
             .from('aulas')
             .select('id')
@@ -160,9 +142,9 @@ export const SyncManager = {
             .eq('data', data)
             .maybeSingle();
 
-          let aulaId = aulaExistente?.id;
+          let aulaIdOficial = aulaExistente?.id;
 
-          if (!aulaId) {
+          if (!aulaIdOficial) {
             const { data: novaAula, error: errAula } = await supabase
               .from('aulas')
               .insert({
@@ -177,7 +159,7 @@ export const SyncManager = {
               .single();
 
             if (errAula) throw errAula;
-            aulaId = novaAula.id;
+            aulaIdOficial = novaAula.id;
           } else {
             const { error: errUp } = await supabase
               .from('aulas')
@@ -187,15 +169,15 @@ export const SyncManager = {
                 observacoes,
                 bimestre
               })
-              .eq('id', aulaId);
+              .eq('id', aulaIdOficial);
 
             if (errUp) throw errUp;
           }
 
-          // 2. Sincroniza presenças e observações
+          // 2. Sincroniza presenças e observações no Supabase
           if (listaPresencas && listaPresencas.length > 0) {
             const payloadFreq = listaPresencas.map(p => ({
-              aula_id: aulaId,
+              aula_id: aulaIdOficial,
               aluno_id: p.alunoId,
               presente: p.presente === true || p.presente === 'true' || p.presente === 1 || p.presente === 't',
               observacao: (p.observacao || '').trim() || null
@@ -207,9 +189,37 @@ export const SyncManager = {
 
             if (errFreq) throw errFreq;
           }
+
+          // 3. Atualiza o ID temporário no IndexedDB local para o ID oficial do Postgres
+          const regLocal = (aulaIdLocal && await localDb.aulas.get(aulaIdLocal)) ||
+            await localDb.aulas.where('[turma_id+data]').equals([turmaId, data]).first();
+
+          if (regLocal && regLocal.id !== aulaIdOficial) {
+            const idAntigo = regLocal.id;
+            await localDb.aulas.delete(idAntigo);
+            await localDb.aulas.put({
+              ...regLocal,
+              id: aulaIdOficial,
+              offline: false
+            });
+
+            const freqsLocais = await localDb.frequencias.where('aula_id').equals(idAntigo).toArray();
+            if (freqsLocais.length > 0) {
+              await localDb.frequencias.where('aula_id').equals(idAntigo).delete();
+              await localDb.frequencias.bulkPut(
+                freqsLocais.map(f => ({
+                  ...f,
+                  id: `${aulaIdOficial}_${f.aluno_id}`,
+                  aula_id: aulaIdOficial,
+                  offline: false
+                }))
+              );
+            }
+          } else if (regLocal) {
+            await localDb.aulas.update(aulaIdOficial, { offline: false });
+          }
         }
 
-        // Se sincronizou com sucesso, remove da fila
         await localDb.sync_queue.delete(item.id);
       } catch (err) {
         console.warn(`[SyncManager] Falha ao sincronizar item #${item.id} (${item.tipo}):`, err.message);
@@ -221,9 +231,6 @@ export const SyncManager = {
   }
 };
 
-/**
- * Limpa todos os caches e filas locais ao deslogar
- */
 export async function limparCacheLocal() {
   await localDb.turmas.clear();
   await localDb.alunos.clear();

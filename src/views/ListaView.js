@@ -352,6 +352,7 @@ export class ListaView {
     });
 
     // 3. Salvar Trabalho no Supabase
+    // 3. Salvar Trabalho no Supabase (Estrutura conteudoJson corrigida)
     this.container.querySelector('#btn-salvar-trabalho-lista')?.addEventListener('click', async () => {
       const btn = this.container.querySelector('#btn-salvar-trabalho-lista');
       btn.disabled = true;
@@ -360,10 +361,13 @@ export class ListaView {
         const docSalvo = await DocumentoService.salvarDocumento({
           id: this.documentoAtivoId,
           tipo: 'lista',
+          categoria: 'Provas e Listas',
           titulo: `${this.vm.dadosCabecalho.tipoDocumento} - ${this.vm.dadosCabecalho.disciplina}`,
-          dadosCabecalho: this.vm.dadosCabecalho,
-          questoes: this.vm.questoes,
-          duasColunas: this.vm.duasColunas
+          conteudoJson: {
+            dadosCabecalho: this.vm.dadosCabecalho,
+            questoes: this.vm.questoes,
+            duasColunas: this.vm.duasColunas
+          }
         });
         this.documentoAtivoId = docSalvo.id;
         Toast.show('Lista salva na sua biblioteca com sucesso!', 'success');
@@ -427,7 +431,7 @@ export class ListaView {
     this.container.addEventListener('input', (e) => {
       if (e.target.dataset.qTexto !== undefined) {
         const idx = parseInt(e.target.dataset.qTexto);
-        this.vm.atualizarQuestao(idx, {エンunciado: e.target.value });
+        this.vm.atualizarQuestao(idx, {enunciado: e.target.value });
       } else if (e.target.dataset.qEspaco !== undefined) {
         const idx = parseInt(e.target.dataset.qEspaco);
         this.vm.atualizarQuestao(idx, { linhasEspaco: e.target.value });

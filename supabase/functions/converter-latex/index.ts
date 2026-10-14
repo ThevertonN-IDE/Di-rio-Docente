@@ -49,7 +49,7 @@ serve(async (req: Request) => {
 
     // 2. Proteção de Negócio: Verificar se o usuário possui Plano PRO ativo no banco
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: perfil, error: perfilError } = await supabaseAdmin
+    const { data: perfil } = await supabaseAdmin
       .from("perfis")
       .select("plano, pro_expira_em")
       .eq("id", user.id)
@@ -74,29 +74,67 @@ serve(async (req: Request) => {
       );
     }
 
-    // 3. Processamento do Arquivo (PDF ou Imagem)
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+    // 3. Processamento Híbrido do Arquivo (Suporta JSON do LatexService.js e FormData)
+    const contentType = req.headers.get("content-type") || "";
+    let base64Data = "";
+    let mimeType = "application/pdf";
+    let tamanhoBytes = 0;
 
-    if (!file) {
-      return new Response(
-        JSON.stringify({ error: "Nenhum arquivo enviado para conversão." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      const file = formData.get("file") as File;
+
+      if (!file) {
+        return new Response(
+          JSON.stringify({ error: "Nenhum arquivo enviado para conversão." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      tamanhoBytes = file.size;
+      mimeType = file.type || "application/pdf";
+
+      if (tamanhoBytes > 15 * 1024 * 1024) {
+        return new Response(
+          JSON.stringify({ error: "O arquivo excede o limite máximo permitido de 15 MB." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const fileBytes = await file.arrayBuffer();
+      const uint8 = new Uint8Array(fileBytes);
+      let binary = "";
+      for (let i = 0; i < uint8.byteLength; i++) {
+        binary += String.fromCharCode(uint8[i]);
+      }
+      base64Data = btoa(binary);
+    } else {
+      // Recebe JSON enviado pelo LatexService.converterArquivoViaIA
+      const body = await req.json();
+      base64Data = body.base64Data || body.base64 || "";
+      mimeType = body.mimeType || "application/pdf";
+
+      // Remove prefixo Data URL caso exista (ex: "data:application/pdf;base64,...")
+      if (base64Data.includes(",")) {
+        base64Data = base64Data.split(",")[1];
+      }
+
+      if (!base64Data) {
+        return new Response(
+          JSON.stringify({ error: "Nenhum arquivo enviado para conversão." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Calcula o tamanho aproximado em bytes a partir da string Base64 (limite de 15 MB)
+      tamanhoBytes = Math.ceil((base64Data.length * 3) / 4);
+      if (tamanhoBytes > 15 * 1024 * 1024) {
+        return new Response(
+          JSON.stringify({ error: "O arquivo excede o limite máximo permitido de 15 MB." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
-
-    // Limite de 15 MB
-    if (file.size > 15 * 1024 * 1024) {
-      return new Response(
-        JSON.stringify({ error: "O arquivo excede o limite máximo permitido de 15 MB." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const fileBytes = await file.arrayBuffer();
-    const base64Data = btoa(
-      new Uint8Array(fileBytes).reduce((data, byte) => data + String.fromCharCode(byte), "")
-    );
 
     // 4. Prompt para a IA
     const prompt = `
@@ -131,7 +169,7 @@ Não inclua blocos de código com markdown (como \`\`\`json), retorne somente o 
             { text: prompt },
             {
               inlineData: {
-                mimeType: file.type || "application/pdf",
+                mimeType: mimeType,
                 data: base64Data,
               },
             },

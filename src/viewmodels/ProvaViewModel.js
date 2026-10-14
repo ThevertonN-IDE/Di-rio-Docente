@@ -93,14 +93,20 @@ export class ProvaViewModel extends Observable {
 
   async salvarDocumento(turmaId = null) {
     try {
-      const { error } = await supabase.from('documentos_impressao').insert({
-        turma_id: turmaId,
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado.');
+
+      const { error } = await supabase.from('documentos_salvos').insert({
+        user_id: user.id,
+        turma_id: turmaId || null,
+        tipo: 'prova',
+        categoria: 'Provas e Listas',
         titulo: `${this.dadosCabecalho.tipoDocumento} - ${this.dadosCabecalho.disciplina}`,
-        formato_colunas: this.duasColunas ? 'duas_colunas' : 'unica',
-        conteudo_markdown_latex: JSON.stringify({
-          cabecalho: this.dadosCabecalho,
-          questoes: this.questoes
-        })
+        conteudo_json: {
+          dadosCabecalho: this.dadosCabecalho,
+          questoes: this.questoes,
+          duasColunas: this.duasColunas
+        }
       });
 
       if (error) throw error;

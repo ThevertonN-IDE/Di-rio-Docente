@@ -255,3 +255,68 @@ ON storage.objects FOR ALL
 TO authenticated
 USING (bucket_id = 'fotos-alunos' AND (storage.foldername(name))[1] = auth.uid()::text)
 WITH CHECK (bucket_id = 'fotos-alunos' AND (storage.foldername(name))[1] = auth.uid()::text);
+-- ============================================================================
+-- 1. PROTEÇÃO CONTRA ESCALADA DE PRIVILÉGIOS NA TABELA PERFIS (Item 2.1)
+-- Impede que o usuário logado mude seu próprio 'plano' ou 'pro_expira_em' via console
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.proteger_campos_plano_perfil()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF current_setting('request.jwt.claim.role', true) = 'authenticated' THEN
+    IF NEW.plano IS DISTINCT FROM OLD.plano OR NEW.pro_expira_em IS DISTINCT FROM OLD.pro_expira_em THEN
+      RAISE EXCEPTION 'Acesso negado: não é permitido alterar o próprio plano de assinatura.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_proteger_plano_perfil ON public.perfis;
+CREATE TRIGGER trg_proteger_plano_perfil
+  BEFORE UPDATE ON public.perfis
+  FOR EACH ROW
+  EXECUTE FUNCTION public.proteger_campos_plano_perfil();
+
+-- ============================================================================
+-- 2. ISOLAMENTO ESTRITO EM MATRÍCULAS (Item 2.4)
+-- Garante que tanto a turma quanto o aluno pertençam ao professor autenticado
+-- ============================================================================
+DROP POLICY IF EXISTS "Acesso a matriculas de turmas proprias" ON public.matriculas;
+DROP POLICY IF EXISTS "Acesso estrito a matriculas de turmas e alunos proprios" ON public.matriculas;
+
+CREATE POLICY "Acesso estrito a matriculas de turmas e alunos proprios"
+ON public.matriculas FOR ALL
+USING (
+  EXISTS (SELECT 1 FROM public.turmas t WHERE t.id = matriculas.turma_id AND t.user_id = auth.uid())
+  AND
+  EXISTS (SELECT 1 FROM public.alunos a WHERE a.id = matriculas.aluno_id AND a.user_id = auth.uid())
+)
+WITH CHECK (
+  EXISTS (SELECT 1 FROM public.turmas t WHERE t.id = matriculas.turma_id AND t.user_id = auth.uid())
+  AND
+  EXISTS (SELECT 1 FROM public.alunos a WHERE a.id = matriculas.aluno_id AND a.user_id = auth.uid())
+);
+
+-- ============================================================================
+-- 3. VALOR PADRÃO EM AVALIACOES.DATA_PREVISTA
+-- Evita erro NOT NULL caso o professor crie uma avaliação sem preencher a data
+-- ============================================================================
+ALTER TABLE public.avaliacoes ALTER COLUMN data_prevista SET DEFAULT CURRENT_DATE;
+ALTER TABLE public.avaliacoes ALTER COLUMN data_prevista DROP NOT NULL;
+
+-- ============================================================================
+-- 4. POLÍTICA RLS DO BUCKET 'fotos-alunos' (Que estava com 0 policies no Storage)
+-- ============================================================================
+DROP POLICY IF EXISTS "Professores gerenciam apenas fotos de seus alunos" ON storage.objects;
+
+CREATE POLICY "Professores gerenciam apenas fotos de seus alunos"
+ON storage.objects FOR ALL
+TO authenticated
+USING (
+  bucket_id = 'fotos-alunos' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+)
+WITH CHECK (
+  bucket_id = 'fotos-alunos' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);

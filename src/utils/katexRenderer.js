@@ -1,27 +1,33 @@
 // src/utils/katexRenderer.js
 import katex from 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.mjs';
+import { escapeHtml } from './sanitize.js';
 
 export function renderizarMatematica(textoPuro) {
-  if (!textoPuro) return '';
+  if (!textoPuro || typeof textoPuro !== 'string') return '';
 
-  // 1. Renderiza fórmulas em bloco ($$ ... $$)
-  let formatado = textoPuro.replace(/\$\$([\s\S]+?)\$\$/g, (match, formula) => {
-    try {
-      return katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false });
-    } catch {
-      return match;
+  // Divide preservando blocos $$...$$ e expressões inline $...$
+  const partes = textoPuro.split(/(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/g);
+
+  return partes.map((parte) => {
+    if (parte.startsWith('$$') && parte.endsWith('$$')) {
+      const formula = parte.slice(2, -2).trim();
+      try {
+        return katex.renderToString(formula, { displayMode: true, throwOnError: false });
+      } catch {
+        return escapeHtml(parte);
+      }
     }
-  });
 
-  // 2. Renderiza fórmulas inline ($ ... $)
-  formatado = formatado.replace(/\$([^\$\n]+?)\$/g, (match, formula) => {
-    try {
-      return katex.renderToString(formula.trim(), { displayMode: false, throwOnError: false });
-    } catch {
-      return match;
+    if (parte.startsWith('$') && parte.endsWith('$')) {
+      const formula = parte.slice(1, -1).trim();
+      try {
+        return katex.renderToString(formula, { displayMode: false, throwOnError: false });
+      } catch {
+        return escapeHtml(parte);
+      }
     }
-  });
 
-  // 3. Quebras de linha normais para HTML
-  return formatado.replace(/\n/g, '<br>');
+    // Sanitiza qualquer HTML presente no texto comum e aplica quebras de linha
+    return escapeHtml(parte).replace(/\n/g, '<br>');
+  }).join('');
 }
