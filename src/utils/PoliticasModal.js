@@ -28,18 +28,18 @@ export class PoliticasModal {
             </h3>
             <p class="text-xs text-slate-500">Transparência e segurança jurídica no ambiente escolar</p>
           </div>
-          <button id="btn-fechar-politicas" class="touch-target-44 text-slate-400 hover:text-slate-600 text-2xl font-bold leading-none">&times;</button>
+          <button id="btn-fechar-politicas" class="touch-target-44 text-slate-400 hover:text-slate-600 text-2xl font-bold leading-none cursor-pointer">&times;</button>
         </div>
 
         <!-- Seletor de Abas -->
         <div class="flex items-center gap-2 border-b border-slate-100 pb-2 text-xs font-bold overflow-x-auto no-scrollbar shrink-0">
-          <button data-aba-legal="privacidade" class="touch-action px-3 py-1.5 rounded-xl transition ${this.abaAtiva === 'privacidade' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+          <button data-aba-legal="privacidade" class="touch-action px-3 py-1.5 rounded-xl transition cursor-pointer ${this.abaAtiva === 'privacidade' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
             LGPD & Dados de Menores
           </button>
-          <button data-aba-legal="termos" class="touch-action px-3 py-1.5 rounded-xl transition ${this.abaAtiva === 'termos' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+          <button data-aba-legal="termos" class="touch-action px-3 py-1.5 rounded-xl transition cursor-pointer ${this.abaAtiva === 'termos' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
             Termos de Uso
           </button>
-          <button data-aba-legal="cookies" class="touch-action px-3 py-1.5 rounded-xl transition ${this.abaAtiva === 'cookies' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+          <button data-aba-legal="cookies" class="touch-action px-3 py-1.5 rounded-xl transition cursor-pointer ${this.abaAtiva === 'cookies' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
             Cookies & Armazenamento
           </button>
         </div>
@@ -52,7 +52,7 @@ export class PoliticasModal {
         <!-- Rodapé do Modal -->
         <div class="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
           <span class="text-[11px] text-slate-400">Atualizado conforme Lei Federal 13.709/2018 (LGPD).</span>
-          <button id="btn-entendi-politicas" class="touch-action px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition">
+          <button id="btn-entendi-politicas" class="touch-action px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer">
             Entendido
           </button>
         </div>
@@ -62,7 +62,6 @@ export class PoliticasModal {
 
     modal.classList.remove('hidden');
 
-    // Fechar
     const fechar = () => modal.classList.add('hidden');
     modal.querySelector('#btn-fechar-politicas').onclick = fechar;
     modal.querySelector('#btn-entendi-politicas').onclick = fechar;
@@ -70,13 +69,12 @@ export class PoliticasModal {
       if (e.target === modal) fechar();
     });
 
-    // Alternar Abas
     modal.querySelectorAll('[data-aba-legal]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         this.abaAtiva = e.currentTarget.dataset.abaLegal;
         modal.querySelectorAll('[data-aba-legal]').forEach(b => {
           const ativo = b.dataset.abaLegal === this.abaAtiva;
-          b.className = `touch-action px-3 py-1.5 rounded-xl transition ${ativo ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
+          b.className = `touch-action px-3 py-1.5 rounded-xl transition cursor-pointer ${ativo ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
         });
         const containerTexto = modal.querySelector('#conteudo-documento-legal');
         if (containerTexto) containerTexto.innerHTML = this.gerarConteudoAba(this.abaAtiva);
@@ -116,17 +114,17 @@ export class PoliticasModal {
             <p>Adotamos o princípio de coletar o mínimo estritamente indispensável para a rotina de sala de aula:</p>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
               <li><strong>Dados Armazenados do Professor:</strong> Nome, endereço de e-mail e credenciais criptografadas de acesso.</li>
-              <li><strong>Dados Operados dos Alunos:</strong> Nome (ou apelido escolar), turma, registro de faltas e notas das avaliações.</li>
-              <li><strong>Dados NÃO Coletados:</strong> A plataforma <strong>não solicita nem armazena</strong> CPF de alunos, certidões civis, dados bancários de discentes, informações de saúde física/mental, biometria ou dados de geolocalização.</li>
+              <li><strong>Dados Operados dos Alunos:</strong> Nome (ou identificação escolar), número de chamada, registros de faltas e notas de avaliações.</li>
+              <li><strong>Dados NÃO Coletados:</strong> A plataforma <strong>não solicita nem armazena</strong> CPF de discentes, certidões civis, dados bancários de alunos, prontuários de saúde física/mental ou dados de geolocalização.</li>
             </ul>
           </div>
 
           <div class="space-y-1">
             <h5 class="font-bold text-slate-700 text-xs">4. Segurança da Informação e Isolamento em Nuvem</h5>
-            <p>Os registros são processados sobre infraestrutura em nuvem (Supabase) dotada de:</p>
+            <p>Os registros são processados sobre infraestrutura em nuvem com rigorosos controles técnicos:</p>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
-              <li><strong>Criptografia em Trânsito:</strong> Todas as requisições utilizam tráfego seguro via HTTPS/TLS 1.3.</li>
-              <li><strong>Isolamento Lógico (Row Level Security):</strong> Regras automáticas no banco garantem que nenhum professor ou terceiro tenha acesso aos dados, notas ou turmas de outros usuários cadastrados.</li>
+              <li><strong>Criptografia em Trânsito:</strong> Todas as requisições utilizam tráfego criptografado via HTTPS/TLS 1.3.</li>
+              <li><strong>Isolamento Lógico (Row Level Security):</strong> Regras automáticas no banco de dados garantem que nenhum professor ou terceiro tenha acesso aos dados, notas ou turmas de outros usuários cadastrados.</li>
             </ul>
           </div>
 
@@ -134,7 +132,7 @@ export class PoliticasModal {
             <h5 class="font-bold text-slate-700 text-xs">5. Direitos do Titular e Exclusão Definitiva (Art. 18 da LGPD)</h5>
             <p>O professor tem autonomia total e imediata para:</p>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
-              <li>Excluir turmas, alunos ou avaliações a qualquer instante, resultando na eliminação direta dos registros vinculados no banco de dados;</li>
+              <li>Excluir turmas, alunos ou avaliações a qualquer instante, resultando na eliminação direta e em cascata dos registros vinculados no banco de dados;</li>
               <li>Baixar um snapshot completo de todos os seus dados a qualquer momento por meio do botão <em>"Fazer Backup"</em> no formato aberto JSON.</li>
             </ul>
           </div>
@@ -159,45 +157,44 @@ export class PoliticasModal {
             <h5 class="font-bold text-slate-700 text-xs">2. Cadastro e Responsabilidade pelo Acesso</h5>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
               <li><strong>Habilitação:</strong> O cadastro destina-se a professores, educadores e gestores escolares maiores de 18 anos ou legalmente habilitados para o exercício da docência.</li>
-              <li><strong>Guarda de Credenciais:</strong> O usuário é o único responsável pela confidencialidade de sua senha e por todas as operações realizadas em sua conta.</li>
-              <li><strong>Autorização Institucional:</strong> Ao registrar turmas e estudantes, o professor declara estar regularmente autorizado pela respectiva instituição escolar para o registro e manutenção do diário acadêmico.</li>
+              <li><strong>Guarda de Credenciais:</strong> O usuário é o único responsável pela confidencialidade de suas credenciais e por todas as operações realizadas em sua conta.</li>
+              <li><strong>Autorização Institucional:</strong> Ao registrar turmas e estudantes, o professor declara estar regularmente autorizado pela respectiva instituição escolar para a gestão pedagógica correspondente.</li>
             </ul>
           </div>
 
           <div class="space-y-1">
             <h5 class="font-bold text-slate-700 text-xs">3. Planos, Valores e Modelo de Assinatura</h5>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
-              <li><strong>Plano Gratuito:</strong> Garante o direito de criar e manter 1 (uma) turma ativa com todas as funções básicas de chamadas, notas e confecção de provas, sem custos ou exibição de anúncios comerciais.</li>
-              <li><strong>Plano Professor Pro (R$ 19,90):</strong> Concede acesso a turmas ilimitadas, ferramentas de IA e recursos avançados de exportação pelo período contratado de 30 (trinta) dias.</li>
-              <li><strong>Ativação via Pix:</strong> O Plano Pro opera no modelo pré-pago sem renovação automática compulsória em cartão de crédito. A ativação ocorre após o envio do comprovante Pix e a correspondente validação cadastral. O término dos 30 dias sem nova contratação apenas congela as turmas excedentes, sem excluir seus dados.</li>
+              <li><strong>Plano Gratuito:</strong> Permite criar e manter 1 (uma) turma ativa com todas as funcionalidades de chamadas, notas e confecção de provas em folha A4, sem custos ou veiculação de anúncios comerciais.</li>
+              <li><strong>Plano Professor Pro:</strong> Concede acesso a turmas ativas ilimitadas, ferramentas de digitalização de avaliações por Inteligência Artificial e recursos avançados de exportação (TeX/Overleaf). O valor promocional de primeiro mês é de <strong>R$ 19,99</strong> por 30 (trinta) dias de vigência, com renovações subsequentes fixadas em <strong>R$ 29,99</strong> por período de 30 dias.</li>
+              <li><strong>Ativação Pré-Paga via Pix:</strong> O Plano Pro opera exclusivamente no modelo pré-pago sem renovação automática compulsória em cartão de crédito. A ativação ocorre mediante transferência Pix e validação de comprovante. Findo o período de 30 dias sem nova contratação, as turmas excedentes à franquia gratuita permanecem em modo somente-leitura/arquivadas, sem qualquer perda ou exclusão de registros históricos.</li>
             </ul>
           </div>
 
           <div class="space-y-1">
             <h5 class="font-bold text-slate-700 text-xs">4. Direitos Autorais e Propriedade dos Dados</h5>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
-              <li><strong>Material do Professor:</strong> Todas as questões, provas, gabaritos, comentários e planos de aula elaborados pelo usuário pertencem exclusivamente a ele ou à sua instituição de ensino. O Diário Docente não reivindica direitos de autor sobre materiais criados no editor.</li>
-              <li><strong>Software:</strong> O código-fonte, layout visual, marcas, ícones e arquitetura do Diário Docente são protegidos pelas leis de propriedade intelectual e direitos autorais, sendo vedada sua reprodução ou engenharia reversa não autorizada.</li>
+              <li><strong>Material do Docente:</strong> Todas as questões, provas, planos de aula e comentários elaborados pelo usuário pertencem exclusivamente a ele ou à sua instituição de ensino. O Diário Docente não reivindica direitos de autor sobre materiais criados no editor.</li>
+              <li><strong>Software:</strong> O código-fonte, layout visual, marcas e recursos do Diário Docente são protegidos pelas leis de propriedade intelectual, sendo vedada sua reprodução ou engenharia reversa não autorizada.</li>
             </ul>
           </div>
 
           <div class="space-y-1">
             <h5 class="font-bold text-slate-700 text-xs">5. Limitações de Responsabilidade</h5>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
-              <li><strong>Revisão Pedagógica:</strong> O usuário é responsável pela revisão final de enunciados, cálculos matemáticos, gabaritos e notas lançadas antes da aplicação impressa ou publicação discente.</li>
-              <li><strong>Rotina de Backup:</strong> Embora a plataforma mantenha persistência em nuvem e mecanismos de isolamento, recomenda-se que o usuário utilize a funcionalidade de backup em arquivo JSON para manter cópias locais regulares de seus acervos.</li>
+              <li><strong>Revisão Pedagógica:</strong> O usuário é responsável pela revisão final de enunciados, gabaritos e notas lançadas antes de sua aplicação impressa ou comunicação institucional.</li>
+              <li><strong>Rotina de Backup:</strong> Embora a plataforma mantenha persistência segura em nuvem e mecanismos de isolamento, recomenda-se que o usuário utilize a funcionalidade de backup em arquivo JSON para manter cópias locais regulares de seus acervos.</li>
             </ul>
           </div>
 
           <div class="space-y-1">
             <h5 class="font-bold text-slate-700 text-xs">6. Cancelamento, Encerramento e Foro</h5>
-            <p>O usuário pode suspender o uso ou solicitar a exclusão integral de sua conta a qualquer tempo. Estes Termos de Uso são regidos pela legislação da República Federativa do Brasil, elegendo-se o foro da Comarca de Currais Novos/RN para dirimir eventuais controvérsias oriundas de sua aplicação.</p>
+            <p>O usuário pode suspender o uso ou solicitar a exclusão integral de sua conta a qualquer momento. Estes Termos de Uso são regidos pela legislação da República Federativa do Brasil, elegendo-se o foro da Comarca de Currais Novos/RN para dirimir eventuais controvérsias oriundas de sua aplicação.</p>
           </div>
         </div>
       `;
     }
 
-    // Aba Cookies
     if (aba === 'cookies') {
       return `
         <div class="space-y-3 text-slate-600">
@@ -212,23 +209,23 @@ export class PoliticasModal {
           </div>
 
           <div class="space-y-1">
-            <h5 class="font-bold text-slate-700 text-xs">2. O que Utilizamos: Armazenamento Local Técnico (Essencial)</h5>
-            <p>Empregamos tecnologias padrão dos navegadores (<code>localStorage</code>, <code>sessionStorage</code> e Cache PWA) estritamente para viabilizar as funções da plataforma:</p>
+            <h5 class="font-bold text-slate-700 text-xs">2. Armazenamento Local Técnico (Estritamente Essencial)</h5>
+            <p>Empregamos tecnologias padrão dos navegadores (<code>localStorage</code>, <code>sessionStorage</code> e Cache PWA / IndexedDB) estritamente para viabilizar as funções essenciais da plataforma:</p>
             <ul class="list-disc list-inside space-y-1 pl-1 text-[11px]">
-              <li><strong>Sessão e Autenticação:</strong> Gerenciado via Supabase no <code>localStorage</code> para manter o professor conectado com segurança sem pedir senha a cada clique.</li>
-              <li><strong>Rascunhos e Persistência Operacional:</strong> Salva localmente suas preferências visuais e rascunhos de provas/aulas em edição, evitando perda de dados caso a internet oscile.</li>
-              <li><strong>Cache Offline (PWA):</strong> Mantém arquivos visuais em cache para carregamento instantâneo no celular e computador.</li>
+              <li><strong>Sessão e Autenticação:</strong> Gerenciado via Supabase no <code>localStorage</code> para manter o professor conectado com segurança.</li>
+              <li><strong>Rascunhos e Persistência Offline:</strong> Salva localmente suas preferências visuais e registros no Dexie.js para viabilizar chamada mesmo sem acesso à internet na sala de aula.</li>
+              <li><strong>Cache PWA:</strong> Mantém arquivos estáticos em cache para inicialização instantânea no celular e no computador.</li>
             </ul>
           </div>
 
           <div class="space-y-1">
             <h5 class="font-bold text-slate-700 text-xs">3. Ausência de Rastreadores de Terceiros</h5>
-            <p>Não há coleta de dados para formação de perfis comerciais nem cruzamento de informações com serviços de publicidade. Nenhuma informação sobre alunos ou turmas é exposta a terceiros por meio de cookies.</p>
+            <p>Não há coleta de dados para formação de perfis comerciais nem cruzamento de informações com serviços de marketing. Nenhuma informação sobre alunos ou turmas é exposta a terceiros por meio de cookies.</p>
           </div>
 
           <div class="space-y-1">
             <h5 class="font-bold text-slate-700 text-xs">4. Gerenciamento pelo Usuário</h5>
-            <p>Caso limpe o histórico ou dados do navegador, sua sessão será encerrada e será necessário fazer login novamente. Rascunhos locais não sincronizados com a nuvem poderão ser perdidos.</p>
+            <p>Caso limpe o histórico ou dados do navegador, sua sessão será encerrada e será necessário fazer login novamente. Rascunhos locais ainda não sincronizados com a nuvem poderão ser perdidos.</p>
           </div>
         </div>
       `;
